@@ -6,13 +6,17 @@ CFLAGS += -g
 CFLAGS += --target=riscv32
 CFLAGS += -march=rv32i
 
+LDFLAGS += -T script.lds 
+LDFLAGS += -L/usr/lib/gcc/riscv64-unknown-elf/12.2.0/rv32i/ilp32/
+LDFLAGS += -lgcc
+
 all: t.mem t.S
 
 t.o: t.c
 	clang $(CFLAGS) -c t.c -o t.o
 
 t.elf: t.o
-	ld.lld -o t.elf t.o -T script.lds
+	ld.lld -o t.elf t.o $(LDFLAGS)
 
 t.bin: t.elf
 	llvm-objcopy-16 -O binary t.elf t.bin

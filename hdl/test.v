@@ -11,7 +11,7 @@ module test();
       for (i = 0; i < 32; i++) begin
          //$dumpvars(0, machine, machine.ram0.mem[i]);
       end
-      #2000
+      #20000
       $finish;
    end
 

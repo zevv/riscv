@@ -77,9 +77,11 @@ module cpu(
       RAM_ST = 3,
       RAM_LD = 4,
       RAM_LD2 = 5,
+      RAM_LD_RS1 = 6,
+      RAM_LD_RS2 = 7,
+      RAM_LD_RD = 8,
+      RAM_LD_INST = 9,
       FAULT = 15;
-
-   reg [1:0] ram_rd_target = 0;
 
    localparam
       LD_TARGET_INST = 0,
@@ -119,8 +121,7 @@ module cpu(
             
             rd_addr <= pc;
             rd_en <= 1;
-            ram_rd_target <= LD_TARGET_INST;
-            state <= RAM_LD;
+            state <= RAM_LD_INST;
          end
 
          EXECUTE: begin
@@ -129,19 +130,24 @@ module cpu(
 
                rd_addr <= rs1 << 2;
                rd_en <= 1;
-               ram_rd_target <= LD_TARGET_RS1;
-               state <= RAM_LD;
+               state <= RAM_LD_RS1;
 
             end else if(need_rs2 && !reg_s2_valid) begin
 
                rd_addr <= rs2 << 2;
                rd_en <= 1;
-               ram_rd_target <= LD_TARGET_RS2;
-               state <= RAM_LD;
+               state <= RAM_LD_RS2;
 
             end else begin
 
                case (opcode)
+                  7'b0110011: begin // alu, R-type
+                     wr_addr <= rd << 2;
+                     wr_data <= alu_out;
+                     wr_en <= 1;
+                     state <= RAM_ST;
+                  end
+
                   7'b0010011: begin // alu, I-type
                      wr_addr <= rd << 2;
                      wr_data <= alu_out;
@@ -152,8 +158,7 @@ module cpu(
                   7'b0000011: begin // load, I-type
                      rd_addr = reg_s1_data + imm_I;
                      rd_en <= 1;
-                     ram_rd_target <= LD_TARGET_RD;
-                     state <= RAM_LD;
+                     state <= RAM_LD_RD;
                   end
 
                   7'b0100011: begin // store, S-type
@@ -171,28 +176,37 @@ module cpu(
                   end
 
                   7'b1100011: begin // branch, B-type
+                     state <= FETCH;
                      case (funct3)
                         3'h0: if (alu_zero) begin // beq
                            pc <= pc - 4 + imm_B;
-                           state <= FETCH;
                         end
                         3'h1: if (!alu_zero) begin // bne
                            pc <= pc - 4 + imm_B;
-                           state <= FETCH;
                         end
                         3'h4: if (alu_out) begin // blt
                            pc <= pc - 4 + imm_B;
-                           state <= FETCH;
                         end
                         default: begin
                            state <= FAULT;
                         end
                      endcase
-                     state <= FETCH;
                   end
 
                   7'b1101111: begin // jal, J-type
                      pc <= pc + imm_J - 4;
+                     if (rd != 0) begin
+                        wr_addr <= rd << 2;
+                        wr_data <= pc + 4;
+                        wr_en <= 1;
+                        state <= RAM_ST;
+                     end else begin
+                        state <= FETCH;
+                     end
+                  end
+
+                  7'b1100111: begin // jalr, I-type
+                     pc <= reg_s1_data + imm_I - 4;
                      if (rd != 0) begin
                         wr_addr <= rd << 2;
                         wr_data <= pc;
@@ -202,7 +216,7 @@ module cpu(
                         state <= FETCH;
                      end
                   end
-
+                  
                   default: begin
                      state <= FAULT;
                   end
@@ -211,38 +225,39 @@ module cpu(
             end
          end
 
-         //RAM_LD: begin
-         //   state <= RAM_LD2;
-         //end
-
-         RAM_LD: begin
+         RAM_LD_INST: begin
             if (rd_valid) begin
                rd_en <= 0;
-               case (ram_rd_target)
-                  2'd0: begin
-                     inst <= rd_data;
-                     state <= EXECUTE;
-                  end
-                  2'd1: begin
-                     reg_s1_data <= rd_data;
-                     reg_s1_valid <= 1;
-                     state <= EXECUTE;
-                  end
-                  2'd2: begin
-                     reg_s2_data <= rd_data;
-                     reg_s2_valid <= 1;
-                     state <= EXECUTE;
-                  end
-                  2'd3: begin
-                     wr_addr <= rd << 2;
-                     wr_data <= rd_data;
-                     wr_en <= 1;
-                     state <= RAM_ST;
-                  end
-                  default: begin
-                     state <= FAULT;
-                  end
-               endcase
+               inst <= rd_data;
+               state <= EXECUTE;
+            end
+         end
+
+         RAM_LD_RS1: begin
+            if (rd_valid) begin
+               rd_en <= 0;
+               reg_s1_data <= rd_data;
+               reg_s1_valid <= 1;
+               state <= EXECUTE;
+            end
+         end
+
+         RAM_LD_RS2: begin
+            if (rd_valid) begin
+               rd_en <= 0;
+               reg_s2_data <= rd_data;
+               reg_s2_valid <= 1;
+               state <= EXECUTE;
+            end
+         end
+
+         RAM_LD_RD: begin
+            if (rd_valid) begin
+               rd_en <= 0;
+               wr_addr <= rd << 2;
+               wr_data <= rd_data;
+               wr_en <= 1;
+               state <= RAM_ST;
             end
          end
 

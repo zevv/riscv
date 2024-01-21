@@ -30,10 +30,14 @@ void _start(void)
 
         /* Run main */
 
-	for(;;) {
-		for(volatile int i=0; i<40000; i++);
-		(*led)++;
-	}
+	volatile int a = 13;
+	volatile int b = 27;
+	*led = a * b;
+	//int a = 3;
+	//for(;;) {
+	//	*led = a * a;
+	//	a ++;
+	//}
 
 	for(;;);
 
