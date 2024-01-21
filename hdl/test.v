@@ -1,4 +1,5 @@
 
+`include "machine.v"
 `include "cpu.v"
 
 module test();

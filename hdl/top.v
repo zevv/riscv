@@ -2,6 +2,7 @@
 `default_nettype none
 
 `include "cpu.v"
+`include "machine.v"
 
 
 module top(

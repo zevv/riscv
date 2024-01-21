@@ -9,6 +9,7 @@ VCD := $(NAME).vcd
 
 SRCS += top.v
 SRCS += cpu.v
+SRCS += machine.v
 
 YOSYSFLAGS := -Q -T
 YOSYSCMD := synth_ice40 -top top -json $(NAME).json -noflatten

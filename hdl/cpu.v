@@ -2,9 +2,6 @@
 // https://github.com/jameslzhu/riscv-card/blob/master/riscv-card.pdf
 // https://riscv.org/wp-content/uploads/2017/05/riscv-spec-v2.2.pdf
 
-/* verilator lint_off DECLFILENAME */
-
-
 module cpu(
    input clk,
    output reg rd_en, output reg [15:0] rd_addr, input [31:0] rd_data, input rd_valid,
@@ -24,6 +21,7 @@ module cpu(
       DECODE = 4,
       LOAD = 5,
       LOAD2 = 6,
+      BRANCH = 7,
       LUI = 8,
       ALU = 9,
       STORE = 10,
@@ -32,7 +30,7 @@ module cpu(
       FAIL = 15;
 
 
-   reg [7:0] pc = 0;
+   reg [7:0] pc = 32;
    reg [31:0] inst = 0;
 
    reg fail = 0;
@@ -53,6 +51,26 @@ module cpu(
    reg [2:0] funct3;
    reg [9:0] funct10;
    reg signed [31:0] imm;
+
+   reg [31:0] alu_in1;
+   reg [31:0] alu_in2;
+   wire [31:0] alu_result;
+   reg [2:0] alu_funct = 0;
+   wire alu_zero;
+   wire alu_overflow;
+   wire alu_negative;
+
+   alu alu(
+      .rs1(alu_in1),
+      .rs2(alu_in2),
+      .funct(alu_funct),
+      .result(alu_result),
+      .zero(alu_zero),
+      .overflow(alu_overflow),
+      .negative(alu_negative)
+   );
+
+   wire [6:0] opcode = inst[6:0];
 
    always @(posedge clk) begin
 
@@ -80,13 +98,28 @@ module cpu(
          end
 
          DECODE: begin
-            case (inst[6:0])
+            case (opcode)
+
+               7'b0110011: begin // ALU, R-type
+                  rs1 <= inst[19:15];
+                  rs2 <= inst[24:20];
+                  rd <= inst[11:7];
+                  funct3 <= inst[14:12];
+                  alu_in1 <= x[inst[19:15]];
+                  alu_in2 <= x[inst[24:20]];
+                  alu_funct <= inst[14:12];
+                  state <= ALU;
+               end
 
                7'b0010011: begin // ALU, I-type
                   imm <= inst[31:20];
                   rs1 <= inst[19:15];
+                  rs2 <= inst[24:20];
                   funct3 <= inst[14:12];
                   rd <= inst[11:7];
+                  alu_in1 <= x[inst[19:15]];
+                  alu_in2 <= inst[31:20];
+                  alu_funct <= inst[14:12];
                   state <= ALU;
                end
 
@@ -118,6 +151,18 @@ module cpu(
                   state <= JAL;
                end
 
+               7'b1100011: begin // BRANCH, B-type
+                  imm <= { inst[31], inst[7], inst[30:25], inst[11:8], 1'b0 };
+                  rs1 <= inst[19:15];
+                  rs2 <= inst[24:20];
+                  funct3 <= inst[14:12];
+                  if (inst[14:12] == 3'h0 || inst[14:12] == 3'h1)
+                     alu_funct <= 3'h0; // SUB
+                  else
+                     alu_funct <= 3'h3; // SLTU
+                  state <= BRANCH;
+               end
+
                default: begin
                   state <= FAIL;
                end
@@ -146,6 +191,20 @@ module cpu(
             end
          end
 
+         BRANCH: begin
+            state <= FETCH;
+            case (funct3)
+               3'h0: // BEQ
+                  if (alu_zero) pc <= (pc - 4) + imm;
+               3'h4: // BLT
+                  if (alu_result[0]) pc <= (pc - 4) + imm;
+               3'h5: // BGE
+                  if (!alu_result[0]) pc <= (pc - 4) + imm;
+               default:
+                  state <= FAIL;
+            endcase
+         end
+
          STORE: begin
             case (funct3)
                3'b010: begin
@@ -172,15 +231,8 @@ module cpu(
          end
 
          ALU: begin
-            case (funct3)
-               3'b000: begin // ADDI
-                  //$display("  addi x%d, x%d, %d", rd, rs1, imm);
-                  x[rd] <= x[rs1] + imm;
-                  state <= FETCH;
-               end
-               default:
-                  state <= FAIL;
-            endcase
+            x[rd] <= alu_result;
+            state <= FETCH;
          end
 
          JAL: begin
@@ -201,178 +253,70 @@ endmodule
 
 
 
-
-module machine(
-   input clk,
-   output debug
+module alu(
+   input [31:0] rs1,
+   input [31:0] rs2,
+   input [2:0] funct,
+   output reg [31:0] result,
+   output reg zero,
+   output reg overflow,
+   output reg negative
 );
 
-   reg ram_rd_en = 0;
-   reg [15:0] ram_rd_addr;
-   wire [31:0] ram_rd_data;
-   wire ram_rd_valid;
-   reg ram_wr_en = 0;
-   reg [15:0] ram_wr_addr = 0;
-   reg [31:0] ram_wr_data = 0;
-
-   ram ram0(
-      .clk(clk),
-      .rd_en(ram_rd_en), .rd_addr(ram_rd_addr), .rd_data(ram_rd_data), .rd_valid(ram_rd_valid),
-      .wr_en(ram_wr_en), .wr_addr(ram_wr_addr), .wr_data(ram_wr_data)
-   );
-
-
-   reg led_rd_en = 0;
-   reg [15:0] led_rd_addr;
-   wire [31:0] led_rd_data;
-   wire led_rd_valid;
-   reg led_wr_en = 0;
-   reg [15:0] led_wr_addr = 0;
-   reg [31:0] led_wr_data = 0;
-
-   led led0(
-      .clk(clk),
-      .rd_en(led_rd_en), .rd_addr(led_rd_addr), .rd_data(led_rd_data), .rd_valid(led_rd_valid),
-      .wr_en(led_wr_en), .wr_addr(led_wr_addr), .wr_data(led_wr_data), .led(debug)
-   );
-
-
-   wire cpu_rd_en;
-   wire [15:0] cpu_rd_addr;
-   reg [31:0] cpu_rd_data;
-   reg cpu_rd_valid;
-   wire cpu_wr_en;
-   wire [15:0] cpu_wr_addr;
-   wire [31:0] cpu_wr_data;
-
-   cpu cpu0(
-      .clk(clk),
-      .rd_en(cpu_rd_en), .rd_addr(cpu_rd_addr), .rd_data(cpu_rd_data), .rd_valid(cpu_rd_valid),
-      .wr_en(cpu_wr_en), .wr_addr(cpu_wr_addr), .wr_data(cpu_wr_data)
-   );
-
-
-   // Bus arbiter
-
-   always @(*) begin
-      
-      cpu_rd_valid = 0;
-      cpu_rd_data = 0;
-
-      ram_rd_en = 0;
-      ram_rd_addr = 0;
-      ram_wr_en = 0;
-      ram_wr_addr = 0;
-      ram_wr_data = 0;
-
-      led_rd_en = 0;
-      led_wr_en = 0;
-      led_rd_addr = 0;
-      led_wr_addr = 0;
-      led_wr_data = 0;
-
-      if (cpu_rd_en) begin
-
-         if (cpu_rd_addr[15:12] == 4'h0) begin
-            ram_rd_en = cpu_rd_en;
-            ram_rd_addr = cpu_rd_addr[11:0];
-         end 
-      
-         if (cpu_rd_addr[15:12] == 4'b1) begin
-            led_rd_en = cpu_rd_en;
-            led_rd_addr = cpu_rd_addr[11:0];
-         end 
-      end
-
-      if (cpu_wr_en) begin
-
-         if(cpu_wr_addr[15:12] == 4'h0) begin
-            ram_wr_en = cpu_wr_en;
-            ram_wr_addr = cpu_wr_addr[11:0];
-            ram_wr_data = cpu_wr_data;
-         end
-         
-         if (cpu_wr_addr[15:12] == 4'b1) begin
-            led_wr_en = cpu_wr_en;
-            led_wr_addr = cpu_wr_addr[11:0];
-            led_wr_data = cpu_wr_data;
-         end
-      end
-
-      if(ram_rd_valid) begin
-         cpu_rd_data = ram_rd_data;
-         cpu_rd_valid = ram_rd_valid;
-      end
-
-      if(led_rd_valid) begin
-         cpu_rd_data = led_rd_data;
-         cpu_rd_valid = led_rd_valid;
-      end
-
-   end
-
-endmodule
-
-
-module ram(
-   input wire clk,
-   input wire rd_en, input wire [15:0] rd_addr, output reg [31:0] rd_data, output reg rd_valid,
-   input wire wr_en, input wire [15:0] wr_addr, input wire [31:0] wr_data
-);
-
-   localparam SIZE = 256;
-
-   reg [31:0] memory [0:SIZE-1];
-
-   initial begin
-      $readmemh("../src/t.mem", memory);
-   end
-
-   always @(posedge clk)
+   always @(*)
    begin
-      rd_valid <= 0;
-      if (rd_en && (rd_addr < SIZE*4)) begin
-         rd_data <= memory[rd_addr>>2];
-         rd_valid <= 1;
-      end
-      if(wr_en) begin
-         memory[wr_addr>>2] <= wr_data;
-      end
+
+      case (funct)
+         3'h0: begin // ADD
+            result = rs1 + rs2;
+         end
+
+         3'h4: begin // XOR
+            result = rs1 ^ rs2;
+         end
+
+         3'h6: begin // OR
+            result = rs1 | rs2;
+         end
+
+         3'h7: begin // AND
+            result = rs1 & rs2;
+         end
+
+         3'h1: begin // SLL
+            result = rs1 << rs2[4:0];
+         end
+
+         3'h5: begin // SRL
+            result = rs1 >> rs2[4:0];
+         end
+
+         3'h2: begin // SLT
+            result = (rs1 < rs2) ? 1 : 0;
+         end
+
+         3'h3: begin // SLTU
+            result = (rs1 < rs2) ? 1 : 0;
+         end
+
+         default: begin
+            result = 0;
+         end
+
+      endcase
+
+      zero = (result == 0) ? 1 : 0;
+      overflow = 0;
+      negative = result[31];
+
    end
 
 endmodule
 
+   
 
-module led(
-   input wire clk,
-   input wire rd_en, input wire [15:0] rd_addr, output reg [31:0] rd_data, output reg rd_valid,
-   input wire wr_en, input wire [15:0] wr_addr, input wire [31:0] wr_data,
-   output led
-);
 
-   reg [31:0] val = 0;
 
-   always @(posedge clk)
-   begin
-      rd_valid <= 0;
-      if(rd_en) begin
-         if (rd_addr == 0) begin
-            //$display("LED rd %d", val);
-            rd_data <= val;
-            rd_valid <= 1;
-         end
-      end
-      if(wr_en) begin
-         if (wr_addr == 0) begin
-            //$display("LED wr %d", wr_data);
-            val <= wr_data;
-         end
-      end
-   end
-
-   assign led = val[20];
-
-endmodule
 
 
 // vi: ft=verilog ts=3 sw=3 et
