@@ -5,7 +5,8 @@
 
 module machine(
    input clk,
-   output debug
+   output debug,
+   output led
 );
 
    reg ram_rd_en = 0;
@@ -34,7 +35,7 @@ module machine(
    led led0(
       .clk(clk),
       .rd_en(led_rd_en), .rd_addr(led_rd_addr), .rd_data(led_rd_data), .rd_valid(led_rd_valid),
-      .wr_en(led_wr_en), .wr_addr(led_wr_addr), .wr_data(led_wr_data), .led(debug)
+      .wr_en(led_wr_en), .wr_addr(led_wr_addr), .wr_data(led_wr_data), .led(led)
    );
 
 
@@ -49,11 +50,11 @@ module machine(
    cpu cpu0(
       .clk(clk),
       .rd_en(cpu_rd_en), .rd_addr(cpu_rd_addr), .rd_data(cpu_rd_data), .rd_valid(cpu_rd_valid),
-      .wr_en(cpu_wr_en), .wr_addr(cpu_wr_addr), .wr_data(cpu_wr_data)
+      .wr_en(cpu_wr_en), .wr_addr(cpu_wr_addr), .wr_data(cpu_wr_data), .debug(debug)
    );
 
 
-   // Bus arbiter
+   // Bus connections / address mapping
 
    always @(*) begin
       
@@ -122,23 +123,30 @@ module ram(
    input wire wr_en, input wire [15:0] wr_addr, input wire [31:0] wr_data
 );
 
-   localparam SIZE = 256;
+   localparam SIZE = 512;
 
-   reg [31:0] memory [0:SIZE-1];
+   reg [7:0] mem0 [0:SIZE-1];
+   reg [7:0] mem1 [0:SIZE-1];
+   reg [7:0] mem2 [0:SIZE-1];
+   reg [7:0] mem3 [0:SIZE-1];
 
    initial begin
-      $readmemh("../src/t.mem", memory);
+      $readmemh("../src/t.mem.0", mem0);
+      $readmemh("../src/t.mem.1", mem1);
+      $readmemh("../src/t.mem.2", mem2);
+      $readmemh("../src/t.mem.3", mem3);
    end
 
    always @(posedge clk)
    begin
-      rd_valid <= 0;
       if (rd_en && (rd_addr < SIZE*4)) begin
-         rd_data <= memory[rd_addr>>2];
+         rd_data <= { mem3[rd_addr>>2], mem2[rd_addr>>2], mem1[rd_addr>>2], mem0[rd_addr>>2] };
          rd_valid <= 1;
+      end else begin
+         rd_valid <= 0;
       end
       if(wr_en) begin
-         memory[wr_addr>>2] <= wr_data;
+         { mem3[wr_addr>>2], mem2[wr_addr>>2], mem1[wr_addr>>2], mem0[wr_addr>>2] } <= wr_data;
       end
    end
 
@@ -159,20 +167,20 @@ module led(
       rd_valid <= 0;
       if(rd_en) begin
          if (rd_addr == 0) begin
-            //$display("LED rd %d", val);
+            //$display("LED rd %x", val);
             rd_data <= val;
             rd_valid <= 1;
          end
       end
       if(wr_en) begin
          if (wr_addr == 0) begin
-            //$display("LED wr %d", wr_data);
+            //$display("LED wr %x", wr_data);
             val <= wr_data;
          end
       end
    end
 
-   assign led = val[2];
+   assign led = val[16];
 
 endmodule
 

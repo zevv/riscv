@@ -17,10 +17,8 @@ t.elf: t.o
 t.bin: t.elf
 	llvm-objcopy-16 -O binary t.elf t.bin
 
-t.mem: t.bin
-	echo "00000000 00000000 00000000 00000000" > t.mem
-	echo "00000000 00000000 00000000 00000000" >> t.mem
-	xxd -e -g 4 < ../src/t.bin  | cut -c 11-45 >> t.mem
+t.mem: t.bin genmem
+	./genmem < t.bin 
 
 t.S: t.elf
 	llvm-objdump-16 -S t.elf > t.S

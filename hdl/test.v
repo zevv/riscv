@@ -9,7 +9,7 @@ module test();
       $dumpfile("test.vcd");
       $dumpvars(0, test);
       for (i = 0; i < 32; i++) begin
-         $dumpvars(0, machine, machine.cpu0.x[i]);
+         //$dumpvars(0, machine, machine.ram0.memory[i]);
       end
       #2000
       $finish;
@@ -23,10 +23,12 @@ module test();
    end
 
    wire debug;
+   wire led;
 
    machine machine(
       .clk(clk),
-      .debug(debug)
+      .debug(debug),
+      .led(led)
    );
 
 endmodule

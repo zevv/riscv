@@ -19,7 +19,6 @@ NEXTPNRFLAGS += --ignore-loops
 all: $(BIN)
 
 
-
 cpu.v: ../src/t.mem
 
 sim: $(VCD)

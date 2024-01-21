@@ -30,10 +30,12 @@ void _start(void)
 
         /* Run main */
 
-	(*led) = 0x10000000;
+	(*led) = 0x1234;
 	for(;;) {
 		(*led) ++;
-		if(*led > 0x10000002) (*led) -= 5;
+		if((*led ) == 0x1238) {
+			//(*led) = 0x1234;
+		}
 	}
 	for(;;);
 

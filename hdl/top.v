@@ -30,7 +30,7 @@ module top(
       .FEEDBACK_PATH("SIMPLE"),
 		.DIVR(4'b0010),		// DIVR =  2
 		.DIVF(7'b0111111),	// DIVF = 63
-		.DIVQ(3'b101),		// DIVQ =  5
+		.DIVQ(3'b110),		// DIVQ =  6
 		.FILTER_RANGE(3'b001)	// FILTER_RANGE = 1
 	) uut (
 		.LOCK(locked),
@@ -40,10 +40,10 @@ module top(
 		.PLLOUTCORE(clk)
    );
 
-
    machine machine(
       .clk(clk),
-      .debug(RGB2)
+      .debug(IOT_37A),
+      .led(RGB2)
    );
 
 
