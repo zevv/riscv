@@ -28,6 +28,7 @@ module cpu(
    wire        [11:0] imm_S = {inst[31:25], inst[11:7]};
    wire signed [31:0] imm_U = {inst[31:12], 12'b0};
    wire signed [30:0] imm_J = {inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
+   wire signed [12:0] imm_B = {inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
 
    reg [31:0] reg_s1_data = 0;
    reg reg_s1_valid = 0;
@@ -55,7 +56,7 @@ module cpu(
          if(funct3 == 3'h0 || funct3 == 3'h1)
             alu_fn = 4'h8; // SUB
          else
-            alu_fn = 4'h4; // BLT
+            alu_fn = 4'h2; // BLT
    end
 
    alu alu(
@@ -72,18 +73,32 @@ module cpu(
    localparam
       BOOT = 0,
       FETCH = 1,
-      DECODE = 2,
-      RAM_WR = 3,
-      RAM_RD = 4,
-      RAM_RD2 = 5,
-      BRANCH = 6,
-      FAIL = 15;
+      EXECUTE = 2,
+      RAM_ST = 3,
+      RAM_LD = 4,
+      RAM_LD2 = 5,
+      FAULT = 15;
 
    reg [1:0] ram_rd_target = 0;
 
+   localparam
+      LD_TARGET_INST = 0,
+      LD_TARGET_RS1 = 1,
+      LD_TARGET_RS2 = 2,
+      LD_TARGET_RD = 3;
+
    always @(*) begin
-      //debug = (inst[0] == 0);
+      debug = (state == FETCH);
    end
+
+   reg need_rs1;
+   reg need_rs2;
+
+   always @(*) begin
+      need_rs1 = !(opcode == 7'b1101111 || opcode == 7'b0110111 || opcode == 7'b0010111);
+      need_rs2 =  (opcode == 7'b0110011 || opcode == 7'b0100011 || opcode == 7'b1100011);
+   end
+
    
    always @(posedge clk) begin
 
@@ -97,8 +112,6 @@ module cpu(
          end
 
          FETCH: begin
-            // $display("%x:", pc);
-
             reg_s1_valid <= 0;
             reg_s2_valid <= 0;
             
@@ -106,164 +119,140 @@ module cpu(
             
             rd_addr <= pc;
             rd_en <= 1;
-            ram_rd_target <= 0;
-            state <= RAM_RD;
+            ram_rd_target <= LD_TARGET_INST;
+            state <= RAM_LD;
          end
 
-         DECODE: begin
+         EXECUTE: begin
 
-            case (opcode)
+            if(need_rs1 && !reg_s1_valid) begin
 
-               7'b0010011: begin // alu, I-type
-                  if(!reg_s1_valid) begin
-                     // $display("alu%d x%d, x%d, %d", funct3, rd, rs1, imm_I);
-                     rd_addr <= rs1 << 2;
-                     rd_en <= 1;
-                     ram_rd_target <= 1;
-                     state <= RAM_RD;
-                  end else begin
-                     //alu_fn <= funct3;
+               rd_addr <= rs1 << 2;
+               rd_en <= 1;
+               ram_rd_target <= LD_TARGET_RS1;
+               state <= RAM_LD;
+
+            end else if(need_rs2 && !reg_s2_valid) begin
+
+               rd_addr <= rs2 << 2;
+               rd_en <= 1;
+               ram_rd_target <= LD_TARGET_RS2;
+               state <= RAM_LD;
+
+            end else begin
+
+               case (opcode)
+                  7'b0010011: begin // alu, I-type
                      wr_addr <= rd << 2;
                      wr_data <= alu_out;
                      wr_en <= 1;
-                     state <= RAM_WR;
+                     state <= RAM_ST;
                   end
-               end
 
-               7'b0000011: begin // load, I-type
-                  if(!reg_s1_valid) begin
-                     // $display("lw x%d, %d(x%d)", rd, imm_I, rs1);
-                     rd_addr <= rs1 << 2;
-                     rd_en <= 1;
-                     ram_rd_target = 1;
-                     state <= RAM_RD;
-                  end else begin
+                  7'b0000011: begin // load, I-type
                      rd_addr = reg_s1_data + imm_I;
                      rd_en <= 1;
-                     ram_rd_target <= 3;
-                     state <= RAM_RD;
+                     ram_rd_target <= LD_TARGET_RD;
+                     state <= RAM_LD;
                   end
-               end
 
-               7'b0100011: begin // store, S-type
-                  if(!reg_s1_valid) begin
-                     // $display("sw x%d, %d(x%d)", rs2, imm_I, rs1);
-                     rd_addr <= rs1 << 2;
-                     rd_en <= 1;
-                     ram_rd_target <= 1;
-                     state <= RAM_RD;
-                  end else if(!reg_s2_valid) begin
-                     rd_addr <= rs2 << 2;
-                     rd_en <= 1;
-                     ram_rd_target <= 2;
-                     state <= RAM_RD;
-                  end else begin
+                  7'b0100011: begin // store, S-type
                      wr_addr = reg_s1_data + imm_S;
                      wr_data = reg_s2_data;
                      wr_en <= 1;
-                     state <= RAM_WR;
+                     state <= RAM_ST;
                   end
-               end
 
-               7'b0110111: begin // lui, U-type
-                  // $display("lui x%d, %x", rd, imm_U);
-                  wr_addr <= rd << 2;
-                  wr_data <= {inst[31:12], 12'b0};
-                  wr_en <= 1;
-                  state <= RAM_WR;
-               end
-
-               7'b1100011: begin // branch, B-type
-                  if(!reg_s1_valid) begin
-                     // $display("beq x%d, x%d, %d", rs1, rs2, imm_I);
-                     rd_addr <= rs1 << 2;
-                     rd_en <= 1;
-                     ram_rd_target <= 1;
-                     state <= RAM_RD;
-                  end else if(!reg_s2_valid) begin
-                     rd_addr <= rs2 << 2;
-                     rd_en <= 1;
-                     ram_rd_target <= 2;
-                     state <= RAM_RD;
-                  end else begin
-                     state <= BRANCH;
+                  7'b0110111: begin // lui, U-type
+                     wr_addr <= rd << 2;
+                     wr_data <= {inst[31:12], 12'b0};
+                     wr_en <= 1;
+                     state <= RAM_ST;
                   end
-               end
 
-               7'b1101111: begin // jal, J-type
-                  // $display("jal x%d, %x", rd, imm_J);
-                  pc <= pc - 4 + imm_J;
-                  wr_addr <= rd << 2;
-                  wr_data <= pc;
-                  wr_en <= 1;
-                  state <= RAM_WR;
-               end
+                  7'b1100011: begin // branch, B-type
+                     case (funct3)
+                        3'h0: if (alu_zero) begin // beq
+                           pc <= pc - 4 + imm_B;
+                           state <= FETCH;
+                        end
+                        3'h1: if (!alu_zero) begin // bne
+                           pc <= pc - 4 + imm_B;
+                           state <= FETCH;
+                        end
+                        3'h4: if (alu_out) begin // blt
+                           pc <= pc - 4 + imm_B;
+                           state <= FETCH;
+                        end
+                        default: begin
+                           state <= FAULT;
+                        end
+                     endcase
+                     state <= FETCH;
+                  end
 
-               default: begin
-                  state <= FAIL;
-               end
+                  7'b1101111: begin // jal, J-type
+                     pc <= pc + imm_J - 4;
+                     if (rd != 0) begin
+                        wr_addr <= rd << 2;
+                        wr_data <= pc;
+                        wr_en <= 1;
+                        state <= RAM_ST;
+                     end else begin
+                        state <= FETCH;
+                     end
+                  end
 
-            endcase
+                  default: begin
+                     state <= FAULT;
+                  end
+
+               endcase
+            end
          end
 
-         RAM_RD: begin
-            state <= RAM_RD2;
+         RAM_LD: begin
+            state <= RAM_LD2;
          end
 
-         BRANCH: begin
-            case (funct3)
-               3'h0: if ( alu_zero) begin
-                  $display("beq x%d, x%d, %d", rs1, rs2, imm_I);
-                  pc <= pc - 4 + imm_I;
-               end
-               3'h1: if (!alu_zero) begin
-                  $display("bne x%d, x%d, %d", rs1, rs2, imm_I);
-                  pc <= pc - 4 + imm_I;
-               end
-            endcase
-            state <= FETCH;
-         end
-
-         RAM_RD2: begin
-            debug <= (rd_data[7:0] == 'h0);
-            
+         RAM_LD2: begin
             if (rd_valid) begin
                rd_en <= 0;
                case (ram_rd_target)
                   2'd0: begin
                      inst <= rd_data;
-                     state <= DECODE;
+                     state <= EXECUTE;
                   end
                   2'd1: begin
                      reg_s1_data <= rd_data;
                      reg_s1_valid <= 1;
-                     state <= DECODE;
+                     state <= EXECUTE;
                   end
                   2'd2: begin
                      reg_s2_data <= rd_data;
                      reg_s2_valid <= 1;
-                     state <= DECODE;
+                     state <= EXECUTE;
                   end
                   2'd3: begin
                      wr_addr <= rd << 2;
                      wr_data <= rd_data;
                      wr_en <= 1;
-                     state <= RAM_WR;
+                     state <= RAM_ST;
                   end
                   default: begin
-                     state <= FAIL;
+                     state <= FAULT;
                   end
                endcase
             end
          end
 
-         RAM_WR: begin
+         RAM_ST: begin
             wr_en <= 0;
             state <= FETCH;
          end
 
          default: begin
-            state <= FAIL;
+            state <= FAULT;
          end
       endcase
    end

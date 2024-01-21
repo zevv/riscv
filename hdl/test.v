@@ -9,7 +9,7 @@ module test();
       $dumpfile("test.vcd");
       $dumpvars(0, test);
       for (i = 0; i < 32; i++) begin
-         //$dumpvars(0, machine, machine.ram0.memory[i]);
+         //$dumpvars(0, machine, machine.ram0.mem[i]);
       end
       #2000
       $finish;

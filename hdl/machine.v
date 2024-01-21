@@ -125,28 +125,30 @@ module ram(
 
    localparam SIZE = 512;
 
-   reg [7:0] mem0 [0:SIZE-1];
-   reg [7:0] mem1 [0:SIZE-1];
-   reg [7:0] mem2 [0:SIZE-1];
-   reg [7:0] mem3 [0:SIZE-1];
+   reg [31:0] mem [0:SIZE-1];
+
+   wire [31:0] zero = mem[0];
+   wire [31:0] ra = mem[1];
+   wire [31:0] sp = mem[2];
+   wire [31:0] a0 = mem[10];
+   wire [31:0] a1 = mem[11];
+   wire [31:0] a2 = mem[12];
+   wire [31:0] a3 = mem[13];
 
    initial begin
-      $readmemh("../src/t.mem.0", mem0);
-      $readmemh("../src/t.mem.1", mem1);
-      $readmemh("../src/t.mem.2", mem2);
-      $readmemh("../src/t.mem.3", mem3);
+      $readmemh("../src/t.mem", mem);
    end
 
    always @(posedge clk)
    begin
       if (rd_en && (rd_addr < SIZE*4)) begin
-         rd_data <= { mem3[rd_addr>>2], mem2[rd_addr>>2], mem1[rd_addr>>2], mem0[rd_addr>>2] };
+         rd_data <= mem[rd_addr>>2];
          rd_valid <= 1;
       end else begin
          rd_valid <= 0;
       end
       if(wr_en) begin
-         { mem3[wr_addr>>2], mem2[wr_addr>>2], mem1[wr_addr>>2], mem0[wr_addr>>2] } <= wr_data;
+         mem[wr_addr>>2] <= wr_data;
       end
    end
 
@@ -180,7 +182,7 @@ module led(
       end
    end
 
-   assign led = val[16];
+   assign led = val[0];
 
 endmodule
 

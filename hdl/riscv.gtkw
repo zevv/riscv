@@ -1,22 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sun Jan 21 15:03:35 2024
+[*] Sun Jan 21 19:29:52 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Sun Jan 21 14:59:56 2024"
-[dumpfile_size] 135754
+[dumpfile_mtime] "Sun Jan 21 19:27:16 2024"
+[dumpfile_size] 116099
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
-[timestart] 489
-[size] 1451 929
+[timestart] 715
+[size] 1451 1015
 [pos] -1 -1
-*-5.700000 15 15 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.699999 725 725 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
 [treeopen] test.machine.cpu0.
 [sst_width] 269
 [signals_width] 166
 [sst_expanded] 1
-[sst_vpaned_height] 274
+[sst_vpaned_height] 301
 @28
 test.clk
 test.led
@@ -25,12 +25,17 @@ test.debug
 -Decoder
 @22
 test.machine.cpu0.pc[7:0]
+@2023
+^1 /home/ico/sandbox/prjs/riscv/hdl/states.txt
 test.machine.cpu0.state[3:0]
+@22
 test.machine.cpu0.inst[31:0]
 @28
 test.machine.cpu0.opcode[6:0]
 @22
+test.machine.cpu0.funct3[3:0]
 test.machine.cpu0.imm_I[11:0]
+test.machine.cpu0.imm_B[12:0]
 test.machine.cpu0.imm_J[30:0]
 @200
 -CPU memory
@@ -50,14 +55,23 @@ test.machine.cpu0.rd_valid
 @22
 test.machine.cpu0.rs1[4:0]
 @28
+test.machine.cpu0.need_rs1
 test.machine.cpu0.reg_s1_valid
 @22
 test.machine.cpu0.reg_s1_data[31:0]
-@28
-test.machine.cpu0.reg_s2_valid
+@200
+-
 @22
 test.machine.cpu0.rs2[4:0]
+@28
+test.machine.cpu0.need_rs2
+test.machine.cpu0.reg_s2_valid
+@22
 test.machine.cpu0.reg_s2_data[31:0]
+@20000
+-
+@22
+test.machine.cpu0.rd[4:0]
 @200
 -LED
 @22
@@ -65,17 +79,25 @@ test.machine.led0.val[31:0]
 @200
 -ALU
 @22
+test.machine.cpu0.alu_fn[3:0]
 test.machine.cpu0.alu_in1[31:0]
 test.machine.cpu0.alu_in2[31:0]
-@28
-test.machine.cpu0.alu_funct[2:0]
-@22
 test.machine.cpu0.alu_out[31:0]
+@28
+test.machine.cpu0.alu_zero
+test.machine.cpu0.alu_negative
+@200
+-Registers
+@22
+test.machine.ram0.zero[31:0]
+test.machine.ram0.a0[31:0]
+test.machine.ram0.a1[31:0]
+test.machine.ram0.a2[31:0]
+test.machine.ram0.a3[31:0]
+test.machine.ram0.sp[31:0]
 @200
 -
-@201
 -
-@200
 -
 -
 -
