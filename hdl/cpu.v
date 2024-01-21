@@ -211,11 +211,11 @@ module cpu(
             end
          end
 
-         RAM_LD: begin
-            state <= RAM_LD2;
-         end
+         //RAM_LD: begin
+         //   state <= RAM_LD2;
+         //end
 
-         RAM_LD2: begin
+         RAM_LD: begin
             if (rd_valid) begin
                rd_en <= 0;
                case (ram_rd_target)
