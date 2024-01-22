@@ -75,8 +75,6 @@ module cpu(
       FETCH = 1,
       EXECUTE = 2,
       RAM_ST = 3,
-      RAM_LD = 4,
-      RAM_LD2 = 5,
       RAM_LD_RS1 = 6,
       RAM_LD_RS2 = 7,
       RAM_LD_RD = 8,

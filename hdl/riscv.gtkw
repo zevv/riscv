@@ -1,22 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sun Jan 21 19:29:52 2024
+[*] Mon Jan 22 06:32:14 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Sun Jan 21 19:27:16 2024"
-[dumpfile_size] 116099
+[dumpfile_mtime] "Mon Jan 22 06:30:43 2024"
+[dumpfile_size] 671010
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
-[timestart] 715
+[timestart] 107
 [size] 1451 1015
 [pos] -1 -1
-*-2.699999 725 725 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.999999 128 725 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
 [treeopen] test.machine.cpu0.
 [sst_width] 269
 [signals_width] 166
 [sst_expanded] 1
-[sst_vpaned_height] 301
+[sst_vpaned_height] 302
 @28
 test.clk
 test.led
@@ -25,7 +25,7 @@ test.debug
 -Decoder
 @22
 test.machine.cpu0.pc[7:0]
-@2023
+@2022
 ^1 /home/ico/sandbox/prjs/riscv/hdl/states.txt
 test.machine.cpu0.state[3:0]
 @22
@@ -34,9 +34,6 @@ test.machine.cpu0.inst[31:0]
 test.machine.cpu0.opcode[6:0]
 @22
 test.machine.cpu0.funct3[3:0]
-test.machine.cpu0.imm_I[11:0]
-test.machine.cpu0.imm_B[12:0]
-test.machine.cpu0.imm_J[30:0]
 @200
 -CPU memory
 @22
@@ -70,11 +67,12 @@ test.machine.cpu0.reg_s2_valid
 test.machine.cpu0.reg_s2_data[31:0]
 @20000
 -
-@22
+@23
 test.machine.cpu0.rd[4:0]
 @200
 -LED
 @22
+[color] 6
 test.machine.led0.val[31:0]
 @200
 -ALU

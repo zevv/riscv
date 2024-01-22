@@ -30,8 +30,8 @@ void _start(void)
 
         /* Run main */
 
-	volatile int a = 13;
-	volatile int b = 27;
+	volatile int a = 1000;
+	volatile int b = 1000;
 	*led = a * b;
 	//int a = 3;
 	//for(;;) {

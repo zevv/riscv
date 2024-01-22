@@ -21,6 +21,11 @@ all: $(BIN)
 
 cpu.v: ../src/t.mem
 
+../src/t.mem: ../src/t.c
+
+../src/t.mem:
+	$(MAKE) -C ../src
+
 sim: $(VCD)
 
 $(BIN): $(ASC)
