@@ -11,6 +11,7 @@ extern uint8_t _edata;
 extern uint8_t _estack;
 extern uint8_t _sstack;
 
+
 void _start(void)
 {
 	//register uint8_t *src, *dst;
@@ -40,14 +41,24 @@ void _start(void)
 	}
 
 	if(1) {
-		*uart_data = 0x55;
-		*led = *uart_ctrl;
+		for(;;) {
+			char *s = "ABCDEFGH\n";
+			while(*s) {
+				*uart_data = *s++;
+				while(*uart_ctrl);
+			}
+			volatile int i;
+			for(i=0; i<40000; i++);
+		}
 	}
-	//int a = 3;
-	//for(;;) {
-	//	*led = a * a;
-	//	a ++;
-	//}
+
+	if(0) {
+		for(;;) {
+			volatile int i;
+			for(i=0; i<40000; i++);
+			(*led)++;
+		}
+	}
 
 	for(;;);
 

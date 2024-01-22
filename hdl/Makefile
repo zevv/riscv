@@ -20,7 +20,7 @@ NEXTPNRFLAGS += --ignore-loops
 all: $(BIN)
 
 
-cpu.v: ../src/t.mem
+machine.v: ../src/t.mem
 
 ../src/t.mem: ../src/t.c
 

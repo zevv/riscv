@@ -12,6 +12,7 @@ module top(
    output RGB2,
    output IOT_37A,
    output IOT_41A,
+   output IOB_13B,
    input IOT_50B,
 );
    
@@ -44,7 +45,8 @@ module top(
    machine machine(
       .clk(clk),
       .debug(IOT_37A),
-      .led(RGB2)
+      .led(RGB2),
+      .uart_tx(IOB_13B)
    );
 
 

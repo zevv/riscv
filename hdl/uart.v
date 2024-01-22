@@ -13,12 +13,12 @@ module uart(
 		tx <= 1;
 	end
 
-	localparam DIVIDER = 104;
+	localparam DIVIDER = 139;
 
-	reg [8:0] shift;
+	reg [9:0] shift = 0;
 	reg [7:0] status = 0;
-	reg [4:0] n;
-	reg [5:0] div;
+	reg [4:0] n = 0;
+	reg [12:0] div = 0;
 
 	always @(*) begin
 		status[0] = (n != 0);
@@ -26,12 +26,13 @@ module uart(
 
 	always @(posedge clk)
 	begin
+		rd_valid <= 0;
 
 		if (wr_en) begin
 			case (addr)
 				'h0: begin
-					shift <= { 1'b1, wr_data };
-					n <= 9;
+					shift <= { 1'b1, wr_data, 1'b0 };
+					n <= 10;
 					div <= DIVIDER;
 					tx <= 0;
 				end
@@ -41,20 +42,17 @@ module uart(
 		if (rd_en) begin
 			case (addr)
 				'h1: begin
-					rd_data <= 'h42;
+					rd_data <= status;
 					rd_valid <= 1;
 				end
 			endcase
 		end
-	end
 
-	always @(posedge clk)
-	begin
 
 		if (n > 0) begin
 			div <= div - 1;
 
-			if(div == 0) begin
+			if (div == 0) begin
 				div <= DIVIDER;
 				n <= n - 1;
 				tx <= shift[0];
@@ -64,9 +62,15 @@ module uart(
 		end else begin
 			tx <= 1;
 		end
-
 	end
+
+//	always @(posedge clk)
+//	begin
+//
+//
+//	end
 
 
 endmodule
 
+// vi: ft=verilog ts=3 sw=3 et
