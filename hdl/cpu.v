@@ -4,8 +4,8 @@
 
 module cpu(
    input clk,
-   output reg rd_en = 0, output reg [15:0] rd_addr = 0, input [31:0] rd_data, input rd_valid,
-   output reg wr_en = 0, output reg [15:0] wr_addr = 0, output reg [31:0] wr_data = 0,
+   output reg rd_en = 0, output reg [15:0] o_addr = 0, input [31:0] rd_data, input rd_valid,
+   output reg wr_en = 0, output reg [31:0] wr_data = 0,
    output reg debug
 );
 
@@ -117,7 +117,7 @@ module cpu(
             
             pc <= pc + 4;
             
-            rd_addr <= pc;
+            o_addr <= pc;
             rd_en <= 1;
             state <= RAM_LD_INST;
          end
@@ -126,13 +126,13 @@ module cpu(
 
             if(need_rs1 && !reg_s1_valid) begin
 
-               rd_addr <= rs1 << 2;
+               o_addr <= rs1 << 2;
                rd_en <= 1;
                state <= RAM_LD_RS1;
 
             end else if(need_rs2 && !reg_s2_valid) begin
 
-               rd_addr <= rs2 << 2;
+               o_addr <= rs2 << 2;
                rd_en <= 1;
                state <= RAM_LD_RS2;
 
@@ -140,34 +140,34 @@ module cpu(
 
                case (opcode)
                   7'b0110011: begin // alu, R-type
-                     wr_addr <= rd << 2;
+                     o_addr <= rd << 2;
                      wr_data <= alu_out;
                      wr_en <= 1;
                      state <= RAM_ST;
                   end
 
                   7'b0010011: begin // alu, I-type
-                     wr_addr <= rd << 2;
+                     o_addr <= rd << 2;
                      wr_data <= alu_out;
                      wr_en <= 1;
                      state <= RAM_ST;
                   end
 
                   7'b0000011: begin // load, I-type
-                     rd_addr = reg_s1_data + imm_I;
+                     o_addr = reg_s1_data + imm_I;
                      rd_en <= 1;
                      state <= RAM_LD_RD;
                   end
 
                   7'b0100011: begin // store, S-type
-                     wr_addr = reg_s1_data + imm_S;
+                     o_addr = reg_s1_data + imm_S;
                      wr_data = reg_s2_data;
                      wr_en <= 1;
                      state <= RAM_ST;
                   end
 
                   7'b0110111: begin // lui, U-type
-                     wr_addr <= rd << 2;
+                     o_addr <= rd << 2;
                      wr_data <= {inst[31:12], 12'b0};
                      wr_en <= 1;
                      state <= RAM_ST;
@@ -194,7 +194,7 @@ module cpu(
                   7'b1101111: begin // jal, J-type
                      pc <= pc + imm_J - 4;
                      if (rd != 0) begin
-                        wr_addr <= rd << 2;
+                        o_addr <= rd << 2;
                         wr_data <= pc + 4;
                         wr_en <= 1;
                         state <= RAM_ST;
@@ -206,7 +206,7 @@ module cpu(
                   7'b1100111: begin // jalr, I-type
                      pc <= reg_s1_data + imm_I - 4;
                      if (rd != 0) begin
-                        wr_addr <= rd << 2;
+                        o_addr <= rd << 2;
                         wr_data <= pc;
                         wr_en <= 1;
                         state <= RAM_ST;
@@ -252,7 +252,7 @@ module cpu(
          RAM_LD_RD: begin
             if (rd_valid) begin
                rd_en <= 0;
-               wr_addr <= rd << 2;
+               o_addr <= rd << 2;
                wr_data <= rd_data;
                wr_en <= 1;
                state <= RAM_ST;

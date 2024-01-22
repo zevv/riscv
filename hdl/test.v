@@ -1,6 +1,7 @@
 
 `include "machine.v"
 `include "cpu.v"
+`include "uart.v"
 
 module test();
 
@@ -24,11 +25,13 @@ module test();
 
    wire debug;
    wire led;
+   wire uart_tx;
 
    machine machine(
       .clk(clk),
       .debug(debug),
-      .led(led)
+      .led(led),
+      .uart_tx(uart_tx)
    );
 
 endmodule

@@ -1,8 +1,9 @@
 
 `default_nettype none
 
-`include "cpu.v"
 `include "machine.v"
+`include "cpu.v"
+`include "uart.v"
 
 
 module top(
