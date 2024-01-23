@@ -3,8 +3,13 @@
 
 volatile int *led = (volatile int *)0x4000;
 
-volatile int *uart_data = (volatile int *)0x8000;
-volatile int *uart_ctrl = (volatile int *)0x8001;
+
+struct uart {
+	uint8_t data;
+	uint8_t status;
+};
+
+struct uart *uart0 = (struct uart *)0x8000;
 
 
 void _start(void);
@@ -24,8 +29,8 @@ extern uint8_t _sstack;
 void putc(uint8_t c)
 {
 	*led = c;
-	*uart_data = c;
-	while(*uart_ctrl);
+	uart0->data = c;
+	while(uart0->status);
 }
 
 void puts(char *c)

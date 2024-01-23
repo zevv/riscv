@@ -1,22 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Mon Jan 22 12:22:46 2024
+[*] Tue Jan 23 13:37:30 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Mon Jan 22 12:20:12 2024"
-[dumpfile_size] 204709
+[dumpfile_mtime] "Tue Jan 23 13:35:08 2024"
+[dumpfile_size] 1096704
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
-[timestart] 0
-[size] 1100 615
-[pos] -1 -1
-*-7.199999 198 725 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 116
+[size] 1451 972
+[pos] -1 -688
+*-4.500000 226 725 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
 [treeopen] test.machine.cpu0.
-[sst_width] 255
+[sst_width] 269
 [signals_width] 166
 [sst_expanded] 1
-[sst_vpaned_height] 257
+[sst_vpaned_height] 286
 @28
 test.clk
 test.led
@@ -28,20 +28,20 @@ test.machine.led0.val[31:0]
 @200
 -Decoder
 @22
-test.machine.cpu0.pc[7:0]
+test.machine.cpu0.pc[15:0]
 @2022
 [color] 3
-^1 /home/ico/sandbox/prjs/riscv/hdl/states.txt
+^2 /home/ico/sandbox/prjs/riscv/hdl/gtkw/states.txt
 test.machine.cpu0.state[3:0]
-@22
-test.machine.cpu0.inst[31:0]
-@28
+@2029
+^1 /home/ico/sandbox/prjs/riscv/hdl/gtkw/opcodes.txt
 test.machine.cpu0.opcode[6:0]
 @22
-test.machine.cpu0.funct3[3:0]
 test.machine.cpu0.rs1[4:0]
 test.machine.cpu0.rs2[4:0]
 test.machine.cpu0.rd[4:0]
+test.machine.cpu0.funct3[3:0]
+test.machine.cpu0.imm[31:0]
 @200
 -CPU memory
 @22
@@ -50,7 +50,7 @@ test.machine.cpu0.o_addr[15:0]
 test.machine.cpu0.wr_en
 @22
 test.machine.cpu0.wr_data[31:0]
-@29
+@28
 test.machine.cpu0.rd_en
 @22
 test.machine.cpu0.rd_data[31:0]
@@ -73,19 +73,10 @@ test.machine.cpu0.reg_s2_valid
 @22
 test.machine.cpu0.reg_s2_data[31:0]
 @200
--ALU
-@22
-test.machine.cpu0.alu_fn[3:0]
-test.machine.cpu0.alu_in1[31:0]
-test.machine.cpu0.alu_in2[31:0]
-test.machine.cpu0.alu_out[31:0]
-@28
-test.machine.cpu0.alu_zero
-test.machine.cpu0.alu_negative
-@200
 -Registers
 @22
 test.machine.ram0.zero[31:0]
+test.machine.ram0.x8[31:0]
 test.machine.ram0.a0[31:0]
 test.machine.ram0.a1[31:0]
 test.machine.ram0.a2[31:0]
@@ -93,6 +84,12 @@ test.machine.ram0.a3[31:0]
 test.machine.ram0.sp[31:0]
 @200
 -
+@22
+test.machine.cpu0.alu_in1[31:0]
+test.machine.cpu0.alu_in2[31:0]
+test.machine.cpu0.alu_fn[3:0]
+test.machine.cpu0.alu_out[31:0]
+@200
 -
 -
 -
