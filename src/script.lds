@@ -1,18 +1,25 @@
 MEMORY
 {
-   ram (rwxa)  : ORIGIN = 0x80, LENGTH = 32K
+	ram (rwxa)      : ORIGIN = 0x80, LENGTH = 32K
 }
 
 SECTIONS
 {
 
-   .text : { *(.text) } > ram
-   .sdata = .;
-   .data : { *(.data) } > ram
-   .edata = .;
+	.text : { 
+		*(.vectors);
+		.stext = .;
+		*(.text) 
+	} > ram
 
-   .sstack = .;
-   . = ALIGN(4);
-   . = . + 32;
-   .estack = .;
+	.sdata = .;
+	.data : { 
+		*(.data) 
+	} > ram
+	.edata = .;
+
+	.sstack = .;
+	. = ALIGN(4);
+	. = . + 32;
+	.estack = .;
 }

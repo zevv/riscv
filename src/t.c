@@ -6,11 +6,41 @@ volatile int *led = (volatile int *)0x4000;
 volatile int *uart_data = (volatile int *)0x8000;
 volatile int *uart_ctrl = (volatile int *)0x8001;
 
+
+void _start(void);
+
+__attribute__ ((section(".vectors")))
+
+void *vectors[] = {
+	_start,
+};
+
 extern uint8_t _sdata;
 extern uint8_t _edata;
 extern uint8_t _estack;
 extern uint8_t _sstack;
 
+
+void uart_tx(uint8_t c)
+{
+	*uart_data = c;
+	while(*uart_ctrl);
+}
+
+void puts(char *c)
+{
+	while(*c) {
+		uart_tx(*c);
+		c++;
+	}
+}
+
+
+void hop(void) __attribute__((noinline));
+void hop(void)
+{
+	*led = 3;
+}
 
 void _start(void)
 {
@@ -34,31 +64,31 @@ void _start(void)
 
 	/* Run main */
 
-	if(1) {
-		volatile int a = 100;
-		volatile int b = 100;
-		*led = a * b;
-	}
+#if 0
+	volatile int a = 100;
+	volatile int b = 100;
+	*led = a * b;
+#endif
 
-	if(1) {
-		for(;;) {
-			char *s = "ABCDEFGH\n";
-			while(*s) {
-				*uart_data = *s++;
-				while(*uart_ctrl);
-			}
-			volatile int i;
-			for(i=0; i<40000; i++);
-		}
-	}
+#if 1
+	hop();
+#endif
 
-	if(0) {
-		for(;;) {
-			volatile int i;
-			for(i=0; i<40000; i++);
-			(*led)++;
-		}
+#if 1
+	for(;;) {
+		puts("Hello\n");
+		volatile int i;
+		for(i=0; i<40000; i++);
 	}
+#endif
+
+#if 0
+	for(;;) {
+		volatile int i;
+		for(i=0; i<40000; i++);
+		(*led)++;
+	}
+#endif
 
 	for(;;);
 

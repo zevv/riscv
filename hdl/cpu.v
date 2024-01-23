@@ -28,13 +28,8 @@ module cpu(
       RAM_LD_RS2 = 6,
       RAM_LD_RD = 7,
       RAM_LD_INST = 8,
+      RAM_LD_PC = 9,
       FAULT = 15;
-
-   localparam
-      LD_TARGET_INST = 0,
-      LD_TARGET_RS1 = 1,
-      LD_TARGET_RS2 = 2,
-      LD_TARGET_RD = 3;
 
    initial begin
       rd_en = 0;
@@ -51,6 +46,7 @@ module cpu(
    reg [31:0] reg_s2_data = 0;
    reg reg_s2_valid = 0;
    reg alu_in2_rs2;
+   reg [1:0] ram_ld_rd_align = 0;
 
    // Decoded instruction
    reg [6:0] opcode = 0;
@@ -105,9 +101,10 @@ module cpu(
 
          BOOT: begin
             pc <= pc + 1;
-            if(pc == 16) begin
-               pc <= 'h80;
-               state <= FETCH;
+            if (pc == 16) begin
+               o_addr <= 'h80;
+               rd_en <= 1;
+               state = RAM_LD_PC;
             end
          end
 
@@ -156,6 +153,7 @@ module cpu(
                   OP_I_LOAD: begin
                      o_addr = alu_out;
                      rd_en <= 1;
+                     ram_ld_rd_align <= alu_out[1:0];
                      state <= RAM_LD_RD;
                   end
 
@@ -301,9 +299,26 @@ module cpu(
             if (rd_valid) begin
                rd_en <= 0;
                o_addr <= rd << 2;
-               wr_data <= rd_data;
+               if (funct3 == 3'b000 || funct3 == 3'b100) begin
+                  case (ram_ld_rd_align)
+                     2'b00: wr_data <= rd_data[7:0];
+                     2'b01: wr_data <= rd_data[15:8];
+                     2'b10: wr_data <= rd_data[23:16];
+                     2'b11: wr_data <= rd_data[31:24];
+                  endcase
+               end else
+                  wr_data <= rd_data;
+
                wr_en <= 1;
                state <= RAM_ST;
+            end
+         end
+
+         RAM_LD_PC: begin
+            if(rd_valid) begin
+               rd_en <= 0;
+               pc <= rd_data;
+               state <= FETCH;
             end
          end
 

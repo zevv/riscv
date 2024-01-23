@@ -39,7 +39,7 @@ $(ASC): $(JSON)
 gui: $(ASC) $(PCF)
 	nextpnr-ice40 $(NEXTPNRFLAGS) --json $(JSON) --pcf $(PCF) --gui
 
-$(VP): $(SRCS) test.v
+$(VP): $(SRCS) test.v ../src/t.mem
 	iverilog -Wall -Winfloop -o $(VP) test.v 
 
 $(VCD): $(VP) $(SRCS)
