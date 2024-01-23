@@ -21,8 +21,9 @@ extern uint8_t _estack;
 extern uint8_t _sstack;
 
 
-void uart_tx(uint8_t c)
+void putc(uint8_t c)
 {
+	*led = c;
 	*uart_data = c;
 	while(*uart_ctrl);
 }
@@ -30,17 +31,11 @@ void uart_tx(uint8_t c)
 void puts(char *c)
 {
 	while(*c) {
-		uart_tx(*c);
+		putc(*c);
 		c++;
 	}
 }
 
-
-void hop(void) __attribute__((noinline));
-void hop(void)
-{
-	*led = 3;
-}
 
 void _start(void)
 {
@@ -71,14 +66,14 @@ void _start(void)
 #endif
 
 #if 1
-	hop();
-#endif
+	volatile int c = 'a';
 
-#if 1
 	for(;;) {
-		puts("Hello\n");
-		volatile int i;
-		for(i=0; i<40000; i++);
+		putc(c);
+		c++;
+		if(c > 'z') c = 'a';
+		//volatile int i;
+		//for(i=0; i<40000; i++);
 	}
 #endif
 

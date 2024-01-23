@@ -177,6 +177,12 @@ module cpu(
                         3'h4: if (alu_out) begin // blt
                            pc <= pc - 4 + imm;
                         end
+                        3'h5: if (!alu_out) begin // bge
+                           pc <= pc - 4 + imm;
+                        end
+                        3'h6: if (alu_out) begin // bltu
+                           pc <= pc - 4 + imm;
+                        end
                         default: begin
                            state <= FAULT;
                         end
