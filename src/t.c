@@ -34,9 +34,9 @@ void _start(void)
 
 	/* Run main */
 
-	if(0) {
-		volatile int a = 1000;
-		volatile int b = 1000;
+	if(1) {
+		volatile int a = 100;
+		volatile int b = 100;
 		*led = a * b;
 	}
 

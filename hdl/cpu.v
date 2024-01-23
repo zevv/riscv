@@ -15,20 +15,15 @@ module cpu(
    end
 
    reg [3:0] state = 0;
+   reg [15:0] pc = 0;
 
-   reg [7:0] pc = 8'h80;
-
-   reg [31:0] inst = 0;
-   wire [6:0] opcode = inst[6:0];
-   wire [4:0] rd = inst[11:7];
-   wire [3:0] funct3 = inst[14:12];
-   wire [4:0] rs1 = inst[19:15];
-   wire [4:0] rs2 = inst[24:20];
-   wire signed [11:0] imm_I = inst[31:20];
-   wire        [11:0] imm_S = {inst[31:25], inst[11:7]};
-   wire signed [31:0] imm_U = {inst[31:12], 12'b0};
-   wire signed [30:0] imm_J = {inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
-   wire signed [12:0] imm_B = {inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
+   reg [6:0] opcode = 0;
+   reg [4:0] rd = 0;
+   reg [6:0] funct7 = 0;
+   reg [3:0] funct3 = 0;
+   reg [4:0] rs1 = 0;
+   reg [4:0] rs2 = 0;
+   reg signed [31:0] imm = 0;
 
    reg [31:0] reg_s1_data = 0;
    reg reg_s1_valid = 0;
@@ -40,18 +35,22 @@ module cpu(
    wire [31:0] alu_in1 = reg_s1_data;;
    reg [31:0] alu_in2;
    wire [31:0] alu_out;
-   reg [3:0] alu_fn;
    wire alu_zero;
    wire alu_overflow;
    wire alu_negative;
+   
+   reg [3:0] alu_fn;
 
    always @(*) begin
-      if (opcode[5])
+      if (opcode == 7'b0110011 || opcode == 7'b1100011)
          alu_in2 = reg_s2_data;
       else
-         alu_in2 = imm_I;
-      if (opcode[6] == 0)
-         alu_fn = { inst[30], funct3 };
+         alu_in2 = imm;
+
+      if (opcode == 7'b0110011 || opcode == 7'b0010011)
+         alu_fn = { funct7[4], funct3 };
+      else if (opcode == 7'b0000011 || opcode == 7'b0100011)
+         alu_fn = 4'h0; // ADD
       else
          if(funct3 == 3'h0 || funct3 == 3'h1)
             alu_fn = 4'h8; // SUB
@@ -73,12 +72,12 @@ module cpu(
    localparam
       BOOT = 0,
       FETCH = 1,
-      EXECUTE = 2,
-      RAM_ST = 3,
-      RAM_LD_RS1 = 6,
-      RAM_LD_RS2 = 7,
-      RAM_LD_RD = 8,
-      RAM_LD_INST = 9,
+      EXECUTE = 3,
+      RAM_ST = 4,
+      RAM_LD_RS1 = 5,
+      RAM_LD_RS2 = 6,
+      RAM_LD_RD = 7,
+      RAM_LD_INST = 8,
       FAULT = 15;
 
    localparam
@@ -88,7 +87,7 @@ module cpu(
       LD_TARGET_RD = 3;
 
    always @(*) begin
-      debug = (state == FETCH);
+      //debug = (state == FETCH);
    end
 
    reg need_rs1;
@@ -105,8 +104,9 @@ module cpu(
       case (state)
 
          BOOT: begin
-            inst <= inst + 1;
-            if(inst == 64) begin
+            pc <= pc + 1;
+            if(pc == 16) begin
+               pc <= 'h80;
                state <= FETCH;
             end
          end
@@ -154,21 +154,15 @@ module cpu(
                   end
 
                   7'b0000011: begin // load, I-type
-                     o_addr = reg_s1_data + imm_I;
+                     o_addr = alu_out;
                      rd_en <= 1;
                      state <= RAM_LD_RD;
                   end
 
                   7'b0100011: begin // store, S-type
-                     o_addr = reg_s1_data + imm_S;
+                     debug <= 1;
+                     o_addr = alu_out;
                      wr_data = reg_s2_data;
-                     wr_en <= 1;
-                     state <= RAM_ST;
-                  end
-
-                  7'b0110111: begin // lui, U-type
-                     o_addr <= rd << 2;
-                     wr_data <= {inst[31:12], 12'b0};
                      wr_en <= 1;
                      state <= RAM_ST;
                   end
@@ -177,13 +171,13 @@ module cpu(
                      state <= FETCH;
                      case (funct3)
                         3'h0: if (alu_zero) begin // beq
-                           pc <= pc - 4 + imm_B;
+                           pc <= pc - 4 + imm;
                         end
                         3'h1: if (!alu_zero) begin // bne
-                           pc <= pc - 4 + imm_B;
+                           pc <= pc - 4 + imm;
                         end
                         3'h4: if (alu_out) begin // blt
-                           pc <= pc - 4 + imm_B;
+                           pc <= pc - 4 + imm;
                         end
                         default: begin
                            state <= FAULT;
@@ -192,7 +186,7 @@ module cpu(
                   end
 
                   7'b1101111: begin // jal, J-type
-                     pc <= pc + imm_J - 4;
+                     pc <= pc + imm - 4;
                      if (rd != 0) begin
                         o_addr <= rd << 2;
                         wr_data <= pc + 4;
@@ -204,7 +198,7 @@ module cpu(
                   end
 
                   7'b1100111: begin // jalr, I-type
-                     pc <= reg_s1_data + imm_I - 4;
+                     pc <= reg_s1_data + imm - 4;
                      if (rd != 0) begin
                         o_addr <= rd << 2;
                         wr_data <= pc;
@@ -213,6 +207,13 @@ module cpu(
                      end else begin
                         state <= FETCH;
                      end
+                  end
+                  
+                  7'b0110111: begin // lui, U-type
+                     o_addr <= rd << 2;
+                     wr_data <= imm;
+                     wr_en <= 1;
+                     state <= RAM_ST;
                   end
                   
                   default: begin
@@ -226,7 +227,24 @@ module cpu(
          RAM_LD_INST: begin
             if (rd_valid) begin
                rd_en <= 0;
-               inst <= rd_data;
+
+               opcode <= rd_data[6:0];
+               rd <= rd_data[11:7];
+               funct7 <= rd_data[31:25];
+               funct3 <= rd_data[14:12];
+               rs1 <= rd_data[19:15];
+               rs2 <= rd_data[24:20];
+               case (rd_data[6:0])
+                  7'b0010011: imm <= { {20{rd_data[31]}}, rd_data[31:20] }; // I
+                  7'b0000011: imm <= { {20{rd_data[31]}}, rd_data[31:20] }; // I
+                  7'b0100011: imm <= { {20{rd_data[31]}}, rd_data[31:25], rd_data[11:7] }; // S
+                  7'b1100011: imm <= { {19{rd_data[31]}}, rd_data[31], rd_data[7], rd_data[30:25], rd_data[11:8], 1'b0}; // B
+                  7'b1101111: imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0}; // J
+                  7'b1100111: imm <= { {20{rd_data[31]}}, rd_data[31:20] }; // I
+                  7'b0110111: imm <= { rd_data[31:12], 12'b0 }; // U
+                  default: imm <= 0;
+               endcase
+
                state <= EXECUTE;
             end
          end

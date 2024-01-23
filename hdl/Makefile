@@ -13,7 +13,7 @@ SRCS += machine.v
 SRCS += uart.v
 
 YOSYSFLAGS := -Q -T
-YOSYSCMD := synth_ice40 -top top -json $(NAME).json -noflatten
+YOSYSCMD := synth_ice40 -top top -json $(NAME).json 
 NEXTPNRFLAGS := --freq 48 --package sg48 --up5k 
 NEXTPNRFLAGS += --ignore-loops
 

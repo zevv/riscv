@@ -119,13 +119,14 @@ module ram(
    input wire wr_en, input wire [31:0] wr_data
 );
 
-   localparam SIZE = 512;
+   localparam SIZE = 2048;
 
    reg [31:0] mem [0:SIZE-1];
 
    wire [31:0] zero = mem[0];
    wire [31:0] ra = mem[1];
    wire [31:0] sp = mem[2];
+   wire [31:0] x8 = mem[8];
    wire [31:0] a0 = mem[10];
    wire [31:0] a1 = mem[11];
    wire [31:0] a2 = mem[12];
