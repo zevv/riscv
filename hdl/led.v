@@ -4,10 +4,11 @@ module led(
    input wire clk,
    input wire rd_en, input wire [15:0] addr, output reg [31:0] rd_data, output reg rd_valid,
    input wire wr_en, input wire [31:0] wr_data,
-   output led
+   output reg led
 );
 
    reg [31:0] val = 0;
+   reg [7:0] n = 0;
 
    always @(posedge clk)
    begin
@@ -26,8 +27,15 @@ module led(
          end
       end
    end
-
-   assign led = val[0];
+   
+   always @(posedge clk)
+   begin
+      n <= n + 1;
+      if (n == 0)
+         led <= 1;
+      if (n == val[7:0])
+         led <= 0;
+   end
 
 endmodule
 

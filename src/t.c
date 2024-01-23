@@ -80,11 +80,15 @@ void _start(void)
 
 	/* Run main */
 
-	puthex(0x12345678);
-	putc('\n');
+	//puthex(0x12345678);
+	//putc('\n');
 
-	volatile int i;
-	for(i=0; i<40000; i++);
+	for(;;) {
+		(*led) ++;
+		volatile int i;
+		for(i=0; i<1000; i++);
+	}
+
 
 #if 0
 	volatile uint32_t *p1 = (void *)0x8000;
