@@ -8,15 +8,51 @@ module cpu(
    output reg wr_en = 0, output reg [31:0] wr_data = 0,
    output reg debug
 );
+   
+   localparam
+      OP_R_ALU = 7'b0110011,
+      OP_I_ALU = 7'b0010011,
+      OP_I_LOAD = 7'b0000011,
+      OP_S_STORE = 7'b0100011,
+      OP_B_BRANCH = 7'b1100011,
+      OP_J_JAL = 7'b1101111,
+      OP_J_JALR = 7'b1100111,
+      OP_U_LUI = 7'b0110111;
+
+   localparam
+      BOOT = 0,
+      FETCH = 1,
+      EXECUTE = 3,
+      RAM_ST = 4,
+      RAM_LD_RS1 = 5,
+      RAM_LD_RS2 = 6,
+      RAM_LD_RD = 7,
+      RAM_LD_INST = 8,
+      FAULT = 15;
+
+   localparam
+      LD_TARGET_INST = 0,
+      LD_TARGET_RS1 = 1,
+      LD_TARGET_RS2 = 2,
+      LD_TARGET_RD = 3;
 
    initial begin
       rd_en = 0;
       wr_en = 0;
    end
 
+   // CPU state
    reg [3:0] state = 0;
    reg [15:0] pc = 0;
+   reg need_rs1;
+   reg need_rs2;
+   reg [31:0] reg_s1_data = 0;
+   reg reg_s1_valid = 0;
+   reg [31:0] reg_s2_data = 0;
+   reg reg_s2_valid = 0;
+   reg alu_in2_rs2;
 
+   // Decoded instruction
    reg [6:0] opcode = 0;
    reg [4:0] rd = 0;
    reg [6:0] funct7 = 0;
@@ -24,14 +60,8 @@ module cpu(
    reg [4:0] rs1 = 0;
    reg [4:0] rs2 = 0;
    reg signed [31:0] imm = 0;
-
-   reg [31:0] reg_s1_data = 0;
-   reg reg_s1_valid = 0;
-
-   reg [31:0] reg_s2_data = 0;
-   reg reg_s2_valid = 0;
-   
-   wire alu_imm = !opcode[5];
+  
+   // ALU
    wire [31:0] alu_in1 = reg_s1_data;;
    reg [31:0] alu_in2;
    wire [31:0] alu_out;
@@ -42,14 +72,12 @@ module cpu(
    reg [3:0] alu_fn;
 
    always @(*) begin
-      if (opcode == 7'b0110011 || opcode == 7'b1100011)
-         alu_in2 = reg_s2_data;
-      else
-         alu_in2 = imm;
 
-      if (opcode == 7'b0110011 || opcode == 7'b0010011)
+      alu_in2 = (alu_in2_rs2) ? reg_s2_data : imm;
+
+      if (opcode == OP_R_ALU || opcode == OP_I_ALU)
          alu_fn = { funct7[4], funct3 };
-      else if (opcode == 7'b0000011 || opcode == 7'b0100011)
+      else if (opcode == OP_I_LOAD || opcode == OP_S_STORE)
          alu_fn = 4'h0; // ADD
       else
          if(funct3 == 3'h0 || funct3 == 3'h1)
@@ -69,35 +97,7 @@ module cpu(
    );
 
 
-   localparam
-      BOOT = 0,
-      FETCH = 1,
-      EXECUTE = 3,
-      RAM_ST = 4,
-      RAM_LD_RS1 = 5,
-      RAM_LD_RS2 = 6,
-      RAM_LD_RD = 7,
-      RAM_LD_INST = 8,
-      FAULT = 15;
-
-   localparam
-      LD_TARGET_INST = 0,
-      LD_TARGET_RS1 = 1,
-      LD_TARGET_RS2 = 2,
-      LD_TARGET_RD = 3;
-
-   always @(*) begin
-      //debug = (state == FETCH);
-   end
-
-   reg need_rs1;
-   reg need_rs2;
-
-   always @(*) begin
-      need_rs1 = !(opcode == 7'b1101111 || opcode == 7'b0110111 || opcode == 7'b0010111);
-      need_rs2 =  (opcode == 7'b0110011 || opcode == 7'b0100011 || opcode == 7'b1100011);
-   end
-
+   // CPU state machine
 
    always @(posedge clk) begin
 
@@ -139,27 +139,27 @@ module cpu(
             end else begin
 
                case (opcode)
-                  7'b0110011: begin // alu, R-type
+                  OP_R_ALU: begin
                      o_addr <= rd << 2;
                      wr_data <= alu_out;
                      wr_en <= 1;
                      state <= RAM_ST;
                   end
 
-                  7'b0010011: begin // alu, I-type
+                  OP_I_ALU: begin
                      o_addr <= rd << 2;
                      wr_data <= alu_out;
                      wr_en <= 1;
                      state <= RAM_ST;
                   end
 
-                  7'b0000011: begin // load, I-type
+                  OP_I_LOAD: begin
                      o_addr = alu_out;
                      rd_en <= 1;
                      state <= RAM_LD_RD;
                   end
 
-                  7'b0100011: begin // store, S-type
+                  OP_S_STORE: begin
                      debug <= 1;
                      o_addr = alu_out;
                      wr_data = reg_s2_data;
@@ -167,7 +167,7 @@ module cpu(
                      state <= RAM_ST;
                   end
 
-                  7'b1100011: begin // branch, B-type
+                  OP_B_BRANCH: begin
                      state <= FETCH;
                      case (funct3)
                         3'h0: if (alu_zero) begin // beq
@@ -185,7 +185,7 @@ module cpu(
                      endcase
                   end
 
-                  7'b1101111: begin // jal, J-type
+                  OP_J_JAL: begin
                      pc <= pc + imm - 4;
                      if (rd != 0) begin
                         o_addr <= rd << 2;
@@ -197,7 +197,7 @@ module cpu(
                      end
                   end
 
-                  7'b1100111: begin // jalr, I-type
+                  OP_J_JALR: begin
                      pc <= reg_s1_data + imm - 4;
                      if (rd != 0) begin
                         o_addr <= rd << 2;
@@ -209,7 +209,7 @@ module cpu(
                      end
                   end
                   
-                  7'b0110111: begin // lui, U-type
+                  OP_U_LUI: begin
                      o_addr <= rd << 2;
                      wr_data <= imm;
                      wr_en <= 1;
@@ -234,14 +234,44 @@ module cpu(
                funct3 <= rd_data[14:12];
                rs1 <= rd_data[19:15];
                rs2 <= rd_data[24:20];
+               need_rs1 <= 0;
+               need_rs2 <= 0;
+               alu_in2_rs2 <= 0;
                case (rd_data[6:0])
-                  7'b0010011: imm <= { {20{rd_data[31]}}, rd_data[31:20] }; // I
-                  7'b0000011: imm <= { {20{rd_data[31]}}, rd_data[31:20] }; // I
-                  7'b0100011: imm <= { {20{rd_data[31]}}, rd_data[31:25], rd_data[11:7] }; // S
-                  7'b1100011: imm <= { {19{rd_data[31]}}, rd_data[31], rd_data[7], rd_data[30:25], rd_data[11:8], 1'b0}; // B
-                  7'b1101111: imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0}; // J
-                  7'b1100111: imm <= { {20{rd_data[31]}}, rd_data[31:20] }; // I
-                  7'b0110111: imm <= { rd_data[31:12], 12'b0 }; // U
+                  OP_R_ALU: begin
+                     need_rs1 <= 1;
+                     need_rs2 <= 1;
+                     alu_in2_rs2 <= 1;
+                  end
+                  OP_I_ALU: begin
+                     imm <= { {20{rd_data[31]}}, rd_data[31:20] };
+                     need_rs1 <= 1;
+                  end
+                  OP_I_LOAD: begin
+                     imm <= { {20{rd_data[31]}}, rd_data[31:20] };
+                     need_rs1 <= 1;
+                  end
+                  OP_S_STORE: begin
+                     imm <= { {20{rd_data[31]}}, rd_data[31:25], rd_data[11:7] };
+                     need_rs1 <= 1;
+                     need_rs2 <= 1;
+                  end
+                  OP_B_BRANCH: begin
+                     imm <= { {19{rd_data[31]}}, rd_data[31], rd_data[7], rd_data[30:25], rd_data[11:8], 1'b0};
+                     need_rs1 <= 1;
+                     need_rs2 <= 1;
+                     alu_in2_rs2 <= 1;
+                  end
+                  OP_J_JAL: begin
+                     imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0};
+                  end
+                  OP_J_JALR: begin
+                     imm <= { {20{rd_data[31]}}, rd_data[31:20] };
+                     need_rs1 <= 1;
+                  end
+                  OP_U_LUI: begin
+                     imm <= { rd_data[31:12], 12'b0 };
+                  end
                   default: imm <= 0;
                endcase
 
