@@ -23,13 +23,13 @@ module cpu(
       BOOT = 0,
       FETCH = 1,
       EXECUTE = 3,
-      RAM_ST = 4,
-      RAM_LD_RS1 = 5,
-      RAM_LD_RS2 = 6,
-      RAM_LD_RD = 7,
-      RAM_LD_INST = 8,
-      RAM_LD_PC = 9,
-      RAM_LD_SP = 10,
+      ST = 4,
+      LD_RS1 = 5,
+      LD_RS2 = 6,
+      LD_RD = 7,
+      LD_INST = 8,
+      LD_PC = 9,
+      LD_SP = 10,
       FAULT = 15;
 
    localparam
@@ -60,6 +60,7 @@ module cpu(
    reg [31:0] reg_s2_data = 0;
    reg reg_s2_valid = 0;
    reg alu_in2_rs2;
+   wire fetch = (state == FETCH);
 
    // Decoded instruction
    reg [6:0] opcode = 0;
@@ -118,7 +119,7 @@ module cpu(
                pc <= 0;
                o_addr <= VEC_RESET;
                rd_en <= 1;
-               state = RAM_LD_PC;
+               state = LD_PC;
             end
          end
 
@@ -128,7 +129,7 @@ module cpu(
             o_addr <= pc;
             rd_en <= 1;
             pc <= pc + 4;
-            state <= RAM_LD_INST;
+            state <= LD_INST;
          end
 
          EXECUTE: begin
@@ -137,13 +138,13 @@ module cpu(
 
                o_addr <= rs1 << 2;
                rd_en <= 1;
-               state <= RAM_LD_RS1;
+               state <= LD_RS1;
 
             end else if(need_rs2 && !reg_s2_valid) begin
 
                o_addr <= rs2 << 2;
                rd_en <= 1;
-               state <= RAM_LD_RS2;
+               state <= LD_RS2;
 
             end else begin
 
@@ -152,20 +153,20 @@ module cpu(
                      o_addr <= rd << 2;
                      wr_data <= alu_out;
                      wr_en <= 1;
-                     state <= RAM_ST;
+                     state <= ST;
                   end
 
                   OP_ALU_I: begin
                      o_addr <= rd << 2;
                      wr_data <= alu_out;
                      wr_en <= 1;
-                     state <= RAM_ST;
+                     state <= ST;
                   end
 
                   OP_LOAD: begin
                      o_addr = alu_out;
                      rd_en <= 1;
-                     state <= RAM_LD_RD;
+                     state <= LD_RD;
                   end
 
                   OP_STORE: begin
@@ -173,7 +174,7 @@ module cpu(
                      o_addr = alu_out;
                      wr_data = reg_s2_data;
                      wr_en <= 1;
-                     state <= RAM_ST;
+                     state <= ST;
                   end
 
                   OP_BRANCH: begin
@@ -195,7 +196,7 @@ module cpu(
                         o_addr <= rd << 2;
                         wr_data <= pc + 4;
                         wr_en <= 1;
-                        state <= RAM_ST;
+                        state <= ST;
                      end else begin
                         state <= FETCH;
                      end
@@ -207,7 +208,7 @@ module cpu(
                         o_addr <= rd << 2;
                         wr_data <= pc;
                         wr_en <= 1;
-                        state <= RAM_ST;
+                        state <= ST;
                      end else begin
                         state <= FETCH;
                      end
@@ -217,7 +218,7 @@ module cpu(
                      o_addr <= rd << 2;
                      wr_data <= imm;
                      wr_en <= 1;
-                     state <= RAM_ST;
+                     state <= ST;
                   end
                   
                   default: begin
@@ -228,7 +229,7 @@ module cpu(
             end
          end
 
-         RAM_LD_INST: begin
+         LD_INST: begin
             rd_en <= 0;
             if (rd_valid) begin
 
@@ -283,7 +284,7 @@ module cpu(
             end
          end
 
-         RAM_LD_RS1: begin
+         LD_RS1: begin
             rd_en <= 0;
             if (rd_valid) begin
                reg_s1_data <= rd_data;
@@ -292,7 +293,7 @@ module cpu(
             end
          end
 
-         RAM_LD_RS2: begin
+         LD_RS2: begin
             rd_en <= 0;
             if (rd_valid) begin
                reg_s2_data <= rd_data;
@@ -301,7 +302,7 @@ module cpu(
             end
          end
 
-         RAM_LD_RD: begin
+         LD_RD: begin
             rd_en <= 0;
             if (rd_valid) begin
                o_addr <= rd << 2;
@@ -312,30 +313,30 @@ module cpu(
                else
                   wr_data <= rd_data;
                wr_en <= 1;
-               state <= RAM_ST;
+               state <= ST;
             end
          end
 
-         RAM_LD_PC: begin
+         LD_PC: begin
             rd_en <= 0;
             if(rd_valid) begin
                pc <= rd_data;
                o_addr = VEC_SP;
-               state <= RAM_LD_SP;
+               state <= LD_SP;
                rd_en <= 1;
             end
          end
 
-         RAM_LD_SP: begin
+         LD_SP: begin
             rd_en <= 0;
             if(rd_valid) begin
                o_addr = 2 << 2;
                wr_data = rd_data;
-               state <= RAM_ST;
+               state <= ST;
             end
          end
 
-         RAM_ST: begin
+         ST: begin
             wr_en <= 0;
             state <= FETCH;
          end
