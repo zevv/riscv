@@ -99,7 +99,12 @@ module machine(
       cpu_rd_valid = ram_rd_valid || led_rd_valid || uart_rd_valid;
 
       if (ram_sel) 
-         cpu_rd_data = ram_rd_data;
+         case (addr[1:0])
+            2'b00: cpu_rd_data = ram_rd_data[31:0];
+            2'b01: cpu_rd_data = ram_rd_data[31:8];
+            2'b10: cpu_rd_data = ram_rd_data[31:16];
+            2'b11: cpu_rd_data = ram_rd_data[31:24];
+         endcase
       else if (led_sel) 
          cpu_rd_data = led_rd_data;
       else if (uart_sel) 
@@ -131,6 +136,7 @@ module ram(
    wire [31:0] a1 = mem[11];
    wire [31:0] a2 = mem[12];
    wire [31:0] a3 = mem[13];
+   wire [31:0] a4 = mem[14];
 
    initial begin
       $readmemh("../src/t.mem", mem);
@@ -139,7 +145,7 @@ module ram(
    always @(posedge clk)
    begin
       if (rd_en && (addr < SIZE*4)) begin
-         rd_data <= mem[addr>>2];
+         rd_data = mem[addr >> 2];
          rd_valid <= 1;
       end else begin
          rd_valid <= 0;

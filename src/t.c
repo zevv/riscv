@@ -9,7 +9,7 @@ struct uart {
 	uint8_t status;
 };
 
-struct uart *uart0 = (struct uart *)0x8000;
+struct uart volatile *uart0 = (struct uart *)0x8000;
 
 
 void _start(void);
@@ -71,7 +71,9 @@ void _start(void)
 #endif
 
 #if 1
-	volatile int c = 'a';
+	int c = 'a';
+
+	puts("1234");
 
 	for(;;) {
 		putc(c);

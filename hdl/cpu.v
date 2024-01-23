@@ -10,14 +10,14 @@ module cpu(
 );
    
    localparam
-      OP_R_ALU = 7'b0110011,
-      OP_I_ALU = 7'b0010011,
-      OP_I_LOAD = 7'b0000011,
-      OP_S_STORE = 7'b0100011,
-      OP_B_BRANCH = 7'b1100011,
-      OP_J_JAL = 7'b1101111,
-      OP_J_JALR = 7'b1100111,
-      OP_U_LUI = 7'b0110111;
+      OP_ALU_R = 7'b0110011,
+      OP_ALU_I = 7'b0010011,
+      OP_LOAD = 7'b0000011,
+      OP_STORE = 7'b0100011,
+      OP_BRANCH = 7'b1100011,
+      OP_JAL = 7'b1101111,
+      OP_JALR = 7'b1100111,
+      OP_LUI = 7'b0110111;
 
    localparam
       BOOT = 0,
@@ -30,6 +30,15 @@ module cpu(
       RAM_LD_INST = 8,
       RAM_LD_PC = 9,
       FAULT = 15;
+
+   localparam
+      BR_BEQ = 3'h0,
+      BR_BNE = 3'h1,
+      BR_BLT = 3'h4,
+      BR_BGE = 3'h5,
+      BR_BLTU = 3'h6,
+      BR_BGEU = 3'h7;
+
 
    initial begin
       rd_en = 0;
@@ -46,7 +55,6 @@ module cpu(
    reg [31:0] reg_s2_data = 0;
    reg reg_s2_valid = 0;
    reg alu_in2_rs2;
-   reg [1:0] ram_ld_rd_align = 0;
 
    // Decoded instruction
    reg [6:0] opcode = 0;
@@ -71,9 +79,9 @@ module cpu(
 
       alu_in2 = (alu_in2_rs2) ? reg_s2_data : imm;
 
-      if (opcode == OP_R_ALU || opcode == OP_I_ALU)
+      if (opcode == OP_ALU_R || opcode == OP_ALU_I)
          alu_fn = { funct7[4], funct3 };
-      else if (opcode == OP_I_LOAD || opcode == OP_S_STORE)
+      else if (opcode == OP_LOAD || opcode == OP_STORE)
          alu_fn = 4'h0; // ADD
       else
          if(funct3 == 3'h0 || funct3 == 3'h1)
@@ -111,11 +119,9 @@ module cpu(
          FETCH: begin
             reg_s1_valid <= 0;
             reg_s2_valid <= 0;
-
-            pc <= pc + 4;
-
             o_addr <= pc;
             rd_en <= 1;
+            pc <= pc + 4;
             state <= RAM_LD_INST;
          end
 
@@ -136,28 +142,27 @@ module cpu(
             end else begin
 
                case (opcode)
-                  OP_R_ALU: begin
+                  OP_ALU_R: begin
                      o_addr <= rd << 2;
                      wr_data <= alu_out;
                      wr_en <= 1;
                      state <= RAM_ST;
                   end
 
-                  OP_I_ALU: begin
+                  OP_ALU_I: begin
                      o_addr <= rd << 2;
                      wr_data <= alu_out;
                      wr_en <= 1;
                      state <= RAM_ST;
                   end
 
-                  OP_I_LOAD: begin
+                  OP_LOAD: begin
                      o_addr = alu_out;
                      rd_en <= 1;
-                     ram_ld_rd_align <= alu_out[1:0];
                      state <= RAM_LD_RD;
                   end
 
-                  OP_S_STORE: begin
+                  OP_STORE: begin
                      debug <= 1;
                      o_addr = alu_out;
                      wr_data = reg_s2_data;
@@ -165,31 +170,19 @@ module cpu(
                      state <= RAM_ST;
                   end
 
-                  OP_B_BRANCH: begin
+                  OP_BRANCH: begin
                      state <= FETCH;
                      case (funct3)
-                        3'h0: if (alu_zero) begin // beq
-                           pc <= pc - 4 + imm;
-                        end
-                        3'h1: if (!alu_zero) begin // bne
-                           pc <= pc - 4 + imm;
-                        end
-                        3'h4: if (alu_out) begin // blt
-                           pc <= pc - 4 + imm;
-                        end
-                        3'h5: if (!alu_out) begin // bge
-                           pc <= pc - 4 + imm;
-                        end
-                        3'h6: if (alu_out) begin // bltu
-                           pc <= pc - 4 + imm;
-                        end
-                        default: begin
-                           state <= FAULT;
-                        end
+                        BR_BEQ: if (alu_zero) pc <= pc - 4 + imm;
+                        BR_BNE: if (!alu_zero) pc <= pc - 4 + imm;
+                        BR_BLT: if (alu_out) pc <= pc - 4 + imm;
+                        BR_BGE: if (!alu_out) pc <= pc - 4 + imm;
+                        BR_BLTU: if (alu_out) pc <= pc - 4 + imm;
+                        default: state <= FAULT;
                      endcase
                   end
 
-                  OP_J_JAL: begin
+                  OP_JAL: begin
                      pc <= pc + imm - 4;
                      if (rd != 0) begin
                         o_addr <= rd << 2;
@@ -201,7 +194,7 @@ module cpu(
                      end
                   end
 
-                  OP_J_JALR: begin
+                  OP_JALR: begin
                      pc <= reg_s1_data + imm - 4;
                      if (rd != 0) begin
                         o_addr <= rd << 2;
@@ -213,7 +206,7 @@ module cpu(
                      end
                   end
                   
-                  OP_U_LUI: begin
+                  OP_LUI: begin
                      o_addr <= rd << 2;
                      wr_data <= imm;
                      wr_en <= 1;
@@ -242,38 +235,38 @@ module cpu(
                need_rs2 <= 0;
                alu_in2_rs2 <= 0;
                case (rd_data[6:0])
-                  OP_R_ALU: begin
+                  OP_ALU_R: begin
                      need_rs1 <= 1;
                      need_rs2 <= 1;
                      alu_in2_rs2 <= 1;
                   end
-                  OP_I_ALU: begin
+                  OP_ALU_I: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
                      need_rs1 <= 1;
                   end
-                  OP_I_LOAD: begin
+                  OP_LOAD: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
                      need_rs1 <= 1;
                   end
-                  OP_S_STORE: begin
+                  OP_STORE: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:25], rd_data[11:7] };
                      need_rs1 <= 1;
                      need_rs2 <= 1;
                   end
-                  OP_B_BRANCH: begin
+                  OP_BRANCH: begin
                      imm <= { {19{rd_data[31]}}, rd_data[31], rd_data[7], rd_data[30:25], rd_data[11:8], 1'b0};
                      need_rs1 <= 1;
                      need_rs2 <= 1;
                      alu_in2_rs2 <= 1;
                   end
-                  OP_J_JAL: begin
+                  OP_JAL: begin
                      imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0};
                   end
-                  OP_J_JALR: begin
+                  OP_JALR: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
                      need_rs1 <= 1;
                   end
-                  OP_U_LUI: begin
+                  OP_LUI: begin
                      imm <= { rd_data[31:12], 12'b0 };
                   end
                   default: imm <= 0;
@@ -305,16 +298,12 @@ module cpu(
             if (rd_valid) begin
                rd_en <= 0;
                o_addr <= rd << 2;
-               if (funct3 == 3'b000 || funct3 == 3'b100) begin
-                  case (ram_ld_rd_align)
-                     2'b00: wr_data <= rd_data[7:0];
-                     2'b01: wr_data <= rd_data[15:8];
-                     2'b10: wr_data <= rd_data[23:16];
-                     2'b11: wr_data <= rd_data[31:24];
-                  endcase
-               end else
+               if (funct3 == 3'b000 || funct3 == 3'b100)
+                  wr_data <= rd_data[7:0];
+               else if(funct3 == 3'b001 || funct3 == 3'b101) 
+                  wr_data <= rd_data[15:0];
+               else
                   wr_data <= rd_data;
-
                wr_en <= 1;
                state <= RAM_ST;
             end
@@ -358,13 +347,13 @@ module alu(
 
       case (fn)
          4'h0: out = v1 + v2;
-         4'h4: out = v1 ^ v2;
-         4'h6: out = v1 | v2;
-         4'h7: out = v1 & v2;
          4'h1: out = v1 << v2[4:0];
-         4'h5: out = v1 >> v2[4:0];
          4'h2: out = (v1 < v2) ? 1 : 0;
          4'h3: out = (v1 < v2) ? 1 : 0;
+         4'h4: out = v1 ^ v2;
+         4'h5: out = v1 >> v2[4:0];
+         4'h6: out = v1 | v2;
+         4'h7: out = v1 & v2;
          4'h8: out = v1 - v2;
          default: out= 0;
       endcase
