@@ -98,7 +98,7 @@ module cpu(
       need_rs2 =  (opcode == 7'b0110011 || opcode == 7'b0100011 || opcode == 7'b1100011);
    end
 
-   
+
    always @(posedge clk) begin
 
       case (state)
@@ -114,9 +114,9 @@ module cpu(
          FETCH: begin
             reg_s1_valid <= 0;
             reg_s2_valid <= 0;
-            
+
             pc <= pc + 4;
-            
+
             o_addr <= pc;
             rd_en <= 1;
             state <= RAM_LD_INST;
