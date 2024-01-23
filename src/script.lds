@@ -1,28 +1,28 @@
 
 MEMORY
 {
-   ram (rwxa)      : ORIGIN = 0x80, LENGTH = 32K
+   registers (rwxa)  : ORIGIN = 0x0000, LENGTH = 0x0080
+   bram (rwxa)       : ORIGIN = 0x0080, LENGTH = 0x1f80
+   spram (rwxa)      : ORIGIN = 0x8000, LENGTH = 0x8000
 }
 
 SECTIONS
 {
-
    .text : { 
       *(.vectors);
-      .stext = .;
       *(.text) 
-   } > ram
+      *(.rodata)
+      *(.data)
+      *(.sdata)
+      _sp = 0x2000;
+   } > bram
 
-   .sdata = .;
-   .data : { 
-      *(.data) 
-   } > ram
-   .edata = .;
+   .bss : { 
+      *(.sbss) 
+   } > spram
 
-   .sstack = .;
-   . = ALIGN(4);
-   . = . + 32;
-   .estack = .;
 }
 
 # vi: ts=3 sw=3 et
+   
+# .data : AT (ADDR(.text) + SIZEOF(.text)) {

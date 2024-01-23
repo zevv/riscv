@@ -29,6 +29,7 @@ module cpu(
       RAM_LD_RD = 7,
       RAM_LD_INST = 8,
       RAM_LD_PC = 9,
+      RAM_LD_SP = 10,
       FAULT = 15;
 
    localparam
@@ -38,6 +39,10 @@ module cpu(
       BR_BGE = 3'h5,
       BR_BLTU = 3'h6,
       BR_BGEU = 3'h7;
+
+   localparam
+      VEC_RESET = 15'h0080,
+      VEC_SP    = 15'h0084;
 
 
    initial begin
@@ -110,7 +115,8 @@ module cpu(
          BOOT: begin
             pc <= pc + 1;
             if (pc == 16) begin
-               o_addr <= 'h80;
+               pc <= 0;
+               o_addr <= VEC_RESET;
                rd_en <= 1;
                state = RAM_LD_PC;
             end
@@ -178,6 +184,7 @@ module cpu(
                         BR_BLT: if (alu_out) pc <= pc - 4 + imm;
                         BR_BGE: if (!alu_out) pc <= pc - 4 + imm;
                         BR_BLTU: if (alu_out) pc <= pc - 4 + imm;
+                        BR_BGEU: if (!alu_out) pc <= pc - 4 + imm;
                         default: state <= FAULT;
                      endcase
                   end
@@ -222,8 +229,8 @@ module cpu(
          end
 
          RAM_LD_INST: begin
+            rd_en <= 0;
             if (rd_valid) begin
-               rd_en <= 0;
 
                opcode <= rd_data[6:0];
                rd <= rd_data[11:7];
@@ -277,8 +284,8 @@ module cpu(
          end
 
          RAM_LD_RS1: begin
+            rd_en <= 0;
             if (rd_valid) begin
-               rd_en <= 0;
                reg_s1_data <= rd_data;
                reg_s1_valid <= 1;
                state <= EXECUTE;
@@ -286,8 +293,8 @@ module cpu(
          end
 
          RAM_LD_RS2: begin
+            rd_en <= 0;
             if (rd_valid) begin
-               rd_en <= 0;
                reg_s2_data <= rd_data;
                reg_s2_valid <= 1;
                state <= EXECUTE;
@@ -295,8 +302,8 @@ module cpu(
          end
 
          RAM_LD_RD: begin
+            rd_en <= 0;
             if (rd_valid) begin
-               rd_en <= 0;
                o_addr <= rd << 2;
                if (funct3 == 3'b000 || funct3 == 3'b100)
                   wr_data <= rd_data[7:0];
@@ -310,10 +317,21 @@ module cpu(
          end
 
          RAM_LD_PC: begin
+            rd_en <= 0;
             if(rd_valid) begin
-               rd_en <= 0;
                pc <= rd_data;
-               state <= FETCH;
+               o_addr = VEC_SP;
+               state <= RAM_LD_SP;
+               rd_en <= 1;
+            end
+         end
+
+         RAM_LD_SP: begin
+            rd_en <= 0;
+            if(rd_valid) begin
+               o_addr = 2 << 2;
+               wr_data = rd_data;
+               state <= RAM_ST;
             end
          end
 

@@ -1,5 +1,7 @@
 #!/usr/bin/lua
 
+SIZE = 8192
+
 mem = {}
 
 bin = io.stdin:read(32767)
@@ -8,13 +10,13 @@ for i = 1, #bin do
 end
 
 -- SP
-mem[2*4 + 0] = 0x00;
-mem[2*4 + 1] = 0x08;
-mem[2*4 + 2] = 0x00;
-mem[2*4 + 3] = 0x00;
+--mem[2*4 + 0] = 0x00;
+--mem[2*4 + 1] = 0x08;
+--mem[2*4 + 2] = 0x00;
+--mem[2*4 + 3] = 0x00;
 
 local f = io.open("t.mem", "w")
-for j = 0, 511, 4 do
+for j = 0, SIZE-1, 4 do
 	f:write(string.format("%02x%02x%02x%02x ", 
 		mem[j+3] or 0,
 		mem[j+2] or 0,

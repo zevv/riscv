@@ -13,8 +13,9 @@ module uart(
 		tx <= 1;
 	end
 
-	localparam DIVIDER = 139;
+	localparam DIVIDER = 7;
 
+   reg [8:0] last_data = 0;
 	reg [9:0] shift = 0;
 	reg [7:0] status = 0;
 	reg [4:0] n = 0;
@@ -31,6 +32,7 @@ module uart(
 		if (wr_en) begin
 			case (addr)
 				'h0: begin
+               last_data <= wr_data;
 					shift <= { 1'b1, wr_data, 1'b0 };
 					n <= 10;
 					div <= DIVIDER;

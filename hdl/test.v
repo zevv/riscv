@@ -1,6 +1,9 @@
 
+`default_nettype none
+
 `include "machine.v"
 `include "cpu.v"
+`include "led.v"
 `include "uart.v"
 
 module test();

@@ -17,8 +17,7 @@ YOSYSCMD := synth_ice40 -top top -json $(NAME).json
 NEXTPNRFLAGS := --freq 48 --package sg48 --up5k 
 NEXTPNRFLAGS += --ignore-loops
 
-all: $(BIN)
-
+all: sim
 
 ../src/t.mem: ../src/t.c
 

@@ -9,31 +9,42 @@ struct uart {
 	uint8_t status;
 };
 
-struct uart volatile *uart0 = (struct uart *)0x8000;
+struct uart volatile *uart0 = (struct uart *)0x5000;
 
 
 void _start(void);
+extern uint32_t _sp;
 
 __attribute__ ((section(".vectors")))
 
 void *vectors[] = {
 	_start,
+	&_sp,
 };
 
-extern uint8_t _sdata;
-extern uint8_t _edata;
-extern uint8_t _estack;
-extern uint8_t _sstack;
+//extern uint32_t _erom;
+//extern uint32_t _sdata;
+//extern uint32_t _edata;
 
 
 void putc(uint8_t c)
 {
-	*led = c;
 	uart0->data = c;
 	while(uart0->status);
 }
 
-void puts(char *c)
+char hexdigit[] = "0123456789abcdef";
+
+void puthex(uint32_t v)
+{
+	for(int i=0; i<8; i++) {
+		putc(hexdigit[v >> 28]);
+		v <<= 4;
+	}
+}
+
+#if 0
+static void puts(char *c)
 {
 	while(*c) {
 		putc(*c);
@@ -41,10 +52,18 @@ void puts(char *c)
 	}
 }
 
+#endif
+
+int flop_a;;
+int flop_b = 0x22222222;
+const int flop_c = 0x33333333;
+
 
 void _start(void)
 {
-	//register uint8_t *src, *dst;
+	//register uint32_t *src = &_erom;
+	//register uint32_t *dst = &_sdata;
+	//while(dst < &_edata) *dst++ = *src++;
 
 	/* Fill stack with pattern */
 
@@ -53,9 +72,6 @@ void _start(void)
 
 	///* Copy .data from flash to RAM */
 
-	//src = &_erom;
-	//dst = &_sdata;
-	//while(dst < &_edata) *dst++ = *src++;
 
 	/* Clear .bss */
 
@@ -64,13 +80,35 @@ void _start(void)
 
 	/* Run main */
 
+	puthex(0x12345678);
+	putc('\n');
+
+	volatile int i;
+	for(i=0; i<40000; i++);
+
+#if 0
+	volatile uint32_t *p1 = (void *)0x8000;
+	volatile uint32_t *p2 = (void *)0x8100;
+
+	while(p1 < p2) {
+		*p1 = 0x12345678;
+		p1 ++;
+	}
+
+	volatile int *ram = (int *)0x8004;
+	*ram = 'a';
+	int d = *ram;
+	putc(d);
+	volatile int i;
+	for(i=0; i<40000; i++);
+#endif
 #if 0
 	volatile int a = 100;
 	volatile int b = 100;
 	*led = a * b;
 #endif
 
-#if 1
+#if 0
 	int c = 'a';
 
 	puts("1234");
