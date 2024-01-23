@@ -100,10 +100,10 @@ module machine(
 
       if (ram_sel) 
          case (addr[1:0])
-            2'b00: cpu_rd_data = ram_rd_data[31:0];
-            2'b01: cpu_rd_data = ram_rd_data[31:8];
-            2'b10: cpu_rd_data = ram_rd_data[31:16];
-            2'b11: cpu_rd_data = ram_rd_data[31:24];
+            2'h0: cpu_rd_data = ram_rd_data[31:0];
+            2'h1: cpu_rd_data = ram_rd_data[31:8];
+            2'h2: cpu_rd_data = ram_rd_data[31:16];
+            2'h3: cpu_rd_data = ram_rd_data[31:24];
          endcase
       else if (led_sel) 
          cpu_rd_data = led_rd_data;
