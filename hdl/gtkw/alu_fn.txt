@@ -1,0 +1,9 @@
+0 ADD
+1 SHL
+2 LT
+3 LTU
+4 XOR
+5 SHR
+6 OR
+7 SRA
+8 SUB
