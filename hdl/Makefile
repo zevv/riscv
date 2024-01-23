@@ -20,8 +20,6 @@ NEXTPNRFLAGS += --ignore-loops
 all: $(BIN)
 
 
-machine.v: ../src/t.mem
-
 ../src/t.mem: ../src/t.c
 
 ../src/t.mem:
@@ -32,7 +30,7 @@ sim: $(VCD)
 $(BIN): $(ASC)
 	icepack $(NAME).asc $@
 
-$(JSON): $(SRCS)
+$(JSON): $(SRCS) ../src/t.mem
 	yosys $(YOSYSFLAGS) -p "$(YOSYSCMD)" top.v
 
 $(ASC): $(JSON)
