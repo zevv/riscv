@@ -1,32 +1,34 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Tue Jan 23 13:41:13 2024
+[*] Wed Jan 24 15:26:00 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Tue Jan 23 13:35:08 2024"
-[dumpfile_size] 1096704
+[dumpfile_mtime] "Wed Jan 24 15:22:23 2024"
+[dumpfile_size] 1421150
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
-[timestart] 61
-[size] 1451 972
+[timestart] 102
+[size] 1451 951
 [pos] -1 -1
-*-5.400000 165 725 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-3.900000 120 725 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
 [treeopen] test.machine.cpu0.
+[treeopen] test.machine.spram0.
 [sst_width] 269
-[signals_width] 166
+[signals_width] 167
 [sst_expanded] 1
-[sst_vpaned_height] 286
+[sst_vpaned_height] 280
 @28
 test.clk
-test.led
 test.debug
 test.uart_tx
-@24
-[color] 6
-test.machine.led0.val[31:0]
+@820
+test.machine.uart0.last_data[8:0]
 @200
 -Decoder
+@28
+[color] 7
+test.machine.cpu0.fetch
 @22
 test.machine.cpu0.pc[15:0]
 @2022
@@ -36,10 +38,14 @@ test.machine.cpu0.state[3:0]
 @2028
 ^2 /home/ico/sandbox/prjs/riscv/hdl/gtkw/opcodes.txt
 test.machine.cpu0.opcode[6:0]
-@22
+@2022
+^3 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
 test.machine.cpu0.rs1[4:0]
+^3 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
 test.machine.cpu0.rs2[4:0]
+^3 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
 test.machine.cpu0.rd[4:0]
+@22
 test.machine.cpu0.funct3[3:0]
 test.machine.cpu0.imm[31:0]
 @200
@@ -58,48 +64,27 @@ test.machine.cpu0.rd_data[31:0]
 test.machine.cpu0.rd_valid
 @200
 -CPU state
-@20000
--
-@28
-test.machine.cpu0.need_rs1
-test.machine.cpu0.reg_s1_valid
 @22
-test.machine.cpu0.reg_s1_data[31:0]
+test.machine.cpu0.rs1_val[31:0]
+test.machine.cpu0.rs2_val[31:0]
 @200
--
-@28
-test.machine.cpu0.need_rs2
-test.machine.cpu0.reg_s2_valid
+-ALU
 @22
-test.machine.cpu0.reg_s2_data[31:0]
-@200
--Registers
-@22
-test.machine.ram0.zero[31:0]
-test.machine.ram0.x8[31:0]
-test.machine.ram0.a0[31:0]
-test.machine.ram0.a1[31:0]
-test.machine.ram0.a2[31:0]
-test.machine.ram0.a3[31:0]
-test.machine.ram0.sp[31:0]
-@200
--
-@23
 test.machine.cpu0.alu_in1[31:0]
-@22
 test.machine.cpu0.alu_in2[31:0]
 @2022
-^3 /home/ico/sandbox/prjs/riscv/hdl/gtkw/alu_fn.txt
+^4 /home/ico/sandbox/prjs/riscv/hdl/gtkw/alu_fn.txt
 test.machine.cpu0.alu_fn[3:0]
 @22
 test.machine.cpu0.alu_out[31:0]
 @200
--
--
--
--
--
--
--
+-Registers
+@22
+test.machine.bram0.a0[31:0]
+test.machine.bram0.a1[31:0]
+test.machine.bram0.a2[31:0]
+test.machine.bram0.a3[31:0]
+test.machine.bram0.a4[31:0]
+test.machine.bram0.sp[31:0]
 [pattern_trace] 1
 [pattern_trace] 0

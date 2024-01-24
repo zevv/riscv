@@ -14,7 +14,7 @@ module uart(
 		tx <= 1;
 	end
 
-	localparam DIVIDER = 8;
+	localparam DIVIDER = 7;
 
    reg [8:0] last_data = 0;
 	reg [9:0] shift = 0;

@@ -55,12 +55,8 @@ module cpu(
    // CPU state
    reg [3:0] state = 0;
    reg [15:0] pc = 0;
-   reg need_rs1;
-   reg need_rs2;
-   reg [31:0] reg_s1_data = 0;
-   reg reg_s1_valid = 0;
-   reg [31:0] reg_s2_data = 0;
-   reg reg_s2_valid = 0;
+   reg [31:0] rs1_val = 0;
+   reg [31:0] rs2_val = 0;
    reg alu_in2_rs2;
    wire fetch = (state == FETCH);
 
@@ -74,18 +70,15 @@ module cpu(
    reg signed [31:0] imm = 0;
   
    // ALU
-   wire [31:0] alu_in1 = reg_s1_data;;
+   wire [31:0] alu_in1 = rs1_val;
    reg [31:0] alu_in2;
+   reg [3:0] alu_fn;
    wire [31:0] alu_out;
    wire alu_zero;
    wire alu_negative;
-   
-   reg [3:0] alu_fn;
 
    always @(*) begin
-
-      alu_in2 = (alu_in2_rs2) ? reg_s2_data : imm;
-
+      alu_in2 = (alu_in2_rs2) ? rs2_val : imm;
    end
 
    alu alu(
@@ -115,8 +108,6 @@ module cpu(
          end
 
          FETCH: begin
-            reg_s1_valid <= 0;
-            reg_s2_valid <= 0;
             o_addr <= pc;
             rd_en <= 1;
             pc <= pc + 4;
@@ -125,98 +116,83 @@ module cpu(
 
          EXECUTE: begin
 
-            if(need_rs1 && !reg_s1_valid) begin
+            case (opcode)
+               OP_ALU_R: begin
+                  o_addr <= rd << 2;
+                  wr_data <= alu_out;
+                  wr_en <= 1;
+                  state <= ST;
+               end
 
-               o_addr <= rs1 << 2;
-               rd_en <= 1;
-               state <= LD_RS1;
+               OP_ALU_I: begin
+                  o_addr <= rd << 2;
+                  wr_data <= alu_out;
+                  wr_en <= 1;
+                  state <= ST;
+               end
 
-            end else if(need_rs2 && !reg_s2_valid) begin
+               OP_LOAD: begin
+                  o_addr = alu_out;
+                  rd_en <= 1;
+                  state <= LD_RD;
+               end
 
-               o_addr <= rs2 << 2;
-               rd_en <= 1;
-               state <= LD_RS2;
+               OP_STORE: begin
+                  o_addr = alu_out;
+                  wr_data = rs2_val;
+                  wr_en <= 1;
+                  state <= ST;
+               end
 
-            end else begin
+               OP_BRANCH: begin
+                  state <= FETCH;
+                  case (funct3)
+                     BR_BEQ: if (alu_zero) pc <= pc - 4 + imm;
+                     BR_BNE: if (!alu_zero) pc <= pc - 4 + imm;
+                     BR_BLT: if (alu_out) pc <= pc - 4 + imm;
+                     BR_BGE: if (!alu_out) pc <= pc - 4 + imm;
+                     BR_BLTU: if (alu_out) pc <= pc - 4 + imm;
+                     BR_BGEU: if (!alu_out) pc <= pc - 4 + imm;
+                     default: state <= FAULT;
+                  endcase
+               end
 
-               case (opcode)
-                  OP_ALU_R: begin
+               OP_JAL: begin
+                  pc <= pc + imm - 4;
+                  if (rd != 0) begin
                      o_addr <= rd << 2;
-                     wr_data <= alu_out;
+                     wr_data <= pc + 4;
                      wr_en <= 1;
                      state <= ST;
-                  end
-
-                  OP_ALU_I: begin
-                     o_addr <= rd << 2;
-                     wr_data <= alu_out;
-                     wr_en <= 1;
-                     state <= ST;
-                  end
-
-                  OP_LOAD: begin
-                     o_addr = alu_out;
-                     rd_en <= 1;
-                     state <= LD_RD;
-                  end
-
-                  OP_STORE: begin
-                     o_addr = alu_out;
-                     wr_data = reg_s2_data;
-                     wr_en <= 1;
-                     state <= ST;
-                  end
-
-                  OP_BRANCH: begin
+                  end else begin
                      state <= FETCH;
-                     case (funct3)
-                        BR_BEQ: if (alu_zero) pc <= pc - 4 + imm;
-                        BR_BNE: if (!alu_zero) pc <= pc - 4 + imm;
-                        BR_BLT: if (alu_out) pc <= pc - 4 + imm;
-                        BR_BGE: if (!alu_out) pc <= pc - 4 + imm;
-                        BR_BLTU: if (alu_out) pc <= pc - 4 + imm;
-                        BR_BGEU: if (!alu_out) pc <= pc - 4 + imm;
-                        default: state <= FAULT;
-                     endcase
                   end
+               end
 
-                  OP_JAL: begin
-                     pc <= pc + imm - 4;
-                     if (rd != 0) begin
-                        o_addr <= rd << 2;
-                        wr_data <= pc + 4;
-                        wr_en <= 1;
-                        state <= ST;
-                     end else begin
-                        state <= FETCH;
-                     end
-                  end
-
-                  OP_JALR: begin
-                     pc <= reg_s1_data + imm - 4;
-                     if (rd != 0) begin
-                        o_addr <= rd << 2;
-                        wr_data <= pc;
-                        wr_en <= 1;
-                        state <= ST;
-                     end else begin
-                        state <= FETCH;
-                     end
-                  end
-                  
-                  OP_LUI: begin
+               OP_JALR: begin
+                  pc <= rs1_val + imm - 4;
+                  if (rd != 0) begin
                      o_addr <= rd << 2;
-                     wr_data <= imm;
+                     wr_data <= pc;
                      wr_en <= 1;
                      state <= ST;
+                  end else begin
+                     state <= FETCH;
                   end
-                  
-                  default: begin
-                     state <= FAULT;
-                  end
+               end
+               
+               OP_LUI: begin
+                  o_addr <= rd << 2;
+                  wr_data <= imm;
+                  wr_en <= 1;
+                  state <= ST;
+               end
+               
+               default: begin
+                  state <= FAULT;
+               end
 
-               endcase
-            end
+            endcase
          end
 
          LD_INST: begin
@@ -229,70 +205,81 @@ module cpu(
                funct3 <= rd_data[14:12];
                rs1 <= rd_data[19:15];
                rs2 <= rd_data[24:20];
-               need_rs1 <= 0;
-               need_rs2 <= 0;
                alu_in2_rs2 <= 0;
                case (rd_data[6:0])
                   OP_ALU_R: begin
-                     need_rs1 <= 1;
-                     need_rs2 <= 1;
                      alu_in2_rs2 <= 1;
                      alu_fn <= { rd_data[30], rd_data[14:12] };
+                     o_addr <= rd_data[19:15] << 2;
+                     rd_en <= 1;
+                     state <= LD_RS1;
                   end
                   OP_ALU_I: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
-                     need_rs1 <= 1;
                      alu_fn <= { rd_data[30], rd_data[14:12] };
+                     o_addr <= rd_data[19:15] << 2;
+                     rd_en <= 1;
+                     state <= LD_RS1;
                   end
                   OP_LOAD: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
-                     need_rs1 <= 1;
                      alu_fn <= 4'h0; // ADD
+                     o_addr <= rd_data[19:15] << 2;
+                     rd_en <= 1;
+                     state <= LD_RS1;
                   end
                   OP_STORE: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:25], rd_data[11:7] };
-                     need_rs1 <= 1;
-                     need_rs2 <= 1;
                      alu_fn <= 4'h0; // ADD
+                     o_addr <= rd_data[19:15] << 2;
+                     rd_en <= 1;
+                     state <= LD_RS1;
                   end
                   OP_BRANCH: begin
                      imm <= { {19{rd_data[31]}}, rd_data[31], rd_data[7], rd_data[30:25], rd_data[11:8], 1'b0};
-                     need_rs1 <= 1;
-                     need_rs2 <= 1;
                      alu_in2_rs2 <= 1;
-                     alu_fn <= (rd_data[14:12] == 3'h0 || rd_data[14:12] == 3'h1) ? 'h0 : 'h2; // ADD : BLT
+                     alu_fn <= (rd_data[14:12] == 3'h0 || rd_data[14:12] == 3'h1) ? 'h8 : 'h2; // SUB : BLT
+                     o_addr <= rd_data[19:15] << 2;
+                     rd_en <= 1;
+                     state <= LD_RS1;
                   end
                   OP_JAL: begin
                      imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0};
+                     state <= EXECUTE;
                   end
                   OP_JALR: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
-                     need_rs1 <= 1;
+                     o_addr <= rd_data[19:15] << 2;
+                     rd_en <= 1;
+                     state <= LD_RS1;
                   end
                   OP_LUI: begin
                      imm <= { rd_data[31:12], 12'b0 };
+                     state <= EXECUTE;
                   end
                   default: imm <= 0;
                endcase
 
-               state <= EXECUTE;
             end
          end
 
          LD_RS1: begin
             rd_en <= 0;
             if (rd_valid) begin
-               reg_s1_data <= rd_data;
-               reg_s1_valid <= 1;
-               state <= EXECUTE;
+               rs1_val <= rd_data;
+               if (opcode == OP_ALU_R || opcode == OP_STORE || opcode == OP_BRANCH) begin
+                  o_addr <= rs2 << 2;
+                  rd_en <= 1;
+                  state <= LD_RS2;
+               end else
+                  state <= EXECUTE;
             end
          end
 
          LD_RS2: begin
             rd_en <= 0;
             if (rd_valid) begin
-               reg_s2_data <= rd_data;
-               reg_s2_valid <= 1;
+               rs2_val <= rd_data;
                state <= EXECUTE;
             end
          end

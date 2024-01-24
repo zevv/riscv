@@ -10,10 +10,10 @@ SECTIONS
 {
    .text : { 
       *(.vectors);
-      *(.text) 
-      *(.rodata)
-      *(.data)
-      *(.sdata)
+      *(.text*) 
+      *(.rodata*)
+      *(.data*)
+      *(.sdata*)
       _sp = 0x2000;
    } > bram
 

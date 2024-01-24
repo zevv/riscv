@@ -45,11 +45,11 @@ void puthex(uint32_t v)
 	}
 }
 
-void puts(char *c)
+void puts(char *s)
 {
-	while(*c) {
-		putc(*c);
-		c++;
+	while(*s) {
+		putc(*s);
+		s++;
 	}
 }
 
@@ -115,8 +115,10 @@ void _start(void)
 	*led = a * b;
 #endif
 
-	putc(0x55);
-	//puts("abc");
+	for(;;) {
+		puts("abc");
+		for(volatile int i=0; i<40000; i++);
+	}
 #if 0
 	int c = 'a';
 
