@@ -237,12 +237,12 @@ module cpu(
                      need_rs1 <= 1;
                      need_rs2 <= 1;
                      alu_in2_rs2 <= 1;
-                     alu_fn <= { funct7[4], funct3 };
+                     alu_fn <= { rd_data[30], rd_data[14:12] };
                   end
                   OP_ALU_I: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
                      need_rs1 <= 1;
-                     alu_fn <= { funct7[4], funct3 };
+                     alu_fn <= { rd_data[30], rd_data[14:12] };
                   end
                   OP_LOAD: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
@@ -260,7 +260,7 @@ module cpu(
                      need_rs1 <= 1;
                      need_rs2 <= 1;
                      alu_in2_rs2 <= 1;
-                     alu_fn <= (funct3 == 3'h0 || funct3 == 3'h1) ? 'h0 : 'h2; // ADD or BLT
+                     alu_fn <= (funct3 == 3'h0 || funct3 == 3'h1) ? 'h0 : 'h2; // ADD : BLT
                   end
                   OP_JAL: begin
                      imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0};

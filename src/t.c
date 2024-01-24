@@ -45,7 +45,6 @@ void puthex(uint32_t v)
 	}
 }
 
-#if 0
 static void puts(char *c)
 {
 	while(*c) {
@@ -54,7 +53,6 @@ static void puts(char *c)
 	}
 }
 
-#endif
 
 int flop_a;;
 int flop_b = 0x22222222;
@@ -84,7 +82,7 @@ void _start(void)
 
 	//puthex(0x12345678);
 	//putc('\n');
-
+#if 0
 	for(;;) {
 		led->r += 1;
 		led->g += 2;
@@ -92,6 +90,7 @@ void _start(void)
 		volatile int i;
 		for(i=0; i<2000; i++);
 	}
+#endif
 
 
 #if 0
@@ -116,6 +115,7 @@ void _start(void)
 	*led = a * b;
 #endif
 
+	puts("abc");
 #if 0
 	int c = 'a';
 
