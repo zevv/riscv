@@ -260,7 +260,7 @@ module cpu(
                      need_rs1 <= 1;
                      need_rs2 <= 1;
                      alu_in2_rs2 <= 1;
-                     alu_fn <= (funct3 == 3'h0 || funct3 == 3'h1) ? 'h0 : 'h2; // ADD : BLT
+                     alu_fn <= (rd_data[14:12] == 3'h0 || rd_data[14:12] == 3'h1) ? 'h0 : 'h2; // ADD : BLT
                   end
                   OP_JAL: begin
                      imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0};

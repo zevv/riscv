@@ -45,7 +45,7 @@ void puthex(uint32_t v)
 	}
 }
 
-static void puts(char *c)
+void puts(char *c)
 {
 	while(*c) {
 		putc(*c);
@@ -115,7 +115,8 @@ void _start(void)
 	*led = a * b;
 #endif
 
-	puts("abc");
+	putc(0x55);
+	//puts("abc");
 #if 0
 	int c = 'a';
 

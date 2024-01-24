@@ -3,7 +3,8 @@
 
 module uart(
    input wire clk,
-   input wire rd_en, input wire [1:0] addr, output reg [7:0] rd_data, output reg rd_valid,
+   input wire [1:0] addr, 
+   input wire rd_en, output reg [7:0] rd_data, output reg rd_valid,
    input wire wr_en, input wire [7:0] wr_data,
    output reg tx
 );
@@ -13,7 +14,7 @@ module uart(
 		tx <= 1;
 	end
 
-	localparam DIVIDER = 7;
+	localparam DIVIDER = 8;
 
    reg [8:0] last_data = 0;
 	reg [9:0] shift = 0;
