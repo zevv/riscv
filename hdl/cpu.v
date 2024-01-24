@@ -57,7 +57,7 @@ module cpu(
    reg [15:0] pc = 0;
    reg [31:0] rs1_val = 0;
    reg [31:0] rs2_val = 0;
-   reg alu_in2_rs2;
+   reg alu_y_rs2;
    wire fetch = (state == FETCH);
 
    // Decoded instruction
@@ -70,20 +70,20 @@ module cpu(
    reg signed [31:0] imm = 0;
   
    // ALU
-   wire [31:0] alu_in1 = rs1_val;
-   reg [31:0] alu_in2;
+   wire [31:0] alu_x = rs1_val;
+   reg [31:0] alu_y;
    reg [3:0] alu_fn;
    wire [31:0] alu_out;
    wire alu_zero;
    wire alu_negative;
 
    always @(*) begin
-      alu_in2 = (alu_in2_rs2) ? rs2_val : imm;
+      alu_y = (alu_y_rs2) ? rs2_val : imm;
    end
 
    alu alu(
-      .v1(alu_in1),
-      .v2(alu_in2),
+      .x(alu_x),
+      .y(alu_y),
       .fn(alu_fn),
       .out(alu_out),
       .zero(alu_zero),
@@ -205,10 +205,10 @@ module cpu(
                funct3 <= rd_data[14:12];
                rs1 <= rd_data[19:15];
                rs2 <= rd_data[24:20];
-               alu_in2_rs2 <= 0;
+               alu_y_rs2 <= 0;
                case (rd_data[6:0])
                   OP_ALU_R: begin
-                     alu_in2_rs2 <= 1;
+                     alu_y_rs2 <= 1;
                      alu_fn <= { rd_data[30], rd_data[14:12] };
                      o_addr <= rd_data[19:15] << 2;
                      rd_en <= 1;
@@ -237,7 +237,7 @@ module cpu(
                   end
                   OP_BRANCH: begin
                      imm <= { {19{rd_data[31]}}, rd_data[31], rd_data[7], rd_data[30:25], rd_data[11:8], 1'b0};
-                     alu_in2_rs2 <= 1;
+                     alu_y_rs2 <= 1;
                      alu_fn <= (rd_data[14:12] == 3'h0 || rd_data[14:12] == 3'h1) ? 'h8 : 'h2; // SUB : BLT
                      o_addr <= rd_data[19:15] << 2;
                      rd_en <= 1;
