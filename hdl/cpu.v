@@ -75,7 +75,6 @@ module cpu(
    reg [3:0] alu_fn;
    wire [31:0] alu_out;
    wire alu_zero;
-   wire alu_negative;
 
    always @(*) begin
       alu_y = (alu_y_rs2) ? rs2_val : imm;
@@ -86,8 +85,7 @@ module cpu(
       .y(alu_y),
       .fn(alu_fn),
       .out(alu_out),
-      .zero(alu_zero),
-      .negative(alu_negative)
+      .zero(alu_zero)
    );
 
 
