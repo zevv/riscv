@@ -9,11 +9,12 @@ VCD := $(NAME).vcd
 
 SRCS += top.v
 SRCS += cpu.v
+SRCS += alu.v
 SRCS += machine.v
 SRCS += uart.v
 
 YOSYSFLAGS := -Q -T
-YOSYSCMD := synth_ice40 -top top -json $(NAME).json 
+YOSYSCMD := synth_ice40 -top top -json $(NAME).json -noflatten
 NEXTPNRFLAGS := --freq 48 --package sg48 --up5k 
 NEXTPNRFLAGS += --ignore-loops
 

@@ -2,6 +2,8 @@
 // https://github.com/jameslzhu/riscv-card/blob/master/riscv-card.pdf
 // https://riscv.org/wp-content/uploads/2017/05/riscv-spec-v2.2.pdf
 
+`include "alu.v"
+
 module cpu(
    input clk,
    output reg rd_en = 0, output reg [15:0] o_addr = 0, input [31:0] rd_data, input rd_valid,
@@ -76,7 +78,6 @@ module cpu(
    reg [31:0] alu_in2;
    wire [31:0] alu_out;
    wire alu_zero;
-   wire alu_overflow;
    wire alu_negative;
    
    reg [3:0] alu_fn;
@@ -85,15 +86,6 @@ module cpu(
 
       alu_in2 = (alu_in2_rs2) ? reg_s2_data : imm;
 
-      if (opcode == OP_ALU_R || opcode == OP_ALU_I)
-         alu_fn = { funct7[4], funct3 };
-      else if (opcode == OP_LOAD || opcode == OP_STORE)
-         alu_fn = 4'h0; // ADD
-      else
-         if(funct3 == 3'h0 || funct3 == 3'h1)
-            alu_fn = 4'h8; // SUB
-         else
-            alu_fn = 4'h2; // BLT
    end
 
    alu alu(
@@ -102,7 +94,6 @@ module cpu(
       .fn(alu_fn),
       .out(alu_out),
       .zero(alu_zero),
-      .overflow(alu_overflow),
       .negative(alu_negative)
    );
 
@@ -170,7 +161,6 @@ module cpu(
                   end
 
                   OP_STORE: begin
-                     debug <= 1;
                      o_addr = alu_out;
                      wr_data = reg_s2_data;
                      wr_en <= 1;
@@ -247,25 +237,30 @@ module cpu(
                      need_rs1 <= 1;
                      need_rs2 <= 1;
                      alu_in2_rs2 <= 1;
+                     alu_fn <= { funct7[4], funct3 };
                   end
                   OP_ALU_I: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
                      need_rs1 <= 1;
+                     alu_fn <= { funct7[4], funct3 };
                   end
                   OP_LOAD: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
                      need_rs1 <= 1;
+                     alu_fn <= 4'h0; // ADD
                   end
                   OP_STORE: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:25], rd_data[11:7] };
                      need_rs1 <= 1;
                      need_rs2 <= 1;
+                     alu_fn <= 4'h0; // ADD
                   end
                   OP_BRANCH: begin
                      imm <= { {19{rd_data[31]}}, rd_data[31], rd_data[7], rd_data[30:25], rd_data[11:8], 1'b0};
                      need_rs1 <= 1;
                      need_rs2 <= 1;
                      alu_in2_rs2 <= 1;
+                     alu_fn <= (funct3 == 3'h0 || funct3 == 3'h1) ? 'h0 : 'h2; // ADD or BLT
                   end
                   OP_JAL: begin
                      imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0};
@@ -348,47 +343,5 @@ module cpu(
    end
 
 endmodule
-
-
-
-module alu(
-   input [31:0] v1,
-   input [31:0] v2,
-   input [3:0] fn,
-   output reg [31:0] out,
-   output reg zero,
-   output reg overflow,
-   output reg negative
-);
-
-   always @(*)
-   begin
-
-      case (fn)
-         4'h0: out = v1 + v2;
-         4'h1: out = v1 << v2[4:0];
-         4'h2: out = (v1 < v2) ? 1 : 0;
-         4'h3: out = (v1 < v2) ? 1 : 0;
-         4'h4: out = v1 ^ v2;
-         4'h5: out = v1 >> v2[4:0];
-         4'h6: out = v1 | v2;
-         4'h7: out = v1 & v2;
-         4'h8: out = v1 - v2;
-         default: out= 0;
-      endcase
-
-      zero = (out == 0) ? 1 : 0;
-      overflow = 0;
-      negative = out[31];
-
-   end
-
-endmodule
-
-   
-
-
-
-
 
 // vi: ft=verilog ts=3 sw=3 et
