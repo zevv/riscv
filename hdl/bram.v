@@ -13,7 +13,8 @@ module bram(
    wire [31:0] zero = mem[0];
    wire [31:0] ra = mem[1];
    wire [31:0] sp = mem[2];
-   wire [31:0] x8 = mem[8];
+   wire [31:0] s0 = mem[8];
+   wire [31:0] s1 = mem[9];
    wire [31:0] a0 = mem[10];
    wire [31:0] a1 = mem[11];
    wire [31:0] a2 = mem[12];

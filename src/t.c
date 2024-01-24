@@ -109,10 +109,11 @@ void _start(void)
 	volatile int i;
 	for(i=0; i<40000; i++);
 #endif
-#if 0
+#if 1
 	volatile int a = 100;
 	volatile int b = 100;
-	*led = a * b;
+	puthex(a * b);
+	putc('\n');
 #endif
 
 	for(;;) {

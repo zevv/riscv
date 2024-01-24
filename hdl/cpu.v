@@ -216,7 +216,7 @@ module cpu(
                   end
                   OP_ALU_I: begin
                      imm <= { {20{rd_data[31]}}, rd_data[31:20] };
-                     alu_fn <= { rd_data[30], rd_data[14:12] };
+                     alu_fn <= { 1'b0, rd_data[14:12] };
                      o_addr <= rd_data[19:15] << 2;
                      rd_en <= 1;
                      state <= LD_RS1;
@@ -257,7 +257,9 @@ module cpu(
                      imm <= { rd_data[31:12], 12'b0 };
                      state <= EXECUTE;
                   end
-                  default: imm <= 0;
+                  default: begin
+                     state <= FAULT;
+                  end
                endcase
 
             end

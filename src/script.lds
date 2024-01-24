@@ -11,6 +11,7 @@ SECTIONS
    .text : { 
       *(.vectors);
       *(.text*) 
+      *(.srodata*)
       *(.rodata*)
       *(.data*)
       *(.sdata*)
