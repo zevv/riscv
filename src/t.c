@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 struct led {
-	uint8_t r, g, b;
+	uint8_t b, g, r;
 };
 
 struct uart {

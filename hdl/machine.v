@@ -104,26 +104,26 @@ module machine(
       led_sel   = (addr[15:12] == 4'b0100);
       uart_sel  = (addr[15:12] == 4'b0101);
       spram_sel = (addr[15:15] == 1'b1);
-
-      bram_addr = addr[11:0];
-      bram_rd_en = bram_sel && cpu_rd_en;
-      bram_wr_en = bram_sel && cpu_wr_en;
-      bram_wr_data = cpu_wr_data;
       
-      spram_addr = addr[14:0];
+      bram_rd_en = bram_sel && cpu_rd_en;
       spram_rd_en = spram_sel && cpu_rd_en;
-      spram_wr_en = spram_sel && cpu_wr_en;
-      spram_wr_data = cpu_wr_data;
-
-      led_addr = addr[1:0];
-      led_wr_data = cpu_wr_data;
       led_rd_en = led_sel && cpu_rd_en;
-      led_wr_en = led_sel && cpu_wr_en;
-
-      uart_addr = addr[2:0];
-      uart_wr_data = cpu_wr_data;
       uart_rd_en = uart_sel && cpu_rd_en;
+
+      bram_wr_en = bram_sel && cpu_wr_en;
+      spram_wr_en = spram_sel && cpu_wr_en;
+      led_wr_en = led_sel && cpu_wr_en;
       uart_wr_en = uart_sel && cpu_wr_en;
+      
+      bram_addr = addr[11:0];
+      spram_addr = addr[14:0];
+      led_addr = addr[1:0];
+      uart_addr = addr[2:0];
+
+      bram_wr_data = cpu_wr_data;
+      spram_wr_data = cpu_wr_data;
+      led_wr_data = cpu_wr_data;
+      uart_wr_data = cpu_wr_data;
 
       cpu_rd_valid = bram_rd_valid || spram_rd_valid || led_rd_valid || uart_rd_valid;
 
