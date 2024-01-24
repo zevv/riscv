@@ -2,9 +2,6 @@
 `default_nettype none
 
 `include "machine.v"
-`include "cpu.v"
-`include "led.v"
-`include "uart.v"
 
 module test();
 
@@ -27,13 +24,13 @@ module test();
    end
 
    wire debug;
-   wire led;
+   wire led1, led2, led3;
    wire uart_tx;
 
    machine machine(
       .clk(clk),
       .debug(debug),
-      .led(led),
+      .led1(led1), .led2(led2), .led3(led3),
       .uart_tx(uart_tx)
    );
 

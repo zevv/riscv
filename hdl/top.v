@@ -2,15 +2,12 @@
 `default_nettype none
 
 `include "machine.v"
-`include "cpu.v"
-`include "led.v"
-`include "uart.v"
 
 
 module top(
    output IOB_8A, output IOB_23B,
    output IOB_9B,
-   output RGB2,
+   output RGB0, RGB1, RGB2,
    output IOT_37A,
    output IOT_41A,
    output IOB_13B,
@@ -46,7 +43,7 @@ module top(
    machine machine(
       .clk(clk),
       .debug(IOT_37A),
-      .led(RGB2),
+      .led1(RGB0), .led2(RGB1), .led3(RGB2),
       .uart_tx(IOB_13B)
    );
 

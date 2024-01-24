@@ -2,39 +2,40 @@
 
 module led(
    input wire clk,
-   input wire rd_en, input wire [15:0] addr, output reg [31:0] rd_data, output reg rd_valid,
-   input wire wr_en, input wire [31:0] wr_data,
-   output reg led
+   input wire rd_en, input wire [1:0] addr, output reg [7:0] rd_data, output reg rd_valid,
+   input wire wr_en, input wire [7:0] wr_data,
+   output reg led1, output reg led2, output reg led3
 );
 
-   reg [31:0] val = 0;
+   reg [7:0] val [2:0];
    reg [7:0] n = 0;
 
    always @(posedge clk)
    begin
       rd_valid <= 0;
       if(rd_en) begin
-         if (addr == 0) begin
-            //$display("LED rd %x", val);
-            rd_data <= val;
-            rd_valid <= 1;
-         end
+         rd_data <= val[addr];
+         rd_valid <= 1;
       end
       if(wr_en) begin
-         if (addr == 0) begin
-            //$display("LED wr %x", wr_data);
-            val <= wr_data;
-         end
+         val[addr] <= wr_data;
       end
    end
    
    always @(posedge clk)
    begin
       n <= n + 1;
-      if (n == 0)
-         led <= 1;
-      if (n == val[7:0])
-         led <= 0;
+      if (n == 0) begin
+         led1 <= 1;
+         led2 <= 1;
+         led3 <= 1;
+      end
+      if (n == val[0])
+         led1 <= 0;
+      if (n == val[1])
+         led2 <= 0;
+      if (n == val[2])
+         led3 <= 0;
    end
 
 endmodule

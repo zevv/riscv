@@ -1,14 +1,16 @@
 
 #include <stdint.h>
 
-volatile int *led = (volatile int *)0x4000;
-
+struct led {
+	uint8_t r, g, b;
+};
 
 struct uart {
 	uint8_t data;
 	uint8_t status;
 };
 
+struct led volatile *led = (struct led *)0x4000;
 struct uart volatile *uart0 = (struct uart *)0x5000;
 
 
@@ -84,9 +86,11 @@ void _start(void)
 	//putc('\n');
 
 	for(;;) {
-		(*led) ++;
+		led->r += 1;
+		led->g += 2;
+		led->b += 3;
 		volatile int i;
-		for(i=0; i<1000; i++);
+		for(i=0; i<2000; i++);
 	}
 
 
