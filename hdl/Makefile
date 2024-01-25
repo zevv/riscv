@@ -54,8 +54,10 @@ prog: $(BIN)
 prog_flash: $(BIN)
 	iceprog $(BIN)
 
-report: $(JSON)
-	./timing.pl < $(NAME).log
+report: $(BIN)
+	@./timing.pl < $(NAME).log
+	@grep % $(NAME).log
+	@grep "Max freq" $(NAME).log
 
 clean:
 	rm -rf $(JSON) $(ASC) $(BIN) $(VP) $(VCD)
