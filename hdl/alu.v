@@ -10,22 +10,29 @@ module alu(
 );
 
 
-   adder adder_inst(
+   adder add(
       .x(x),
       .y(y),
-      .addsub(addsub),
-      .out(mac_out)
+      .addsub(1'b0),
+      .out(add_out)
    );
 
-   wire [31:0] mac_out;
-   wire addsub = (fn == 4'h8 || fn == 4'h2 || fn == 4'h3) ? 1 : 0;
-   wire [31:0] lt = mac_out ^ ((x ^ y) & (mac_out ^ x));
+   adder sub(
+      .x(x),
+      .y(y),
+      .addsub(1'b1),
+      .out(sub_out)
+   );
+
+   wire [31:0] add_out;
+   wire [31:0] sub_out;
+   wire [31:0] lt = sub_out ^ ((x ^ y) & (sub_out ^ x));
 
    always @(*)
    begin
 
       case (fn)
-         4'h0: out = mac_out; // x + y;
+         4'h0: out = add_out; // x + y;
          4'h1: out = x << y[4:0];
          4'h2: out = lt[31];
          4'h3: out = lt[31];
@@ -33,7 +40,7 @@ module alu(
          4'h5: out = x >> y[4:0];
          4'h6: out = x | y;
          4'h7: out = x & y;
-         4'h8: out = mac_out; // x - y;
+         4'h8: out = sub_out; // x - y;
          default: out= 0;
       endcase
 
