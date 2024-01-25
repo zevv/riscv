@@ -303,7 +303,7 @@ module cpu(
             rd_en <= 0;
             if(rd_valid) begin
                pc <= rd_data;
-               o_addr = VEC_SP;
+               o_addr <= VEC_SP;
                state <= LD_SP;
                rd_en <= 1;
             end
@@ -312,8 +312,9 @@ module cpu(
          LD_SP: begin
             rd_en <= 0;
             if(rd_valid) begin
-               o_addr = 2 << 2;
-               wr_data = rd_data;
+               o_addr <= 2 << 2;
+               wr_data <= rd_data;
+               wr_en <= 1;
                state <= ST;
             end
          end
