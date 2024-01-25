@@ -46,18 +46,12 @@ module cpu(
       VEC_RESET = 15'h0080,
       VEC_SP    = 15'h0084;
 
-
-   initial begin
-      rd_en = 0;
-      wr_en = 0;
-   end
-
    // CPU state
    reg [3:0] state = 0;
    reg [15:0] pc = 0;
    reg [31:0] rs1_val = 0;
    reg [31:0] rs2_val = 0;
-   reg alu_y_rs2;
+   reg alu_y_rs2 = 0;
    wire fetch = (state == FETCH);
 
    // Decoded instruction
@@ -71,14 +65,11 @@ module cpu(
   
    // ALU
    wire [31:0] alu_x = rs1_val;
-   reg [31:0] alu_y;
-   reg [3:0] alu_fn;
+   wire [31:0] alu_y = (alu_y_rs2) ? rs2_val : imm;
+   reg [3:0] alu_fn = 0;
    wire [31:0] alu_out;
    wire alu_zero;
 
-   always @(*) begin
-      alu_y = (alu_y_rs2) ? rs2_val : imm;
-   end
 
    alu alu(
       .x(alu_x),
@@ -101,7 +92,7 @@ module cpu(
                pc <= 0;
                o_addr <= VEC_RESET;
                rd_en <= 1;
-               state = LD_PC;
+               state <= LD_PC;
             end
          end
 
@@ -130,14 +121,14 @@ module cpu(
                end
 
                OP_LOAD: begin
-                  o_addr = alu_out;
+                  o_addr <= alu_out;
                   rd_en <= 1;
                   state <= LD_RD;
                end
 
                OP_STORE: begin
-                  o_addr = alu_out;
-                  wr_data = rs2_val;
+                  o_addr <= alu_out;
+                  wr_data <= rs2_val;
                   wr_en <= 1;
                   state <= ST;
                end
