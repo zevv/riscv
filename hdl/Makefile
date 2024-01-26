@@ -12,6 +12,7 @@ SRCS += cpu.v
 SRCS += alu.v adder.v
 SRCS += machine.v
 SRCS += uart.v
+SRCS += led.v
 
 YOSYSFLAGS := -Q -T
 YOSYSCMD := synth_ice40 -top top -json $(NAME).json

@@ -84,7 +84,7 @@ endmodule
 module cpu(
    input clk,
    output reg rd_en, output reg [15:0] o_addr, input [31:0] rd_data, input rd_valid,
-   output reg wr_en = 0, output [31:0] wr_data = 0,
+   output reg wr_en, output reg [31:0] wr_data,
    output reg debug
 );
    
@@ -121,7 +121,6 @@ module cpu(
    // CPU state
    reg [3:0] state = 0;
    reg [15:0] pc = 0;
-   reg [15:0] pc_next = 0;
    reg [31:0] rs1_val = 0;
    reg [31:0] rs2_val = 0;
    wire fetch = (state == FETCH);
@@ -156,20 +155,20 @@ module cpu(
       .zero(alu_zero)
    );
 
-   reg [31:0] ld_tmp = 0;
+   reg [31:0] rd_val = 0;
    
    always @(*) begin
-      wr_data = ld_tmp;
+      wr_data = rd_val;
       case (opcode)
          OP_ALU_R: wr_data = alu_out;
          OP_ALU_I: wr_data = alu_out;
          OP_LOAD: begin
             if (funct3 == 3'b000 || funct3 == 3'b100)
-               wr_data = ld_tmp[7:0];
+               wr_data = rd_val[7:0];
             else if(funct3 == 3'b001 || funct3 == 3'b101) 
-               wr_data = ld_tmp[15:0];
+               wr_data = rd_val[15:0];
             else
-               wr_data = ld_tmp;
+               wr_data = rd_val;
          end
          OP_STORE: wr_data = rs2_val;
          OP_JAL: wr_data = pc + 4;
@@ -182,14 +181,14 @@ module cpu(
       o_addr = rd << 2;
       case (state)
          FETCH: o_addr = pc;
-         ST: if(opcode == OP_STORE) o_addr = rs1_val + imm;
          LD_RD: o_addr = alu_out;
-         LD_RS1: o_addr = rd_data[19:15] << 2;
+         LD_RS1: o_addr = rs1 << 2;
          LD_RS2: o_addr = rs2 << 2;
          LD_INST: o_addr = pc;
          LD_PC: o_addr = VEC_RESET;
          LD_SP: o_addr = VEC_SP;
          ST_SP: o_addr = 2 << 2;
+         ST: if(opcode == OP_STORE) o_addr = rs1_val + imm;
       endcase
    end
 
@@ -235,21 +234,6 @@ module cpu(
    reg [31:0] inst = 0;
    wire signed [31:0] imm ;
 
-
-   reg [16:0] pc_next2;
-   always @(*) begin
-      pc_next2 = pc;
-      case (state)
-         FETCH: pc_next2 = pc + 4;
-         EXECUTE: begin
-            if (opcode == OP_BRANCH && branch)
-               pc_next2 = pc + imm;
-            else if (opcode == OP_JAL || opcode == OP_JALR)
-               pc_next2 = pc + imm;
-         end
-      endcase
-   end
-
    // CPU state machine
 
    always @(posedge clk) begin
@@ -257,8 +241,8 @@ module cpu(
       case (state)
 
          BOOT: begin
-            pc <= pc + 1;
-            if (pc == 16) begin
+            pc <= pc + 4;
+            if (pc == 64) begin
                pc <= 0;
                state <= LD_SP;
             end
@@ -266,7 +250,7 @@ module cpu(
 
          LD_SP: begin
             if(rd_valid) begin
-               ld_tmp = rd_data;
+               rd_val = rd_data;
                state <= ST_SP;
             end
          end
@@ -317,10 +301,7 @@ module cpu(
          LD_RS1: begin
             if (rd_valid) begin
                rs1_val <= rd_data;
-               if (opcode == OP_ALU_R || opcode == OP_STORE || opcode == OP_BRANCH) begin
-                  state <= LD_RS2;
-               end else
-                  state <= EXECUTE;
+               state <= LD_RS2;
             end
          end
 
@@ -333,7 +314,7 @@ module cpu(
 
          LD_RD: begin
             if (rd_valid) begin
-               ld_tmp <= rd_data;
+               rd_val <= rd_data;
                state <= ST;
             end
          end

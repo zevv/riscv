@@ -10,6 +10,16 @@ module led(
    reg [7:0] val [3:0];
    reg [7:0] n = 0;
 
+   initial begin
+      val[0] = 0;
+      val[1] = 0;
+      val[2] = 0;
+   end
+
+   wire [7:0] v1 = val[0];
+   wire [7:0] v2 = val[0];
+   wire [7:0] v3 = val[0];
+
    always @(posedge clk)
    begin
       rd_valid <= 0;
