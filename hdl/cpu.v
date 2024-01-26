@@ -110,6 +110,8 @@ module cpu(
       LD_PC = 9,
       LD_SP = 10,
       ST_SP = 11,
+      ST_JAL = 13,
+      ST_JALR = 14,
       FAULT = 15;
 
    localparam
@@ -205,7 +207,13 @@ module cpu(
    end
 
    always @(*) begin
-      wr_en = (state == ST || state == ST_SP);
+      wr_en = 0;
+      case (state)
+         ST: wr_en = 1;
+         ST_SP: wr_en = 1;
+         ST_JAL: if(rd != 0) wr_en = 1;
+         ST_JALR: if(rd != 0) wr_en = 1;
+      endcase
    end
 
 
@@ -276,38 +284,24 @@ module cpu(
 
          FETCH: begin
             state <= LD_INST;
-            $display("%08x", pc);
+            //$display("%08x", pc);
          end
 
          EXECUTE: begin
-            pc <= pc + 4;
             case (opcode)
                OP_ALU_R: state <= ST;
                OP_ALU_I: state <= ST;
                OP_LOAD: state <= LD_RD;
                OP_STORE: state <= ST;
                OP_BRANCH: begin
-                  if (branch) begin
+                  if (branch)
                      pc <= pc + imm;
-                  end
+                  else
+                     pc <= pc + 4;
                   state <= FETCH;
                end
-               OP_JAL: begin
-                  pc <= pc + imm;
-                  if (rd != 0) begin
-                     state <= ST;
-                  end else begin
-                     state <= FETCH;
-                  end
-               end
-               OP_JALR: begin
-                  pc <= rs1_val + imm;
-                  if (rd != 0) begin
-                     state <= ST;
-                  end else begin
-                     state <= FETCH;
-                  end
-               end
+               OP_JAL: state <= ST_JAL;
+               OP_JALR: state <= ST_JALR;
                OP_LUI: state <= ST;
                default: state <= FAULT;
             endcase
@@ -343,8 +337,19 @@ module cpu(
                state <= ST;
             end
          end
-
+         
          ST: begin
+            pc <= pc + 4;
+            state <= FETCH;
+         end
+
+         ST_JAL: begin
+            pc <= pc + imm;
+            state <= FETCH;
+         end
+
+         ST_JALR: begin
+            pc <= rs1_val + imm;
             state <= FETCH;
          end
 
