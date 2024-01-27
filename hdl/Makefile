@@ -3,9 +3,6 @@ NAME := riscv
 PCF := io.pcf
 ASC := $(NAME).asc
 BIN := $(NAME).bin
-JSON := $(NAME).json
-VP := $(NAME).vp
-VCD := $(NAME).vcd
 
 SRCS += top.v
 SRCS += cpu.v
@@ -41,9 +38,6 @@ sim: test.vcd
 %.vcd: %.vp $(SRCS)
 	vvp $<
 
-gui: $(ASC) $(PCF)
-	nextpnr-ice40 $(NEXTPNRFLAGS) --json $(JSON) --pcf $(PCF) --gui
-
 lint: $(SRCS)
 	verilator --lint-only -Wall --timing --top test test.v
 
@@ -53,8 +47,10 @@ prog: top.bin
 prog_flash: $(BIN)
 	iceprog $(BIN)
 
-report: $(JSON)
-	./timing.pl < $(NAME).log
+report: top.asc
+	#@./timing.pl < $(NAME).log
+	@grep % $(NAME).log
+	@grep "Max freq" $(NAME).log
 
 clean:
 	rm -rf *.json *.asc *.bin *.vp *.vcd
