@@ -1,0 +1,57 @@
+#!/bin/bash
+
+#set -e
+
+do_test()
+{
+	NAME=$1
+	printf %-20s $NAME
+
+	(
+	make -C ../src/ clean
+	make -C ../src/ SSRC=test/compliance/${NAME}.S
+	make clean
+	make | grep mem > mem.dump
+	) > /tmp/build.out 2>&1
+
+	if [ ! -r ../src/t.elf ]; then
+		echo "BUILD FAIL"
+		return
+	fi
+
+	FROM=`nm ../src/t.elf | grep test...res | sort | head -1 | awk '{print $1}'`
+	TO=`nm ../src/t.elf | grep test...res | sort | tail -1 | awk '{print $1}'`
+
+	if [ "$FROM" == "" -o "$TO" == "" ]; then
+		echo "EXEC FAIL"
+		return
+	fi
+
+	FROM=$((16#$FROM))
+	TO=$((16#$TO))
+
+	(
+	for i in `seq $FROM $(($TO+20))`; do
+		a=`printf "%08x" $i`
+		grep "mem $a" mem.dump | awk '{print $3}'
+	done
+	) > /tmp/out
+
+	diff /tmp/out ../src/test/ref/${NAME} > /tmp/diff.out
+	if [ "$?" == "0" ]; then
+		echo "OK"
+	else
+		echo "FAIL"
+	fi
+}
+
+if [ "$1" != "" ]; then
+	do_test I-$1-01
+	cat /tmp/build.out
+	cat /tmp/diff.out
+else
+	TESTS=`cd ../src/test/ref; ls`
+	for TEST in $TESTS; do
+		do_test $TEST
+	done
+fi
