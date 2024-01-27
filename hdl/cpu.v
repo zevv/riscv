@@ -24,6 +24,7 @@ module cpu(
    localparam
       BOOT = 0,
       FETCH = 1,
+      BRANCH = 2,
       EXECUTE = 3,
       ST = 4,
       LD_RS1 = 5,
@@ -35,6 +36,7 @@ module cpu(
       ST_SP = 11,
       ST_JAL = 12,
       ST_JALR = 13,
+      ST_ALU_R = 14,
       FAULT = 15;
 
    localparam
@@ -81,7 +83,7 @@ module cpu(
    wire alu_zero;
 
    always @(*) begin
-      alu_in2 = (alu_in2_rs2) ? rs2_val : imm;
+      alu_in2 = (alu_in2_rs2) ? rd_data : imm;
    end
 
    alu alu(
@@ -179,6 +181,10 @@ module cpu(
             wr_data = rd_val;
             wr_en = 1;
          end
+         BRANCH: begin
+            o_addr = (rs2 << 2);
+            rd_en = 1;
+         end
          FETCH: begin
             o_addr = pc;
             rd_en = 1;
@@ -205,6 +211,11 @@ module cpu(
                o_addr = alu_out;
                wr_data = rs2_val;
             end
+         end
+         ST_ALU_R: begin
+            o_addr = (rd << 2);
+            wr_en = (rd != 0);
+            wr_data = alu_out;
          end
          ST_JAL:begin
             wr_en = (rd != 0);
@@ -276,10 +287,11 @@ module cpu(
                rs1_val <= rd_data;
                state <= EXECUTE;
                case (opcode)
-                  OP_ALU_R: state <= LD_RS2;
+                  OP_ALU_R: state <= ST_ALU_R;
                   OP_ALU_I: state <= ST;
                   OP_STORE: state <= LD_RS2;
-                  OP_BRANCH: state <= LD_RS2;
+                  OP_BRANCH: state <= BRANCH;
+                  OP_JALR: state <= ST_JALR;
                endcase
             end
          end
@@ -291,15 +303,16 @@ module cpu(
                case (opcode)
                   OP_ALU_R: state <= ST;
                   OP_STORE: state <= ST;
-                  OP_BRANCH: begin
-                     if (branch)
-                        pc <= pc + imm;
-                     else
-                        pc <= pc + 4;
-                     state <= FETCH;
-                  end
                endcase
             end
+         end
+
+         BRANCH: begin
+            if (branch)
+               pc <= pc + imm;
+            else
+               pc <= pc + 4;
+            state <= FETCH;
          end
 
          LOAD: begin
@@ -327,6 +340,11 @@ module cpu(
                rd_val <= rd_data;
                state <= ST_SP;
             end
+         end
+
+         ST_ALU_R: begin
+            pc <= pc + 4;
+            state <= FETCH;
          end
 
          ST_SP: begin

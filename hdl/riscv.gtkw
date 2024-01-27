@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Wed Jan 24 15:26:00 2024
+[*] Sat Jan 27 16:23:37 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Wed Jan 24 15:22:23 2024"
-[dumpfile_size] 1421150
+[dumpfile_mtime] "Sat Jan 27 16:23:24 2024"
+[dumpfile_size] 4654594
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
-[timestart] 102
-[size] 1451 951
+[timestart] 214
+[size] 1704 1057
 [pos] -1 -1
-*-3.900000 120 725 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-3.300001 151 151 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
 [treeopen] test.machine.cpu0.
@@ -18,8 +18,9 @@
 [signals_width] 167
 [sst_expanded] 1
 [sst_vpaned_height] 280
+@22
+test.cycle[31:0]
 @28
-test.clk
 test.debug
 test.uart_tx
 @820
@@ -52,16 +53,18 @@ test.machine.cpu0.imm[31:0]
 -CPU memory
 @22
 test.machine.cpu0.o_addr[15:0]
-@28
-test.machine.cpu0.wr_en
-@22
+[color] 2
 test.machine.cpu0.wr_data[31:0]
 @28
+[color] 2
+test.machine.cpu0.wr_en
+[color] 3
 test.machine.cpu0.rd_en
-@22
-test.machine.cpu0.rd_data[31:0]
-@28
+[color] 3
 test.machine.cpu0.rd_valid
+@22
+[color] 3
+test.machine.cpu0.rd_data[31:0]
 @200
 -CPU state
 @22
