@@ -103,6 +103,59 @@ module cpu(
       rs2 = inst[24:20];
    end
 
+   always @(*) begin
+      alu_in2_rs2 = 0;
+      alu_fn = 0;
+      case (inst[6:0])
+         OP_ALU_R: begin
+            alu_in2_rs2 = 1;
+            alu_fn = { funct7[4], funct3 };
+         end
+         OP_ALU_I: begin
+            alu_fn = { 1'b0, funct3 };
+         end
+         OP_LOAD: begin
+            alu_fn = 4'h0; // ADD
+         end
+         OP_STORE: begin
+            alu_fn = 4'h0; // ADD
+         end
+         OP_BRANCH: begin
+            alu_in2_rs2 = 1;
+            alu_fn = (funct3 == 3'h0 || funct3 == 3'h1) ? 'h8 : 'h2; // SUB : BLT
+         end
+      endcase
+   end
+
+   always @(*) begin
+      imm = 0;
+      case (inst[6:0])
+         OP_ALU_I: imm = { {20{inst[31]}}, inst[31:20] };
+         OP_LOAD: imm = { {20{inst[31]}}, inst[31:20] };
+         OP_STORE: imm = { {20{inst[31]}}, inst[31:25], inst[11:7] };
+         OP_BRANCH: imm = { {19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
+         OP_JAL: imm = { inst[31], inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
+         OP_JALR: imm = { {20{inst[31]}}, inst[31:20] };
+         OP_LUI: imm = { inst[31:12], 12'b0 };
+      endcase
+   end
+ 
+   reg branch;
+
+   always @(*) begin
+      branch = 0;
+      case (funct3)
+         BR_BEQ: if (alu_zero) branch = 1;
+         BR_BNE: if (!alu_zero) branch = 1;
+         BR_BLT: if (alu_out) branch = 1;
+         BR_BGE: if (!alu_out) branch = 1;
+         BR_BLTU: if (alu_out) branch = 1;
+         BR_BGEU: if (!alu_out) branch = 1;
+      endcase
+   end
+
+
+   // Memory control
 
    always @(*) begin
 
@@ -172,22 +225,6 @@ module cpu(
       endcase
    end
 
- 
-   reg branch;
-
-   always @(*) begin
-      branch = 0;
-      case (funct3)
-         BR_BEQ: if (alu_zero) branch = 1;
-         BR_BNE: if (!alu_zero) branch = 1;
-         BR_BLT: if (alu_out) branch = 1;
-         BR_BGE: if (!alu_out) branch = 1;
-         BR_BLTU: if (alu_out) branch = 1;
-         BR_BGEU: if (!alu_out) branch = 1;
-      endcase
-   end
-
-
    // CPU state machine
 
    always @(posedge clk) begin
@@ -208,54 +245,18 @@ module cpu(
 
          LD_INST: begin
             if (rd_valid) begin
-
                inst <= rd_data;
-
-               alu_in2_rs2 <= 0;
                case (rd_data[6:0])
-                  OP_ALU_R: begin
-                     alu_in2_rs2 <= 1;
-                     alu_fn <= { rd_data[30], rd_data[14:12] };
-                     state <= LD_RS1;
-                  end
-                  OP_ALU_I: begin
-                     imm <= { {20{rd_data[31]}}, rd_data[31:20] };
-                     alu_fn <= { 1'b0, rd_data[14:12] };
-                     state <= LD_RS1;
-                  end
-                  OP_LOAD: begin
-                     imm <= { {20{rd_data[31]}}, rd_data[31:20] };
-                     alu_fn <= 4'h0; // ADD
-                     state <= LD_RS1;
-                  end
-                  OP_STORE: begin
-                     imm <= { {20{rd_data[31]}}, rd_data[31:25], rd_data[11:7] };
-                     alu_fn <= 4'h0; // ADD
-                     state <= LD_RS1;
-                  end
-                  OP_BRANCH: begin
-                     imm <= { {19{rd_data[31]}}, rd_data[31], rd_data[7], rd_data[30:25], rd_data[11:8], 1'b0};
-                     alu_in2_rs2 <= 1;
-                     alu_fn <= (rd_data[14:12] == 3'h0 || rd_data[14:12] == 3'h1) ? 'h8 : 'h2; // SUB : BLT
-                     state <= LD_RS1;
-                  end
-                  OP_JAL: begin
-                     imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0};
-                     state <= EXECUTE;
-                  end
-                  OP_JALR: begin
-                     imm <= { {20{rd_data[31]}}, rd_data[31:20] };
-                     state <= LD_RS1;
-                  end
-                  OP_LUI: begin
-                     imm <= { rd_data[31:12], 12'b0 };
-                     state <= EXECUTE;
-                  end
-                  default: begin
-                     state <= FAULT;
-                  end
+                  OP_ALU_R: state <= LD_RS1;
+                  OP_ALU_I: state <= LD_RS1;
+                  OP_LOAD: state <= LD_RS1;
+                  OP_STORE: state <= LD_RS1;
+                  OP_BRANCH: state <= LD_RS1;
+                  OP_JAL: state <= EXECUTE;
+                  OP_JALR: state <= LD_RS1;
+                  OP_LUI: state <= EXECUTE;
+                  default: state <= FAULT;
                endcase
-
             end
          end
 
@@ -265,17 +266,10 @@ module cpu(
                OP_ALU_I: state <= ST;
                OP_LOAD: state <= LOAD;
                OP_STORE: state <= ST;
-               OP_BRANCH: begin
-                  if (branch) 
-                     pc <= pc + imm;
-                  else
-                     pc <= pc + 4;
-                  state <= FETCH;
-               end
+               OP_BRANCH: begin end
                OP_JAL: state <= ST_JAL;
                OP_JALR: state <= ST_JALR;
                OP_LUI: state <= ST;
-               default: state <= FAULT;
             endcase
          end
 
@@ -292,7 +286,14 @@ module cpu(
          LD_RS2: begin
             if (rd_valid) begin
                rs2_val <= rd_data;
-               state <= EXECUTE;
+               if(opcode == OP_BRANCH) begin
+                  if (branch)
+                     pc <= pc + imm;
+                  else
+                     pc <= pc + 4;
+                  state <= FETCH;
+               end else
+                  state <= EXECUTE;
             end
          end
 
