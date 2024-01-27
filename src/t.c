@@ -59,6 +59,18 @@ int flop_b = 0x22222222;
 const int flop_c = 0x33333333;
 
 
+void begin_testcode();
+
+void rvtest_pass(void)
+{
+	__asm__("fence");
+}
+
+void rvtest_fail(void)
+{
+	__asm__("fence");
+}
+
 void _start(void)
 {
 	//register uint32_t *src = &_erom;
@@ -99,12 +111,20 @@ void _start(void)
 	for(i=0; i<40000; i++);
 #endif
 #if 1
+	begin_testcode();
+#endif
+#if 0
+	volatile int d = 0x1234567;
+	puthex(d);
+#endif
+#if 0
+
 	volatile int a = 100;
 	volatile int b = 100;
 	puthex(a * b);
 	putc('\n');
 #endif
-#if 1
+#if 0
 	for(;;) {
 		led->r += 1;
 		led->g += 2;

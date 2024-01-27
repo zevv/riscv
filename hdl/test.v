@@ -13,6 +13,10 @@ module test();
          //$dumpvars(0, machine, machine.ram0.mem[i]);
       end
       #20000
+      for (i = 'h0; i < 'h2000; i++) begin
+         $display("mem %04x %08x", i * 'd4, machine.bram0.mem[i]);
+      end
+
       $finish;
    end
 
@@ -30,9 +34,9 @@ module test();
          cycle <= cycle + 1;
          $display("%d pc:%08x ra:%08x sp:%08x a1:%08x a2:%08x a3:%08x a4:%08x a5:%08x",
             cycle,
-            machine.cpu0.pc, machine.bram0.ra, machine.bram0.sp,
-            machine.bram0.a1, machine.bram0.a2, machine.bram0.a3,
-            machine.bram0.a4, machine.bram0.a5);
+            machine.cpu0.pc, machine.bram0.reg_ra, machine.bram0.reg_sp,
+            machine.bram0.reg_a1, machine.bram0.reg_a2, machine.bram0.reg_a3,
+            machine.bram0.reg_a4, machine.bram0.reg_a5);
       end
    end
 

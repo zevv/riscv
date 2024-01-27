@@ -16,7 +16,7 @@ NEXTPNRFLAGS += --ignore-loops --timing-allow-fail
 
 all: sim
 
-../src/t.mem: ../src/t.c
+../src/t.mem: ../src/t.c ../src/script.lds
 
 ../src/t.mem:
 	$(MAKE) -C ../src

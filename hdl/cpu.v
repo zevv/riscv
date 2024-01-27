@@ -19,7 +19,8 @@ module cpu(
       OP_BRANCH = 7'b1100011,
       OP_JAL = 7'b1101111,
       OP_JALR = 7'b1100111,
-      OP_LUI = 7'b0110111;
+      OP_LUI = 7'b0110111,
+      OP_AUIPC = 7'b0010111;
 
    localparam
       BOOT = 0,
@@ -70,7 +71,7 @@ module cpu(
    reg [6:0] opcode;
    reg [4:0] rd;
    reg [6:0] funct7;
-   reg [3:0] funct3;
+   reg [2:0] funct3;
    reg [4:0] rs1;
    reg [4:0] rs2;
    reg signed [31:0] imm = 0;
@@ -111,7 +112,7 @@ module cpu(
       case (inst[6:0])
          OP_ALU_R: begin
             alu_in2_rs2 = 1;
-            alu_fn = { funct7[4], funct3 };
+            alu_fn = { funct7[5], funct3 };
          end
          OP_ALU_I: begin
             alu_fn = { 1'b0, funct3 };
@@ -124,7 +125,14 @@ module cpu(
          end
          OP_BRANCH: begin
             alu_in2_rs2 = 1;
-            alu_fn = (funct3 == 3'h0 || funct3 == 3'h1) ? 'h8 : 'h2; // SUB : BLT
+            case (funct3)
+               BR_BEQ: alu_fn = 4'h0;
+               BR_BNE: alu_fn = 4'h0;
+               BR_BLT: alu_fn = 4'h2;
+               BR_BGE: alu_fn = 4'h2;
+               BR_BLTU: alu_fn = 4'h3;
+               BR_BGEU: alu_fn = 4'h3;
+            endcase
          end
       endcase
    end
@@ -203,7 +211,9 @@ module cpu(
          ST: begin
             o_addr = (rd << 2);
             wr_data = alu_out;
-            wr_en = 1;
+            if(opcode == OP_LUI) begin
+               wr_data = imm;
+            end
             if(opcode == OP_LOAD) begin
                wr_data = rd_val;
             end
@@ -211,6 +221,10 @@ module cpu(
                o_addr = alu_out;
                wr_data = rs2_val;
             end
+            if(opcode == OP_AUIPC) begin
+               wr_data = pc + imm;
+            end
+            wr_en = (o_addr != 0);
          end
          ST_ALU_R: begin
             o_addr = (rd << 2);
@@ -244,8 +258,8 @@ module cpu(
       case (state)
 
          BOOT: begin
-            pc <= pc + 1;
-            if (pc == 16) begin
+            pc <= pc + 4;
+            if (pc == 64) begin
                pc <= 0;
                state = LD_PC;
             end
@@ -266,7 +280,8 @@ module cpu(
                   OP_BRANCH: state <= LD_RS1;
                   OP_JAL: state <= ST_JAL;
                   OP_JALR: state <= LD_RS1;
-                  OP_LUI: state <= EXECUTE;
+                  OP_LUI: state <= ST;
+                  OP_AUIPC: state <= ST;
                   default: state <= FAULT;
                endcase
             end
@@ -276,22 +291,21 @@ module cpu(
             state <= ST;
             case (opcode)
                OP_LOAD: state <= LOAD;
-               OP_BRANCH: begin end
-               OP_JAL: state <= ST_JAL;
-               OP_JALR: state <= ST_JALR;
+               default: state <= FAULT;
             endcase
          end
 
          LD_RS1: begin
             if (rd_valid) begin
                rs1_val <= rd_data;
-               state <= EXECUTE;
+               state <= FAULT;
                case (opcode)
                   OP_ALU_R: state <= ST_ALU_R;
                   OP_ALU_I: state <= ST;
                   OP_STORE: state <= LD_RS2;
                   OP_BRANCH: state <= BRANCH;
                   OP_JALR: state <= ST_JALR;
+                  OP_LOAD: state <= EXECUTE;
                endcase
             end
          end
@@ -299,7 +313,7 @@ module cpu(
          LD_RS2: begin
             if (rd_valid) begin
                rs2_val <= rd_data;
-               state <= EXECUTE;
+               state <= FAULT;
                case (opcode)
                   OP_ALU_R: state <= ST;
                   OP_STORE: state <= ST;
@@ -318,12 +332,6 @@ module cpu(
          LOAD: begin
             if (rd_valid) begin
                rd_val <= rd_data;
-               //if (funct3 == 3'b000 || funct3 == 3'b100)
-               //   //wr_data <= rd_data[7:0];
-               //else if(funct3 == 3'b001 || funct3 == 3'b101) 
-               //   //wr_data <= rd_data[15:0];
-               //else
-               //   //wr_data <= rd_data;
                state <= ST;
             end
          end
@@ -369,6 +377,7 @@ module cpu(
          default: begin
             state <= FAULT;
          end
+
       endcase
    end
 

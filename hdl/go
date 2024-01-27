@@ -2,8 +2,15 @@
 
 #set -e
 
-do_test()
-{
+ok() {
+	echo -e "\e[1;32mOK\e[0m"
+}
+
+err() {
+	echo -e "\e[31m$1\e[0m"
+}
+
+do_test() {
 	NAME=$1
 	printf %-20s $NAME
 
@@ -15,7 +22,7 @@ do_test()
 	) > /tmp/build.out 2>&1
 
 	if [ ! -r ../src/t.elf ]; then
-		echo "BUILD FAIL"
+		err "BUILD FAIL"
 		return
 	fi
 
@@ -23,7 +30,7 @@ do_test()
 	TO=`nm ../src/t.elf | grep test...res | sort | tail -1 | awk '{print $1}'`
 
 	if [ "$FROM" == "" -o "$TO" == "" ]; then
-		echo "EXEC FAIL"
+		err "EXEC FAIL"
 		return
 	fi
 
@@ -39,9 +46,9 @@ do_test()
 
 	diff /tmp/out ../src/test/ref/${NAME} > /tmp/diff.out
 	if [ "$?" == "0" ]; then
-		echo "OK"
+		ok
 	else
-		echo "FAIL"
+		err "FAIL"
 	fi
 }
 

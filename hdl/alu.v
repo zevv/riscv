@@ -26,7 +26,6 @@ module alu(
 
    wire [31:0] add_out;
    wire [31:0] sub_out;
-   wire [31:0] lt = sub_out ^ ((x ^ y) & (sub_out ^ x));
 
    always @(*)
    begin
@@ -34,8 +33,8 @@ module alu(
       case (fn)
          4'h0: out = add_out; // x + y;
          4'h1: out = x << y[4:0];
-         4'h2: out = lt[31];
-         4'h3: out = lt[31];
+         4'h2: out = $signed(x) < $signed(y);
+         4'h3: out = x < y;
          4'h4: out = x ^ y;
          4'h5: out = x >> y[4:0];
          4'h6: out = x | y;

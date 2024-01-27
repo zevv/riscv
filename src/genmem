@@ -6,7 +6,7 @@ mem = {}
 
 bin = io.stdin:read(32767)
 for i = 1, #bin do
-	mem[i-1 + 128] = bin:byte(i)
+	mem[i-1] = bin:byte(i)
 end
 
 -- SP
