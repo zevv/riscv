@@ -77,19 +77,17 @@ module cpu(
    reg [3:0] alu_fn;
    wire [31:0] alu_out;
    wire alu_zero;
-   wire alu_negative;
 
    always @(*) begin
       alu_in2 = (alu_in2_rs2) ? rs2_val : imm;
    end
 
    alu alu(
-      .v1(alu_in1),
-      .v2(alu_in2),
+      .x(alu_in1),
+      .y(alu_in2),
       .fn(alu_fn),
       .out(alu_out),
-      .zero(alu_zero),
-      .negative(alu_negative)
+      .zero(alu_zero)
    );
 
    reg [31:0] inst = 0;
