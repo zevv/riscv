@@ -5,6 +5,8 @@ MEMORY
    bram (rwxa)       : ORIGIN = 0x0080, LENGTH = 0x1f80
    spram (rwxa)      : ORIGIN = 0x8000, LENGTH = 0x8000
 }
+      
+_sp = 0x2000;
 
 SECTIONS
 {
@@ -15,7 +17,6 @@ SECTIONS
       *(.rodata*)
       *(.data*)
       *(.sdata*)
-      _sp = 0x2000;
    } > bram
 
    .bss : { 

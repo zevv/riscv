@@ -20,6 +20,7 @@ module bram(
    wire [31:0] a2 = mem[12];
    wire [31:0] a3 = mem[13];
    wire [31:0] a4 = mem[14];
+   wire [31:0] a5 = mem[15];
 
    initial begin
       $readmemh("../src/t.mem", mem);

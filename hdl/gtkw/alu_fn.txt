@@ -5,5 +5,5 @@
 4 XOR
 5 SHR
 6 OR
-7 SRA
+7 AND
 8 SUB

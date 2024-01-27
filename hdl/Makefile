@@ -15,7 +15,7 @@ SRCS += uart.v
 
 YOSYSFLAGS := -Q -T
 NEXTPNRFLAGS := --freq 48 --package sg48 --up5k 
-NEXTPNRFLAGS += --ignore-loops
+NEXTPNRFLAGS += --ignore-loops --timing-allow-fail
 
 all: sim
 

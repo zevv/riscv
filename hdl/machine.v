@@ -100,7 +100,7 @@ module machine(
 
    always @(*) begin
       
-      bram_sel  = (addr[15:12] == 4'b0000);
+      bram_sel  = (addr[15:14] == 2'b00);
       led_sel   = (addr[15:12] == 4'b0100);
       uart_sel  = (addr[15:12] == 4'b0101);
       spram_sel = (addr[15:15] == 1'b1);

@@ -83,17 +83,6 @@ void _start(void)
 	//puthex(0x12345678);
 	//putc('\n');
 #if 0
-	for(;;) {
-		led->r += 1;
-		led->g += 2;
-		led->b += 3;
-		volatile int i;
-		for(i=0; i<2000; i++);
-	}
-#endif
-
-
-#if 0
 	volatile uint32_t *p1 = (void *)0x8000;
 	volatile uint32_t *p2 = (void *)0x8100;
 
@@ -115,11 +104,21 @@ void _start(void)
 	puthex(a * b);
 	putc('\n');
 #endif
-
+#if 1
+	for(;;) {
+		led->r += 1;
+		led->g += 2;
+		led->b += 3;
+		volatile int i;
+		for(i=0; i<2000; i++);
+	}
+#endif
+#if 0
 	for(;;) {
 		puts("abc");
 		for(volatile int i=0; i<40000; i++);
 	}
+#endif
 #if 0
 	int c = 'a';
 
