@@ -14,7 +14,6 @@ SRCS += machine.v
 SRCS += uart.v
 
 YOSYSFLAGS := -Q -T
-YOSYSCMD := synth_ice40 -top top -json $(NAME).json -noflatten
 NEXTPNRFLAGS := --freq 48 --package sg48 --up5k 
 NEXTPNRFLAGS += --ignore-loops
 
@@ -25,31 +24,31 @@ all: sim
 ../src/t.mem:
 	$(MAKE) -C ../src
 
-sim: $(VCD)
+sim: test.vcd
 
-$(BIN): $(ASC)
-	icepack $(NAME).asc $@
+%.json: %.v ../src/t.mem
+	yosys $(YOSYSFLAGS) -p "synth_ice40 -top $* -json $@" $<
 
-$(JSON): $(SRCS) ../src/t.mem
-	yosys $(YOSYSFLAGS) -p "$(YOSYSCMD)" top.v
+%.asc: %.json
+	nextpnr-ice40 $(NEXTPNRFLAGS) --json $< --pcf $(PCF) --asc $@ -l $(NAME).log
 
-$(ASC): $(JSON)
-	nextpnr-ice40 $(NEXTPNRFLAGS) --json $(JSON) --pcf $(PCF) --asc $(ASC) -l $(NAME).log
+%.bin: %.asc
+	icepack $< $@
+
+%.vp: %.v $(SRCS) ../src/t.mem
+	iverilog -Wall -Winfloop -o $@ $<
+
+%.vcd: %.vp $(SRCS)
+	vvp $<
 
 gui: $(ASC) $(PCF)
 	nextpnr-ice40 $(NEXTPNRFLAGS) --json $(JSON) --pcf $(PCF) --gui
 
-$(VP): $(SRCS) test.v ../src/t.mem
-	iverilog -Wall -Winfloop -o $(VP) test.v 
-
-$(VCD): $(VP) $(SRCS)
-	vvp $(VP)
-
 lint: $(SRCS)
 	verilator --lint-only -Wall --timing --top test test.v
 
-prog: $(BIN)
-	iceprog -S $(BIN)
+prog: top.bin
+	iceprog -S $<
 
 prog_flash: $(BIN)
 	iceprog $(BIN)
@@ -58,4 +57,4 @@ report: $(JSON)
 	./timing.pl < $(NAME).log
 
 clean:
-	rm -rf $(JSON) $(ASC) $(BIN) $(VP) $(VCD)
+	rm -rf *.json *.asc *.bin *.vp *.vcd
