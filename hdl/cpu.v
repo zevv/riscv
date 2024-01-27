@@ -172,6 +172,21 @@ module cpu(
       endcase
    end
 
+ 
+   reg branch;
+
+   always @(*) begin
+      branch = 0;
+      case (funct3)
+         BR_BEQ: if (alu_zero) branch = 1;
+         BR_BNE: if (!alu_zero) branch = 1;
+         BR_BLT: if (alu_out) branch = 1;
+         BR_BGE: if (!alu_out) branch = 1;
+         BR_BLTU: if (alu_out) branch = 1;
+         BR_BGEU: if (!alu_out) branch = 1;
+      endcase
+   end
+
 
    // CPU state machine
 
@@ -251,17 +266,11 @@ module cpu(
                OP_LOAD: state <= LOAD;
                OP_STORE: state <= ST;
                OP_BRANCH: begin
+                  if (branch) 
+                     pc <= pc + imm;
+                  else
+                     pc <= pc + 4;
                   state <= FETCH;
-                  pc <= pc + 4;
-                  case (funct3)
-                     BR_BEQ: if (alu_zero) pc <= pc + imm;
-                     BR_BNE: if (!alu_zero) pc <= pc + imm;
-                     BR_BLT: if (alu_out) pc <= pc + imm;
-                     BR_BGE: if (!alu_out) pc <= pc + imm;
-                     BR_BLTU: if (alu_out) pc <= pc + imm;
-                     BR_BGEU: if (!alu_out) pc <= pc + imm;
-                     default: state <= FAULT;
-                  endcase
                end
                OP_JAL: state <= ST_JAL;
                OP_JALR: state <= ST_JALR;
