@@ -33,6 +33,8 @@ module cpu(
       LD_PC = 9,
       LD_SP = 10,
       ST_SP = 11,
+      ST_JAL = 12,
+      ST_JALR = 13,
       FAULT = 15;
 
    localparam
@@ -101,7 +103,6 @@ module cpu(
       rs2 = inst[24:20];
    end
 
-   reg [15:0] pc_prev = 0;
 
    always @(*) begin
 
@@ -145,9 +146,6 @@ module cpu(
             o_addr = (rd << 2);
             wr_data = alu_out;
             wr_en = 1;
-            if(opcode == OP_JAL) begin
-               wr_data = pc_prev + 8;
-            end
             if(opcode == OP_LOAD) begin
                wr_data = rd_val;
             end
@@ -155,6 +153,16 @@ module cpu(
                o_addr = alu_out;
                wr_data = rs2_val;
             end
+         end
+         ST_JAL:begin
+            wr_en = (rd != 0);
+            o_addr = (rd << 2);
+            wr_data = pc + 4;
+         end
+         ST_JALR:begin
+            wr_en = (rd != 0);
+            o_addr = (rd << 2);
+            wr_data = pc + 4;
          end
          LOAD: begin
             o_addr = rs1_val + imm;
@@ -180,55 +188,7 @@ module cpu(
          end
 
          FETCH: begin
-            pc_prev <= pc;
-            pc <= pc + 4;
             state <= LD_INST;
-         end
-
-         EXECUTE: begin
-
-            case (opcode)
-               OP_ALU_R: state <= ST;
-               OP_ALU_I: state <= ST;
-               OP_LOAD: state <= LOAD;
-               OP_STORE: state <= ST;
-               OP_BRANCH: begin
-                  state <= FETCH;
-                  case (funct3)
-                     BR_BEQ: if (alu_zero) pc <= pc - 4 + imm;
-                     BR_BNE: if (!alu_zero) pc <= pc - 4 + imm;
-                     BR_BLT: if (alu_out) pc <= pc - 4 + imm;
-                     BR_BGE: if (!alu_out) pc <= pc - 4 + imm;
-                     BR_BLTU: if (alu_out) pc <= pc - 4 + imm;
-                     BR_BGEU: if (!alu_out) pc <= pc - 4 + imm;
-                     default: state <= FAULT;
-                  endcase
-               end
-
-               OP_JAL: begin
-                  pc <= pc + imm - 4;
-                  if (rd != 0) begin
-                     //wr_data <= pc + 4;
-                     state <= ST;
-                  end else begin
-                     state <= FETCH;
-                  end
-               end
-
-               OP_JALR: begin
-                  pc <= rs1_val + imm - 4;
-                  if (rd != 0) begin
-                     //wr_data <= pc;
-                     state <= ST;
-                  end else begin
-                     state <= FETCH;
-                  end
-               end
-               
-               OP_LUI: state <= ST;
-               default: state <= FAULT;
-
-            endcase
          end
 
          LD_INST: begin
@@ -284,6 +244,32 @@ module cpu(
             end
          end
 
+         EXECUTE: begin
+            case (opcode)
+               OP_ALU_R: state <= ST;
+               OP_ALU_I: state <= ST;
+               OP_LOAD: state <= LOAD;
+               OP_STORE: state <= ST;
+               OP_BRANCH: begin
+                  state <= FETCH;
+                  pc <= pc + 4;
+                  case (funct3)
+                     BR_BEQ: if (alu_zero) pc <= pc + imm;
+                     BR_BNE: if (!alu_zero) pc <= pc + imm;
+                     BR_BLT: if (alu_out) pc <= pc + imm;
+                     BR_BGE: if (!alu_out) pc <= pc + imm;
+                     BR_BLTU: if (alu_out) pc <= pc + imm;
+                     BR_BGEU: if (!alu_out) pc <= pc + imm;
+                     default: state <= FAULT;
+                  endcase
+               end
+               OP_JAL: state <= ST_JAL;
+               OP_JALR: state <= ST_JALR;
+               OP_LUI: state <= ST;
+               default: state <= FAULT;
+            endcase
+         end
+
          LD_RS1: begin
             if (rd_valid) begin
                rs1_val <= rd_data;
@@ -333,6 +319,17 @@ module cpu(
          end
 
          ST: begin
+            pc <= pc + 4;
+            state <= FETCH;
+         end
+         
+         ST_JAL: begin
+            pc <= pc + imm;
+            state <= FETCH;
+         end
+         
+         ST_JALR: begin
+            pc <= rs1_val + imm;
             state <= FETCH;
          end
 
