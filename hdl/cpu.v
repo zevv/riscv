@@ -159,7 +159,6 @@ module cpu(
 
    always @(*) begin
 
-      debug = (rd_en && wr_en) || (o_addr == -1 && (rd_en || wr_en));
          
       rd_en = 0;
       wr_en = 0;
@@ -223,6 +222,8 @@ module cpu(
          end
 
       endcase
+
+      debug = (!(rd_en || wr_en)) && (opcode != OP_LOAD && opcode != OP_STORE);
    end
 
    // CPU state machine
@@ -252,7 +253,7 @@ module cpu(
                   OP_LOAD: state <= LD_RS1;
                   OP_STORE: state <= LD_RS1;
                   OP_BRANCH: state <= LD_RS1;
-                  OP_JAL: state <= EXECUTE;
+                  OP_JAL: state <= ST_JAL;
                   OP_JALR: state <= LD_RS1;
                   OP_LUI: state <= EXECUTE;
                   default: state <= FAULT;
@@ -261,39 +262,43 @@ module cpu(
          end
 
          EXECUTE: begin
+            state <= ST;
             case (opcode)
-               OP_ALU_R: state <= ST;
-               OP_ALU_I: state <= ST;
                OP_LOAD: state <= LOAD;
-               OP_STORE: state <= ST;
                OP_BRANCH: begin end
                OP_JAL: state <= ST_JAL;
                OP_JALR: state <= ST_JALR;
-               OP_LUI: state <= ST;
             endcase
          end
 
          LD_RS1: begin
             if (rd_valid) begin
                rs1_val <= rd_data;
-               if (opcode == OP_ALU_R || opcode == OP_STORE || opcode == OP_BRANCH) begin
-                  state <= LD_RS2;
-               end else
-                  state <= EXECUTE;
+               state <= EXECUTE;
+               case (opcode)
+                  OP_ALU_R: state <= LD_RS2;
+                  OP_ALU_I: state <= ST;
+                  OP_STORE: state <= LD_RS2;
+                  OP_BRANCH: state <= LD_RS2;
+               endcase
             end
          end
 
          LD_RS2: begin
             if (rd_valid) begin
                rs2_val <= rd_data;
-               if(opcode == OP_BRANCH) begin
-                  if (branch)
-                     pc <= pc + imm;
-                  else
-                     pc <= pc + 4;
-                  state <= FETCH;
-               end else
-                  state <= EXECUTE;
+               state <= EXECUTE;
+               case (opcode)
+                  OP_ALU_R: state <= ST;
+                  OP_STORE: state <= ST;
+                  OP_BRANCH: begin
+                     if (branch)
+                        pc <= pc + imm;
+                     else
+                        pc <= pc + 4;
+                     state <= FETCH;
+                  end
+               endcase
             end
          end
 
