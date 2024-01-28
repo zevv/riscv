@@ -228,7 +228,7 @@ module cpu(
          ST_LOAD: begin
             o_addr = (rd << 2);
             wr_data = rd_val;
-            wr_en = 1;
+            wr_en = (rd != 0);
          end
          ST_ALU: begin
             o_addr = (rd << 2);
@@ -327,7 +327,13 @@ module cpu(
 
          LOAD: begin
             if (rd_valid) begin
-               rd_val <= rd_data;
+               case (funct3)
+                  3'h0: rd_val = { {24{rd_data[7]}}, rd_data[7:0] };
+                  3'h1: rd_val = { {16{rd_data[15]}}, rd_data[15:0] };
+                  3'h2: rd_val = rd_data[7:0];
+                  3'h4: rd_val = { 24'b0, rd_data[7:0] };
+                  3'h5: rd_val = { 16'b0, rd_data[15:0] };
+               endcase
                state <= ST_LOAD;
             end
          end
