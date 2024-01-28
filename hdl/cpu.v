@@ -115,7 +115,7 @@ module cpu(
             alu_fn = { funct7[5], funct3 };
          end
          OP_ALU_I: begin
-            alu_fn = { 1'b0, funct3 };
+            alu_fn = { (funct3 == 3'h1 || funct3 == 3'h5) ? imm[10] : 1'b0, funct3 };
          end
          OP_LOAD: begin
             alu_fn = 4'h0; // ADD
@@ -126,8 +126,8 @@ module cpu(
          OP_BRANCH: begin
             alu_in2_rs2 = 1;
             case (funct3)
-               BR_BEQ: alu_fn = 4'h0;
-               BR_BNE: alu_fn = 4'h0;
+               BR_BEQ: alu_fn = 4'h8;
+               BR_BNE: alu_fn = 4'h8;
                BR_BLT: alu_fn = 4'h2;
                BR_BGE: alu_fn = 4'h2;
                BR_BLTU: alu_fn = 4'h3;

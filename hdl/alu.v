@@ -40,6 +40,7 @@ module alu(
          4'h6: out = x | y;
          4'h7: out = x & y;
          4'h8: out = sub_out; // x - y;
+         4'hd: out = $signed(x) >>> y[4:0];
          default: out= 0;
       endcase
 

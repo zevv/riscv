@@ -1,24 +1,24 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sat Jan 27 16:37:04 2024
+[*] Sun Jan 28 05:52:23 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Sat Jan 27 16:36:59 2024"
-[dumpfile_size] 4658428
+[dumpfile_mtime] "Sun Jan 28 05:45:11 2024"
+[dumpfile_size] 988688
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
-[timestart] 410
-[size] 1704 1057
+[timestart] 2009
+[size] 1704 822
 [pos] -1 -1
-*-3.900001 433 433 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.100002 2021 2021 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
 [treeopen] test.machine.cpu0.
 [treeopen] test.machine.spram0.
 [sst_width] 269
-[signals_width] 167
+[signals_width] 142
 [sst_expanded] 1
-[sst_vpaned_height] 280
-@25
+[sst_vpaned_height] 233
+@24
 test.cycle[31:0]
 @28
 test.debug
@@ -32,6 +32,7 @@ test.machine.uart0.last_data[8:0]
 test.machine.cpu0.fetch
 @22
 test.machine.cpu0.pc[15:0]
+test.machine.cpu0.inst[31:0]
 @2022
 [color] 3
 ^1 /home/ico/sandbox/prjs/riscv/hdl/gtkw/states.txt
@@ -47,7 +48,7 @@ test.machine.cpu0.rs2[4:0]
 ^3 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
 test.machine.cpu0.rd[4:0]
 @22
-test.machine.cpu0.funct3[3:0]
+test.machine.cpu0.funct7[6:0]
 test.machine.cpu0.imm[31:0]
 @200
 -CPU memory
@@ -72,22 +73,47 @@ test.machine.cpu0.rs1_val[31:0]
 test.machine.cpu0.rs2_val[31:0]
 @200
 -ALU
-@22
-test.machine.cpu0.alu_in1[31:0]
-test.machine.cpu0.alu_in2[31:0]
-@2022
+@2023
 ^4 /home/ico/sandbox/prjs/riscv/hdl/gtkw/alu_fn.txt
 test.machine.cpu0.alu_fn[3:0]
 @22
+test.machine.cpu0.alu_in1[31:0]
+test.machine.cpu0.alu_in2[31:0]
 test.machine.cpu0.alu_out[31:0]
 @200
 -Registers
 @22
-test.machine.bram0.a0[31:0]
-test.machine.bram0.a1[31:0]
-test.machine.bram0.a2[31:0]
-test.machine.bram0.a3[31:0]
-test.machine.bram0.a4[31:0]
-test.machine.bram0.sp[31:0]
+test.machine.bram0.reg_a0[31:0]
+test.machine.bram0.reg_a1[31:0]
+test.machine.bram0.reg_a2[31:0]
+test.machine.bram0.reg_a3[31:0]
+test.machine.bram0.reg_a4[31:0]
+test.machine.bram0.reg_a5[31:0]
+test.machine.bram0.reg_a6[31:0]
+test.machine.bram0.reg_a7[31:0]
+test.machine.bram0.reg_gp[31:0]
+test.machine.bram0.reg_ra[31:0]
+test.machine.bram0.reg_s0[31:0]
+test.machine.bram0.reg_s1[31:0]
+test.machine.bram0.reg_s2[31:0]
+test.machine.bram0.reg_s3[31:0]
+test.machine.bram0.reg_s4[31:0]
+test.machine.bram0.reg_s5[31:0]
+test.machine.bram0.reg_s6[31:0]
+test.machine.bram0.reg_s7[31:0]
+test.machine.bram0.reg_s8[31:0]
+test.machine.bram0.reg_s9[31:0]
+test.machine.bram0.reg_s10[31:0]
+test.machine.bram0.reg_s11[31:0]
+test.machine.bram0.reg_sp[31:0]
+test.machine.bram0.reg_t0[31:0]
+test.machine.bram0.reg_t1[31:0]
+test.machine.bram0.reg_t2[31:0]
+test.machine.bram0.reg_t3[31:0]
+test.machine.bram0.reg_t4[31:0]
+test.machine.bram0.reg_t5[31:0]
+test.machine.bram0.reg_t6[31:0]
+test.machine.bram0.reg_tp[31:0]
+test.machine.bram0.reg_zero[31:0]
 [pattern_trace] 1
 [pattern_trace] 0
