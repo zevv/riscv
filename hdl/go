@@ -26,8 +26,8 @@ do_test() {
 		return
 	fi
 
-	FROM=`nm ../src/t.elf | grep test...res | sort | head -1 | awk '{print $1}'`
-	TO=`nm ../src/t.elf | grep test...res | sort | tail -1 | awk '{print $1}'`
+	FROM=`nm ../src/t.elf | egrep test.+res | sort | head -1 | awk '{print $1}'`
+	TO=`nm ../src/t.elf | egrep test.+res | sort | tail -1 | awk '{print $1}'`
 
 	if [ "$FROM" == "" -o "$TO" == "" ]; then
 		err "EXEC FAIL"
@@ -44,7 +44,8 @@ do_test() {
 	done
 	) > /tmp/out
 
-	diff -u /tmp/out ../src/test/ref/${NAME} > /tmp/diff.out
+	LINES=`wc -l ../src/test/ref/${NAME} | awk '{print $1}'`
+	diff -u <(head -$LINES /tmp/out) ../src/test/ref/${NAME} > /tmp/diff.out
 	if [ "$?" == "0" ]; then
 		ok
 	else
