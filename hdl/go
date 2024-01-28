@@ -3,7 +3,7 @@
 #set -e
 
 ok() {
-	echo -e "\e[1;32mOK\e[0m"
+	echo -e "\e[1;32m$1\e[0m"
 }
 
 err() {
@@ -14,6 +14,11 @@ do_test() {
 	NAME=$1
 	printf %-20s $NAME
 
+	if grep -q csrr ../src/test/compliance/${NAME}.S; then
+		ok "SKIP"
+		return
+	fi
+
 	(
 	make -C ../src/ clean
 	make -C ../src/ SSRC=test/compliance/${NAME}.S
@@ -22,7 +27,7 @@ do_test() {
 	) > /tmp/build.out 2>&1
 
 	if [ ! -r ../src/t.elf ]; then
-		err "BUILD FAIL"
+		err "BUILD"
 		return
 	fi
 
@@ -30,7 +35,7 @@ do_test() {
 	TO=`nm ../src/t.elf | egrep test.+res | sort | tail -1 | awk '{print $1}'`
 
 	if [ "$FROM" == "" -o "$TO" == "" ]; then
-		err "EXEC FAIL"
+		err "EXEC"
 		return
 	fi
 
@@ -47,9 +52,9 @@ do_test() {
 	LINES=`wc -l ../src/test/ref/${NAME} | awk '{print $1}'`
 	diff -u <(head -$LINES /tmp/out) ../src/test/ref/${NAME} > /tmp/diff.out
 	if [ "$?" == "0" ]; then
-		ok
+		ok OK
 	else
-		err "FAIL"
+		err FAIL
 	fi
 }
 

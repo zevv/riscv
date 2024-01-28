@@ -3,12 +3,13 @@
 module bram(
    input wire clk,
    input wire rd_en, input wire [12:0] addr, output reg [31:0] rd_data, output reg rd_valid,
-   input wire wr_en, input wire [31:0] wr_data
+   input wire wr_en, input wire [31:0] wr_data, input [3:0] wr_mask
 );
 
    localparam SIZE = 2048;
 
    reg [31:0] mem [0:SIZE-1];
+   wire [10:0] addr32 = (addr >> 2);
 
    wire [31:0] reg_zero   = mem['h00];
  	wire [31:0] reg_ra     = mem['h01];
@@ -50,13 +51,19 @@ module bram(
    always @(posedge clk)
    begin
       if (rd_en) begin
-         rd_data = mem[addr >> 2];
+         rd_data = mem[addr32];
          rd_valid <= 1;
       end else begin
          rd_valid <= 0;
       end
       if(wr_en) begin
-         mem[addr>>2] <= wr_data;
+         if (addr > 'h020) begin
+            $display("%4x: wr %08x %08x", machine.cpu0.pc, addr, wr_data);
+         end
+         if (wr_mask[3]) mem[addr32][7:0] <= wr_data[7:0];
+         if (wr_mask[2]) mem[addr32][15:8] <= wr_data[15:8];
+         if (wr_mask[1]) mem[addr32][23:16] <= wr_data[23:16];
+         if (wr_mask[0]) mem[addr32][31:24] <= wr_data[31:24];
       end
    end
 

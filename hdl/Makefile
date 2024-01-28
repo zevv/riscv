@@ -9,6 +9,7 @@ SRCS += cpu.v
 SRCS += alu.v adder.v
 SRCS += machine.v
 SRCS += uart.v
+SRCS += bram.v
 
 YOSYSFLAGS := -Q -T
 NEXTPNRFLAGS := --freq 48 --package sg48 --up5k 

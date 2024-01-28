@@ -23,12 +23,13 @@ module machine(
    reg cpu_rd_valid;
    wire cpu_wr_en;
    wire [31:0] cpu_wr_data;
+   wire [3:0] cpu_wr_mask;
 
    cpu cpu0(
       .clk(clk),
       .o_addr(addr),
       .rd_en(cpu_rd_en), .rd_data(cpu_rd_data), .rd_valid(cpu_rd_valid),
-      .wr_en(cpu_wr_en), .wr_data(cpu_wr_data),
+      .wr_en(cpu_wr_en), .wr_data(cpu_wr_data), .wr_mask(cpu_wr_mask),
       .debug(debug)
    );
 
@@ -44,7 +45,7 @@ module machine(
       .clk(clk),
       .addr(bram_addr),
       .rd_en(bram_rd_en), .rd_data(bram_rd_data), .rd_valid(bram_rd_valid),
-      .wr_en(bram_wr_en), .wr_data(bram_wr_data)
+      .wr_en(bram_wr_en), .wr_data(bram_wr_data), .wr_mask(cpu_wr_mask)
    );
 
 
@@ -128,12 +129,7 @@ module machine(
       cpu_rd_valid = bram_rd_valid || spram_rd_valid || led_rd_valid || uart_rd_valid;
 
       if (bram_sel) 
-         case (addr[1:0])
-            2'h0: cpu_rd_data = bram_rd_data[31:0];
-            2'h1: cpu_rd_data = bram_rd_data[31:8];
-            2'h2: cpu_rd_data = bram_rd_data[31:16];
-            2'h3: cpu_rd_data = bram_rd_data[31:24];
-         endcase
+         cpu_rd_data = bram_rd_data;
       else if (spram_sel)
          cpu_rd_data = spram_rd_data;
       else if (led_sel) 

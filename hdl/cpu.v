@@ -7,7 +7,7 @@
 module cpu(
    input clk,
    output reg rd_en, output reg [15:0] o_addr, input [31:0] rd_data, input rd_valid,
-   output reg wr_en, output reg [31:0] wr_data,
+   output reg wr_en, output reg [31:0] wr_data, output reg[3:0] wr_mask,
    output reg debug
 );
    
@@ -168,6 +168,27 @@ module cpu(
       endcase
    end
 
+   // Memory load, handle unaligned and B/H/W
+
+   reg [31:0] rd_data_shifted;
+   reg [31:0] load_cooked;
+
+   always @(*) begin
+      case (o_addr[1:0])
+         2'h0: rd_data_shifted = rd_data[31:0];
+         2'h1: rd_data_shifted = rd_data[31:8];
+         2'h2: rd_data_shifted = rd_data[31:16];
+         2'h3: rd_data_shifted = rd_data[31:24];
+      endcase
+      load_cooked = 0;
+      case (funct3)
+         3'h0: load_cooked = { {24{rd_data_shifted[7]}}, rd_data_shifted[7:0] };
+         3'h1: load_cooked = { {16{rd_data_shifted[15]}}, rd_data_shifted[15:0] };
+         3'h2: load_cooked = rd_data_shifted;
+         3'h4: load_cooked = { 24'b0, rd_data_shifted[7:0] };
+         3'h5: load_cooked = { 16'b0, rd_data_shifted[15:0] };
+      endcase
+   end
 
    // Memory control
 
@@ -176,6 +197,7 @@ module cpu(
       wr_en = 0;
       o_addr = -1;
       wr_data = 0;
+      wr_mask = 4'b1111;
 
       case (state)
          LD_PC: begin
@@ -217,7 +239,28 @@ module cpu(
          end
          ST_STORE: begin
             o_addr = alu_out;
-            wr_data = rs2_val;
+            case (funct3)
+               3'h0: wr_mask = 4'b1000;
+               3'h1: wr_mask = 4'b1100;
+               3'h2: wr_mask = 4'b1111;
+            endcase
+            case (o_addr[1:0])
+               2'h0: begin
+                  wr_data = rs2_val;
+               end
+               2'h1: begin
+                  wr_data = rs2_val << 8;
+                  wr_mask >>= 1;
+               end
+               2'h2: begin
+                  wr_data = rs2_val << 16;
+                  wr_mask >>= 2;
+               end
+               2'h3: begin
+                  wr_data = rs2_val << 24;
+                  wr_mask >>= 3;
+               end
+            endcase
             wr_en = 1;
          end
          ST_LUI: begin
@@ -327,13 +370,7 @@ module cpu(
 
          LOAD: begin
             if (rd_valid) begin
-               case (funct3)
-                  3'h0: rd_val = { {24{rd_data[7]}}, rd_data[7:0] };
-                  3'h1: rd_val = { {16{rd_data[15]}}, rd_data[15:0] };
-                  3'h2: rd_val = rd_data;
-                  3'h4: rd_val = { 24'b0, rd_data[7:0] };
-                  3'h5: rd_val = { 16'b0, rd_data[15:0] };
-               endcase
+               rd_val = load_cooked;
                state <= ST_LOAD;
             end
          end

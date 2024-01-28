@@ -154,6 +154,7 @@ RV_COMPLIANCE_CODE_BEGIN
 	RVTEST_IO_WRITE_STR(x31, "# Test number 3\n")
 
 
+// 1f8 
     # Addresses for test results
 	la	x1, test_3_res
 
@@ -164,6 +165,8 @@ RV_COMPLIANCE_CODE_BEGIN
     addi    x21, x1, 0
     sh      x6, 0x2(x21)
 
+// 210
+
     #RVTEST_IO_ASSERT_GPR_EQ(x7, x21, test_3_res)
     RVTEST_IO_ASSERT_GPR_EQ(x7, x6, 0x1234)
     # Clear memory
@@ -173,6 +176,7 @@ RV_COMPLIANCE_CODE_BEGIN
     addi    x20, x1, 0
     sh      x5, -0x4(x20)
 
+// 220
     #RVTEST_IO_ASSERT_GPR_EQ(x7, x20, test_3_res)
     RVTEST_IO_ASSERT_GPR_EQ(x7, x5, 0x80000000)
     # Clear memory
@@ -182,6 +186,7 @@ RV_COMPLIANCE_CODE_BEGIN
     addi    x19, x1, 0
     sh      x4, 0x2(x19)
 
+// 234
     #RVTEST_IO_ASSERT_GPR_EQ(x7, x19, test_3_res)
     RVTEST_IO_ASSERT_GPR_EQ(x7, x4, -0x1234)
     # Clear memory
