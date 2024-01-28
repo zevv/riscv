@@ -250,15 +250,15 @@ module cpu(
                end
                2'h1: begin
                   wr_data = rs2_val << 8;
-                  wr_mask >>= 1;
+                  wr_mask = wr_mask >> 1;
                end
                2'h2: begin
                   wr_data = rs2_val << 16;
-                  wr_mask >>= 2;
+                  wr_mask = wr_mask >> 2;
                end
                2'h3: begin
                   wr_data = rs2_val << 24;
-                  wr_mask >>= 3;
+                  wr_mask = wr_mask >> 3;
                end
             endcase
             wr_en = 1;

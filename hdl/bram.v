@@ -57,9 +57,6 @@ module bram(
          rd_valid <= 0;
       end
       if(wr_en) begin
-         if (addr > 'h020) begin
-            $display("%4x: wr %08x %08x", machine.cpu0.pc, addr, wr_data);
-         end
          if (wr_mask[3]) mem[addr32][7:0] <= wr_data[7:0];
          if (wr_mask[2]) mem[addr32][15:8] <= wr_data[15:8];
          if (wr_mask[1]) mem[addr32][23:16] <= wr_data[23:16];
