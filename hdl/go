@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PATH_CTS=../riscv-compliance/riscv-test-suite/rv32i
+
 #set -e
 
 ok() {
@@ -14,14 +16,17 @@ do_test() {
 	NAME=$1
 	printf %-20s $NAME
 
-	if grep -q csrr ../src/test/compliance/${NAME}.S; then
+	SRC=${PATH_CTS}/src/${NAME}.S
+	REF=${PATH_CTS}/references/${NAME}.reference_output
+
+	if grep -q csrr ${SRC}; then
 		ok "SKIP"
 		return
 	fi
 
 	(
 	make -C ../src/ clean
-	make -C ../src/ SSRC=test/compliance/${NAME}.S
+	make -C ../src/ SSRC=${SRC}
 	make clean
 	make > mem.dump
 	) > /tmp/build.out 2>&1
@@ -38,7 +43,7 @@ do_test() {
 		return
 	fi
 
-	COUNT=`wc -l ../src/test/ref/${NAME} | awk '{print $1}'`
+	COUNT=`wc -l ${REF} | awk '{print $1}'`
 	FROM=$((16#$FROM))
 	TO=$(($FROM + $COUNT*4 - 4))
 
@@ -49,7 +54,7 @@ do_test() {
 	done
 	) > /tmp/out
 
-	diff -u /tmp/out ../src/test/ref/${NAME} > /tmp/diff.out
+	diff -u ${REF} /tmp/out > /tmp/diff.out
 	if [ "$?" == "0" ]; then
 		ok OK
 	else
@@ -62,7 +67,7 @@ if [ "$1" != "" ]; then
 	cat /tmp/build.out
 	cat /tmp/diff.out
 else
-	TESTS=`cd ../src/test/ref; ls`
+	TESTS=`cd ${PATH_CTS}/src && ls | sed -e 's/.S$//'`
 	for TEST in $TESTS; do
 		do_test $TEST
 	done
