@@ -330,7 +330,7 @@ module cpu(
                case (funct3)
                   3'h0: rd_val = { {24{rd_data[7]}}, rd_data[7:0] };
                   3'h1: rd_val = { {16{rd_data[15]}}, rd_data[15:0] };
-                  3'h2: rd_val = rd_data[7:0];
+                  3'h2: rd_val = rd_data;
                   3'h4: rd_val = { 24'b0, rd_data[7:0] };
                   3'h5: rd_val = { 16'b0, rd_data[15:0] };
                endcase
