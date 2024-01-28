@@ -150,6 +150,7 @@ module cpu(
          OP_JAL: imm = { inst[31], inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
          OP_JALR: imm = { {20{inst[31]}}, inst[31:20] };
          OP_LUI: imm = { inst[31:12], 12'b0 };
+         OP_AUIPC: imm = { inst[31:12], 12'b0 };
       endcase
    end
  
@@ -212,7 +213,7 @@ module cpu(
          ST_AUIPC: begin
             o_addr = (rd << 2);
             wr_data = pc + imm;
-            wr_en = 1;
+            wr_en = (rd != 0);;
          end
          ST_STORE: begin
             o_addr = alu_out;
