@@ -7,8 +7,8 @@ struct led {
 };
 
 struct uart {
-	uint8_t data;
-	uint8_t status;
+	uint32_t data;
+	uint32_t status;
 };
 
 struct led volatile *led = (struct led *)0x4000;
@@ -52,6 +52,22 @@ void puts(char *s)
 		putc(*s);
 		s++;
 	}
+}
+
+extern char _sheap;
+extern char _eheap;
+static char *brk = &_sheap;
+
+void *_sbrk(ptrdiff_t incr)
+{
+	char *old_brk = brk;
+
+	if ((brk += incr) < &_eheap) {
+		brk += incr;
+	} else {
+		brk = &_eheap;
+	}
+	return old_brk;
 }
 
 
@@ -111,7 +127,7 @@ void _start(void)
 	volatile int i;
 	for(i=0; i<40000; i++);
 #endif
-#if 1
+#if 0
 	begin_testcode();
 #endif
 #if 0
@@ -119,10 +135,22 @@ void _start(void)
 	puthex(d);
 #endif
 #if 0
-	int *a = malloc(128);
-	puthex((uint32_t)a);
+	int n = 128;
+	int *a = malloc(n * sizeof(int));
+	for(int i=0; i<n; i++) {
+		a[i] = i;
+	}
+	int b = 0;
+	for(int i=0; i<n; i++) {
+		b += a[i];
+	}
+	for(;;) {
+		puthex(b);
+		for(volatile int i=0; i<40000; i++);
+	}
+
 #endif
-#if 0
+#if 1
 
 	volatile int a = 100;
 	volatile int b = 100;
@@ -138,7 +166,7 @@ void _start(void)
 		for(i=0; i<10000; i++);
 	}
 #endif
-#if 0
+#if 1
 	for(;;) {
 		puts("abc");
 		for(volatile int i=0; i<40000; i++);

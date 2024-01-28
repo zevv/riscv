@@ -3,7 +3,7 @@
 
 module uart(
    input wire clk,
-   input wire [1:0] addr, 
+   input wire [4:0] addr, 
    input wire rd_en, output reg [7:0] rd_data, output reg rd_valid,
    input wire wr_en, input wire [7:0] wr_data,
    output reg tx
@@ -44,7 +44,7 @@ module uart(
 
 		if (rd_en) begin
 			case (addr)
-				'h1: begin
+				'h4: begin
 					rd_data <= status;
 					rd_valid <= 1;
 				end

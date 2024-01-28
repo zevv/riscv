@@ -82,7 +82,7 @@ module machine(
    wire [7:0] uart_rd_data;
    wire uart_rd_valid;
    reg uart_wr_en = 0;
-   reg [1:0] uart_addr = 0;
+   reg [4:0] uart_addr = 0;
    reg [7:0] uart_wr_data = 0;
 
    uart uart0(
