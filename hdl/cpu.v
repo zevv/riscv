@@ -26,10 +26,10 @@ module cpu(
       BOOT = 0,
       FETCH = 1,
       BRANCH = 2,
-      EXECUTE = 3,
-      ST = 4,
+      LOAD_WAIT = 3,
+      ST_AUIPC = 4,
       LD_RS1 = 5,
-      LD_RS2 = 6,
+      STORE = 6,
       LOAD = 7,
       LD_INST = 8,
       LD_PC = 9,
@@ -37,8 +37,11 @@ module cpu(
       ST_SP = 11,
       ST_JAL = 12,
       ST_JALR = 13,
-      ST_ALU_R = 14,
-      FAULT = 15;
+      ST_ALU = 14,
+      ST_LOAD = 15,
+      ST_LUI = 16,
+      ST_STORE = 17,
+      FAULT = 31;
 
    localparam
       BR_BEQ = 3'h0,
@@ -59,7 +62,7 @@ module cpu(
    end
 
    // CPU state
-   reg [3:0] state = 0;
+   reg [4:0] state = 0;
    reg [15:0] pc = 0;
    reg [31:0] rd_val = 0;
    reg [31:0] rs1_val = 0;
@@ -205,41 +208,43 @@ module cpu(
             o_addr = (rs2 << 2);
             rd_en = 1;
          end
-         LD_RS2: begin
+         STORE: begin
             o_addr = (rs2 << 2);
          end
-         ST: begin
+         ST_AUIPC: begin
+            o_addr = (rd << 2);
+            wr_data = pc + imm;
+            wr_en = 1;
+         end
+         ST_STORE: begin
+            o_addr = alu_out;
+            wr_data = rs2_val;
+            wr_en = 1;
+         end
+         ST_LUI: begin
+            o_addr = (rd << 2);
+            wr_data = imm;
+            wr_en = (rd != 0);
+         end
+         ST_LOAD: begin
+            o_addr = (rd << 2);
+            wr_data = rd_val;
+            wr_en = 1;
+         end
+         ST_ALU: begin
             o_addr = (rd << 2);
             wr_data = alu_out;
-            if(opcode == OP_LUI) begin
-               wr_data = imm;
-            end
-            if(opcode == OP_LOAD) begin
-               wr_data = rd_val;
-            end
-            if(opcode == OP_STORE) begin
-               o_addr = alu_out;
-               wr_data = rs2_val;
-            end
-            if(opcode == OP_AUIPC) begin
-               wr_data = pc + imm;
-            end
-            wr_en = (o_addr != 0);
-         end
-         ST_ALU_R: begin
-            o_addr = (rd << 2);
             wr_en = (rd != 0);
-            wr_data = alu_out;
          end
-         ST_JAL:begin
-            wr_en = (rd != 0);
+         ST_JAL: begin
             o_addr = (rd << 2);
             wr_data = pc + 4;
-         end
-         ST_JALR:begin
             wr_en = (rd != 0);
+         end
+         ST_JALR: begin
             o_addr = (rd << 2);
             wr_data = pc + 4;
+            wr_en = (rd != 0);
          end
          LOAD: begin
             o_addr = rs1_val + imm;
@@ -248,7 +253,7 @@ module cpu(
 
       endcase
 
-      debug = (!(rd_en || wr_en)) && (opcode != OP_LOAD && opcode != OP_STORE);
+      debug = (!(rd_en || wr_en));
    end
 
    // CPU state machine
@@ -280,19 +285,11 @@ module cpu(
                   OP_BRANCH: state <= LD_RS1;
                   OP_JAL: state <= ST_JAL;
                   OP_JALR: state <= LD_RS1;
-                  OP_LUI: state <= ST;
-                  OP_AUIPC: state <= ST;
+                  OP_LUI: state <= ST_LUI;
+                  OP_AUIPC: state <= ST_AUIPC;
                   default: state <= FAULT;
                endcase
             end
-         end
-
-         EXECUTE: begin
-            state <= ST;
-            case (opcode)
-               OP_LOAD: state <= LOAD;
-               default: state <= FAULT;
-            endcase
          end
 
          LD_RS1: begin
@@ -300,25 +297,32 @@ module cpu(
                rs1_val <= rd_data;
                state <= FAULT;
                case (opcode)
-                  OP_ALU_R: state <= ST_ALU_R;
-                  OP_ALU_I: state <= ST;
-                  OP_STORE: state <= LD_RS2;
+                  OP_ALU_R: state <= ST_ALU;
+                  OP_ALU_I: state <= ST_ALU;
+                  OP_STORE: state <= STORE;
                   OP_BRANCH: state <= BRANCH;
                   OP_JALR: state <= ST_JALR;
-                  OP_LOAD: state <= EXECUTE;
+                  OP_LOAD: state <= LOAD_WAIT;
                endcase
             end
          end
 
-         LD_RS2: begin
+         STORE: begin
             if (rd_valid) begin
                rs2_val <= rd_data;
                state <= FAULT;
                case (opcode)
-                  OP_ALU_R: state <= ST;
-                  OP_STORE: state <= ST;
+                  OP_STORE: state <= ST_STORE;
                endcase
             end
+         end
+         
+         LOAD_WAIT: begin
+            state <= ST_LOAD;
+            case (opcode)
+               OP_LOAD: state <= LOAD;
+               default: state <= FAULT;
+            endcase
          end
 
          BRANCH: begin
@@ -332,7 +336,7 @@ module cpu(
          LOAD: begin
             if (rd_valid) begin
                rd_val <= rd_data;
-               state <= ST;
+               state <= ST_LOAD;
             end
          end
 
@@ -350,7 +354,7 @@ module cpu(
             end
          end
 
-         ST_ALU_R: begin
+         ST_ALU: begin
             pc <= pc + 4;
             state <= FETCH;
          end
@@ -359,7 +363,22 @@ module cpu(
             state <= FETCH;
          end
 
-         ST: begin
+         ST_AUIPC: begin
+            pc <= pc + 4;
+            state <= FETCH;
+         end
+         
+         ST_STORE: begin
+            pc <= pc + 4;
+            state <= FETCH;
+         end
+         
+         ST_LUI: begin
+            pc <= pc + 4;
+            state <= FETCH;
+         end
+         
+         ST_LOAD: begin
             pc <= pc + 4;
             state <= FETCH;
          end

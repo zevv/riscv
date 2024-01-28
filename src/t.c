@@ -110,7 +110,7 @@ void _start(void)
 	volatile int i;
 	for(i=0; i<40000; i++);
 #endif
-#if 1
+#if 0
 	begin_testcode();
 #endif
 #if 0
@@ -124,7 +124,7 @@ void _start(void)
 	puthex(a * b);
 	putc('\n');
 #endif
-#if 0
+#if 1
 	for(;;) {
 		led->r += 1;
 		led->g += 2;
