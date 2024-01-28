@@ -24,7 +24,7 @@ all: sim
 
 sim: test.vcd
 
-%.json: %.v ../src/t.mem
+%.json: %.v $(SRCS) ../src/t.mem
 	yosys $(YOSYSFLAGS) -p "synth_ice40 -top $* -json $@" $<
 
 %.asc: %.json

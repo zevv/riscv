@@ -9,19 +9,11 @@ module alu(
    output reg zero
 );
 
-
-   adder add(
+   adder adder0(
       .x(x),
       .y(y),
-      .addsub(1'b0),
+      .addsub(fn == 4'h8),
       .out(add_out)
-   );
-
-   adder sub(
-      .x(x),
-      .y(y),
-      .addsub(1'b1),
-      .out(sub_out)
    );
 
    wire [31:0] add_out;
@@ -39,7 +31,7 @@ module alu(
          4'h5: out = x >> y[4:0];
          4'h6: out = x | y;
          4'h7: out = x & y;
-         4'h8: out = sub_out; // x - y;
+         4'h8: out = add_out; // x - y;
          4'hd: out = $signed(x) >>> y[4:0];
          default: out= 0;
       endcase
