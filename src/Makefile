@@ -14,6 +14,7 @@ CFLAGS += -Itest
 LDFLAGS += -T script.lds 
 LDFLAGS += -nostartfiles
 LDFLAGS += -march=rv32i
+LDFLAGS += --specs=nano.specs
 
 CSRC += t.c
 
@@ -41,7 +42,7 @@ t.asm: t.elf
 	llvm-objdump-16 -S t.elf > t.asm
 
 clean:
-	rm -f *.elf *.o *.asm *.bin
+	rm -f *.elf *.o *.asm *.bin *.mem
 
 #&& llvm-objdump-16 -S t.o
 

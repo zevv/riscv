@@ -1,5 +1,6 @@
 
 #include <stdint.h>
+#include <stdlib.h>
 
 struct led {
 	uint32_t b, g, r;
@@ -110,12 +111,16 @@ void _start(void)
 	volatile int i;
 	for(i=0; i<40000; i++);
 #endif
-#if 0
+#if 1
 	begin_testcode();
 #endif
 #if 0
 	volatile int d = 0x1234567;
 	puthex(d);
+#endif
+#if 0
+	int *a = malloc(128);
+	puthex((uint32_t)a);
 #endif
 #if 0
 
@@ -124,7 +129,7 @@ void _start(void)
 	puthex(a * b);
 	putc('\n');
 #endif
-#if 1
+#if 0
 	for(;;) {
 		led->r += 1;
 		led->g += 2;

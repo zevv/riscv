@@ -161,9 +161,9 @@ module cpu(
       case (funct3)
          BR_BEQ: if (alu_zero) branch = 1;
          BR_BNE: if (!alu_zero) branch = 1;
-         BR_BLT: if (alu_out) branch = 1;
-         BR_BGE: if (!alu_out) branch = 1;
+         BR_BLT,
          BR_BLTU: if (alu_out) branch = 1;
+         BR_BGE,
          BR_BGEU: if (!alu_out) branch = 1;
       endcase
    end
@@ -213,10 +213,6 @@ module cpu(
             wr_data = rd_val;
             wr_en = 1;
          end
-         BRANCH: begin
-            o_addr = (rs2 << 2);
-            rd_en = 1;
-         end
          FETCH: begin
             o_addr = pc;
             rd_en = 1;
@@ -232,10 +228,9 @@ module cpu(
          LD_RS2_STORE: begin
             o_addr = (rs2 << 2);
          end
-         ST_AUIPC: begin
-            o_addr = (rd << 2);
-            wr_data = pc + imm;
-            wr_en = (rd != 0);;
+         BRANCH: begin
+            o_addr = (rs2 << 2);
+            rd_en = 1;
          end
          ST_STORE: begin
             o_addr = alu_out;
@@ -266,27 +261,28 @@ module cpu(
          ST_LUI: begin
             o_addr = (rd << 2);
             wr_data = imm;
-            wr_en = (rd != 0);
+            wr_en = 1;
          end
          ST_LOAD: begin
             o_addr = (rd << 2);
             wr_data = rd_val;
-            wr_en = (rd != 0);
+            wr_en = 1;
          end
          ST_ALU: begin
             o_addr = (rd << 2);
             wr_data = alu_out;
-            wr_en = (rd != 0);
+            wr_en = 1;
          end
-         ST_JAL: begin
+         ST_JAL,
+            ST_JALR: begin
             o_addr = (rd << 2);
             wr_data = pc + 4;
-            wr_en = (rd != 0);
+            wr_en = 1;
          end
-         ST_JALR: begin
+         ST_AUIPC: begin
             o_addr = (rd << 2);
-            wr_data = pc + 4;
-            wr_en = (rd != 0);
+            wr_data = pc + imm;
+            wr_en = 1;
          end
          LOAD: begin
             o_addr = rs1_val + imm;
@@ -294,6 +290,9 @@ module cpu(
          end
 
       endcase
+
+      // Do not allow writes to address 0, the zero register
+      wr_en = (wr_en && o_addr != 0);
 
       debug = (!(rd_en || wr_en));
    end
@@ -339,7 +338,7 @@ module cpu(
                rs1_val <= rd_data;
                state <= FAULT;
                case (opcode)
-                  OP_ALU_R: state <= ST_ALU;
+                  OP_ALU_R,
                   OP_ALU_I: state <= ST_ALU;
                   OP_STORE: state <= LD_RS2_STORE;
                   OP_BRANCH: state <= BRANCH;

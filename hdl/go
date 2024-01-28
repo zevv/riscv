@@ -25,9 +25,9 @@ do_test() {
 	fi
 
 	(
-	make -C ../src/ clean
-	make -C ../src/ SSRC=${SRC}
 	make clean
+
+	make -C ../src/ SSRC=${SRC} t.asm
 	make > mem.dump
 	) > /tmp/build.out 2>&1
 

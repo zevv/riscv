@@ -55,3 +55,4 @@ report: top.asc
 
 clean:
 	rm -rf *.json *.asc *.bin *.vp *.vcd
+	make -C ../src clean
