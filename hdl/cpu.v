@@ -29,7 +29,7 @@ module cpu(
       LOAD_WAIT = 3,
       ST_AUIPC = 4,
       LD_RS1 = 5,
-      STORE = 6,
+      LD_RS2_STORE = 6,
       LOAD = 7,
       LD_INST = 8,
       LD_PC = 9,
@@ -171,8 +171,6 @@ module cpu(
    // Memory control
 
    always @(*) begin
-
-         
       rd_en = 0;
       wr_en = 0;
       o_addr = -1;
@@ -208,7 +206,7 @@ module cpu(
             o_addr = (rs2 << 2);
             rd_en = 1;
          end
-         STORE: begin
+         LD_RS2_STORE: begin
             o_addr = (rs2 << 2);
          end
          ST_AUIPC: begin
@@ -299,7 +297,7 @@ module cpu(
                case (opcode)
                   OP_ALU_R: state <= ST_ALU;
                   OP_ALU_I: state <= ST_ALU;
-                  OP_STORE: state <= STORE;
+                  OP_STORE: state <= LD_RS2_STORE;
                   OP_BRANCH: state <= BRANCH;
                   OP_JALR: state <= ST_JALR;
                   OP_LOAD: state <= LOAD_WAIT;
@@ -307,22 +305,15 @@ module cpu(
             end
          end
 
-         STORE: begin
+         LD_RS2_STORE: begin
             if (rd_valid) begin
                rs2_val <= rd_data;
-               state <= FAULT;
-               case (opcode)
-                  OP_STORE: state <= ST_STORE;
-               endcase
+               state <= ST_STORE;
             end
          end
          
          LOAD_WAIT: begin
-            state <= ST_LOAD;
-            case (opcode)
-               OP_LOAD: state <= LOAD;
-               default: state <= FAULT;
-            endcase
+            state <= LOAD;
          end
 
          BRANCH: begin
@@ -354,7 +345,7 @@ module cpu(
             end
          end
 
-         ST_ALU: begin
+         ST_ALU, ST_STORE, ST_LUI, ST_LOAD: begin
             pc <= pc + 4;
             state <= FETCH;
          end
@@ -364,21 +355,6 @@ module cpu(
          end
 
          ST_AUIPC: begin
-            pc <= pc + 4;
-            state <= FETCH;
-         end
-         
-         ST_STORE: begin
-            pc <= pc + 4;
-            state <= FETCH;
-         end
-         
-         ST_LUI: begin
-            pc <= pc + 4;
-            state <= FETCH;
-         end
-         
-         ST_LOAD: begin
             pc <= pc + 4;
             state <= FETCH;
          end

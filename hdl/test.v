@@ -13,8 +13,10 @@ module test();
          //$dumpvars(0, machine, machine.ram0.mem[i]);
       end
       #20000
-      for (i = 'h0; i < 'h2000; i++) begin
-         $display("mem %04x %08x", i * 'd4, machine.bram0.mem[i]);
+      if (machine.cpu0.state == 31) begin
+         for (i = 'h0; i < 'h2000; i++) begin
+            $display("mem %04x %08x", i * 'd4, machine.bram0.mem[i]);
+         end
       end
 
       $finish;
@@ -30,7 +32,7 @@ module test();
    reg [31:0] cycle = 0;
 
    always @(posedge clk) begin
-      if (machine.cpu0.state == 1) begin
+      if (0 && machine.cpu0.state == 1) begin
          cycle <= cycle + 1;
          $display("%d pc:%08x ra:%08x sp:%08x a1:%08x a2:%08x a3:%08x a4:%08x a5:%08x",
             cycle,
