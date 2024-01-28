@@ -2,6 +2,7 @@
 `default_nettype none
 
 `include "machine.v"
+`include "/usr/share/yosys/ice40/cells_sim.v"
 
 module test();
 

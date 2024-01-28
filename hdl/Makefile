@@ -34,7 +34,7 @@ sim: test.vcd
 	icepack $< $@
 
 %.vp: %.v $(SRCS) ../src/t.mem
-	iverilog -Wall -Winfloop -o $@ $<
+	iverilog -g2005-sv -Wall -Winfloop -o $@ $<
 
 %.vcd: %.vp $(SRCS)
 	vvp $<

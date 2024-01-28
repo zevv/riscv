@@ -68,7 +68,7 @@ module machine(
    wire [7:0] led_rd_data;
    wire led_rd_valid;
    reg led_wr_en = 0;
-   reg [1:0] led_addr = 0;
+   reg [4:0] led_addr = 0;
    reg [7:0] led_wr_data = 0;
 
    led led0(

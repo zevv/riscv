@@ -2,7 +2,7 @@
 
 module led(
    input wire clk,
-   input wire rd_en, input wire [1:0] addr, output reg [7:0] rd_data, output reg rd_valid,
+   input wire rd_en, input wire [4:0] addr, output reg [7:0] rd_data, output reg rd_valid,
    input wire wr_en, input wire [7:0] wr_data,
    output reg led1, output reg led2, output reg led3
 );
@@ -14,11 +14,11 @@ module led(
    begin
       rd_valid <= 0;
       if(rd_en) begin
-         rd_data <= val[addr];
+         rd_data <= val[addr >> 2];
          rd_valid <= 1;
       end
       if(wr_en) begin
-         val[addr] <= wr_data;
+         val[addr >> 2] <= wr_data;
       end
    end
    
