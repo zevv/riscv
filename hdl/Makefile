@@ -4,12 +4,15 @@ PCF := io.pcf
 ASC := $(NAME).asc
 BIN := $(NAME).bin
 
+FREQ := 16
+
 SRCS += top.v
 SRCS += cpu.v
 SRCS += alu.v adder.v
 SRCS += machine.v
 SRCS += uart.v
 SRCS += bram.v
+SRCS += pll.v
 
 YOSYSFLAGS := -Q -T
 NEXTPNRFLAGS := --freq 48 --package sg48 --up5k 
@@ -23,6 +26,10 @@ all: sim
 	$(MAKE) -C ../src
 
 sim: test.vcd
+
+pll.v: Makefile
+	icepll -i 12 -o $(FREQ) -m -f pll.v
+
 
 %.json: %.v $(SRCS) ../src/t.mem
 	yosys $(YOSYSFLAGS) -p "synth_ice40 -top $* -json $@" $<
@@ -54,5 +61,5 @@ report: top.asc
 	@grep "Max freq" $(NAME).log
 
 clean:
-	rm -rf *.json *.asc *.bin *.vp *.vcd
+	rm -rf *.json *.asc *.bin *.vp *.vcd pll.v
 	make -C ../src clean
