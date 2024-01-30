@@ -28,7 +28,7 @@ do_test() {
 	make clean
 
 	make -C ../src/ SSRC=${SRC} t.asm
-	make > mem.dump
+	make sim > mem.dump
 	) > /tmp/build.out 2>&1
 
 	if [ ! -r ../src/t.elf ]; then

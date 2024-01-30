@@ -18,7 +18,7 @@ module test();
          for (i = 'h0; i < 'h800; i++) begin
             $display("mem %04x %08x", i * 'd4, machine.bram0.mem[i]);
          end
-         $display("FAULT at %08x: %08x", machine.cpu0.pc, machine.cpu0.inst);
+         //$display("FAULT at %08x: %08x", machine.cpu0.pc, machine.cpu0.inst);
       end
 
       $finish;

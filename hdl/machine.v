@@ -118,7 +118,7 @@ module machine(
       
       bram_addr = addr[11:0];
       spram_addr = addr[14:0];
-      led_addr = addr[1:0];
+      led_addr = addr[4:0];
       uart_addr = addr[2:0];
 
       bram_wr_data = cpu_wr_data;

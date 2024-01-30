@@ -150,23 +150,23 @@ void _start(void)
 	}
 
 #endif
-#if 1
+#if 0
 
 	volatile int a = 100;
 	volatile int b = 100;
 	puthex(a * b);
 	putc('\n');
 #endif
-#if 0
+#if 1
 	for(;;) {
 		led->r += 1;
 		led->g += 2;
 		led->b += 3;
 		volatile int i;
-		for(i=0; i<10000; i++);
+		for(i=0; i<40000; i++);
 	}
 #endif
-#if 1
+#if 0
 	for(;;) {
 		puts("abc");
 		for(volatile int i=0; i<40000; i++);

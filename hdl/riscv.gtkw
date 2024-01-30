@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sun Jan 28 05:52:23 2024
+[*] Mon Jan 29 18:30:51 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Sun Jan 28 05:45:11 2024"
-[dumpfile_size] 988688
+[dumpfile_mtime] "Mon Jan 29 18:28:52 2024"
+[dumpfile_size] 617561
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
-[timestart] 2009
-[size] 1704 822
+[timestart] 37
+[size] 1535 737
 [pos] -1 -1
-*-2.100002 2021 2021 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-1.800002 41 2021 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
 [treeopen] test.machine.cpu0.
@@ -27,17 +27,16 @@ test.uart_tx
 test.machine.uart0.last_data[8:0]
 @200
 -Decoder
-@28
-[color] 7
-test.machine.cpu0.fetch
 @22
+[color] 7
 test.machine.cpu0.pc[15:0]
-test.machine.cpu0.inst[31:0]
-@2022
-[color] 3
+@2025
 ^1 /home/ico/sandbox/prjs/riscv/hdl/gtkw/states.txt
-test.machine.cpu0.state[3:0]
+test.machine.cpu0.state[4:0]
+@22
+test.machine.cpu0.inst[31:0]
 @2028
+[color] 3
 ^2 /home/ico/sandbox/prjs/riscv/hdl/gtkw/opcodes.txt
 test.machine.cpu0.opcode[6:0]
 @2022
@@ -68,19 +67,7 @@ test.machine.cpu0.rd_valid
 test.machine.cpu0.rd_data[31:0]
 @200
 -CPU state
-@22
-test.machine.cpu0.rs1_val[31:0]
-test.machine.cpu0.rs2_val[31:0]
-@200
 -ALU
-@2023
-^4 /home/ico/sandbox/prjs/riscv/hdl/gtkw/alu_fn.txt
-test.machine.cpu0.alu_fn[3:0]
-@22
-test.machine.cpu0.alu_in1[31:0]
-test.machine.cpu0.alu_in2[31:0]
-test.machine.cpu0.alu_out[31:0]
-@200
 -Registers
 @22
 test.machine.bram0.reg_a0[31:0]
