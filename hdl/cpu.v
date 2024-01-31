@@ -16,26 +16,15 @@ module cpu(
       VEC_SP    = 16'h0084;
 
    localparam
-      OP_ALU_R = 7'b0110011,
-      OP_ALU_I = 7'b0010011,
-      OP_LOAD = 7'b0000011,
-      OP_STORE = 7'b0100011,
+      OP_ALU_R  = 7'b0110011,
+      OP_ALU_I  = 7'b0010011,
+      OP_LOAD   = 7'b0000011,
+      OP_STORE  = 7'b0100011,
       OP_BRANCH = 7'b1100011,
-      OP_JAL = 7'b1101111,
-      OP_JALR = 7'b1100111,
-      OP_LUI = 7'b0110111,
-      OP_AUIPC = 7'b0010111;
-
-   reg [4:0] state = 0;
-   reg [15:0] pc = 0;
-   reg [31:0] rd_val = 0;
-   reg [31:0] rs1_val = 0;
-   reg [31:0] rs2_val = 0;
-
-   initial begin
-      wr_en = 0;
-      rd_en = 0;
-   end
+      OP_JAL    = 7'b1101111,
+      OP_JALR   = 7'b1100111,
+      OP_LUI    = 7'b0110111,
+      OP_AUIPC  = 7'b0010111;
    
    localparam
       BR_BEQ = 3'h0,
@@ -78,8 +67,16 @@ module cpu(
       ST_X_LOAD_4 = 27,
 
       ST_FAULT = 31;
+
+   // CPU state
+   reg [4:0] state = 0;
+   reg [15:0] pc = 0;
+   reg [31:0] rd_val = 0;
+   reg [31:0] rs1_val = 0;
+   reg [31:0] rs2_val = 0;
    
    // Decoded instruction
+   reg [31:0] inst = 0;
    reg [6:0] opcode;
    reg [4:0] rd;
    reg [6:0] funct7;
@@ -87,21 +84,34 @@ module cpu(
    reg [4:0] rs1;
    reg [4:0] rs2;
    reg signed [31:0] imm = 0;
+   
+   // Instruction decoding
+   always @(*) begin
+      opcode = inst[6:0];
+      rd = inst[11:7];
+      funct7 = inst[31:25];
+      funct3 = inst[14:12];
+      rs1 = inst[19:15];
+      rs2 = inst[24:20];
+      imm = 0;
+      case (inst[6:0])
+         OP_ALU_I:  imm = { {20{inst[31]}}, inst[31:20] };
+         OP_LOAD:   imm = { {20{inst[31]}}, inst[31:20] };
+         OP_STORE:  imm = { {20{inst[31]}}, inst[31:25], inst[11:7] };
+         OP_BRANCH: imm = { {19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
+         OP_JAL:    imm = { inst[31], inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
+         OP_JALR:   imm = { {20{inst[31]}}, inst[31:20] };
+         OP_LUI:    imm = { inst[31:12], 12'b0 };
+         OP_AUIPC:  imm = { inst[31:12], 12'b0 };
+      endcase
+   end
 
-   reg [31:0] inst;
-
-   reg alu_y_rs2 = 1;
+   // ALU
    reg [31:0] alu_x;
    reg [31:0] alu_y;
    reg [3:0] alu_fn;
    wire [31:0] alu_out;
    wire alu_zero;
-
-   always @(*) begin
-      alu_x = (opcode == OP_JAL) ? pc : rs1_val;
-      alu_y = (opcode == OP_ALU_R || opcode == OP_BRANCH) ? rs2_val : imm;
-   end
-
    alu alu(
       .x(alu_x),
       .y(alu_y),
@@ -110,11 +120,15 @@ module cpu(
       .zero(alu_zero)
    );
 
+   // ALU control
    always @(*) begin
       alu_fn = 0;
+      alu_x = rs1_val;
+      alu_y = imm;
       case (inst[6:0])
          OP_ALU_R: begin
             alu_fn = { funct7[5], funct3 };
+            alu_y = rs2_val;
          end
          OP_ALU_I: begin
             alu_fn = { (funct3 == 3'h1 || funct3 == 3'h5) ? imm[10] : 1'b0, funct3 };
@@ -134,12 +148,24 @@ module cpu(
                BR_BLTU: alu_fn = 4'h3;
                BR_BGEU: alu_fn = 4'h3;
             endcase
+            alu_y = rs2_val;
+         end
+         OP_JAL: begin
+            alu_x = pc;
+         end
+         OP_JAL: begin
+            alu_x = pc;
+            alu_y = 32'd4;
+         end
+         OP_AUIPC: begin
+            alu_fn = 4'h0; // ADD
+            alu_x = pc;
          end
       endcase
    end
 
+   // Branch control
    reg branch;
-
    always @(*) begin
       branch = 0;
       case (funct3)
@@ -152,17 +178,6 @@ module cpu(
       endcase
    end
 
-
-   always @(*) begin
-      opcode = inst[6:0];
-      rd = inst[11:7];
-      funct7 = inst[31:25];
-      funct3 = inst[14:12];
-      rs1 = inst[19:15];
-      rs2 = inst[24:20];
-   end
-
-
    reg [31:0] rd_data_shifted;
    always @(*) begin
       case (o_addr[1:0])
@@ -173,22 +188,8 @@ module cpu(
       endcase
    end
 
+   // Memory read/write control
    always @(*) begin
-      imm = 0;
-      case (inst[6:0])
-         OP_ALU_I: imm = { {20{inst[31]}}, inst[31:20] };
-         OP_LOAD: imm = { {20{inst[31]}}, inst[31:20] };
-         OP_STORE: imm = { {20{inst[31]}}, inst[31:25], inst[11:7] };
-         OP_BRANCH: imm = { {19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
-         OP_JAL: imm = { inst[31], inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
-         OP_JALR: imm = { {20{inst[31]}}, inst[31:20] };
-         OP_LUI: imm = { inst[31:12], 12'b0 };
-         OP_AUIPC: imm = { inst[31:12], 12'b0 };
-      endcase
-   end
-   
-   always @(*) begin
-
       rd_en = 0;
       wr_en = 0;
       o_addr = 0;
@@ -272,7 +273,7 @@ module cpu(
          end
          ST_X_JAL_1: begin
             o_addr = (rd << 2);
-            wr_data = pc + 4;
+            wr_data = alu_out;
             wr_en = 1;
          end
          ST_X_ALU_R_2: begin
@@ -287,12 +288,12 @@ module cpu(
          end
          ST_X_AUIPC: begin
             o_addr = (rd << 2);
-            wr_data = pc + imm; // TODO ALU
+            wr_data = alu_out;
             wr_en = 1;
          end
          ST_X_JALR_2: begin
             o_addr = (rd << 2);
-            wr_data = pc + 4; // TODO
+            wr_data = alu_out;
             wr_en = 1;
          end
       endcase
@@ -300,11 +301,9 @@ module cpu(
       debug = (rd_en || wr_en);
    end
 
-   wire fetch = (state == ST_L_INST);
-
+   // CPU state machine
    always @(posedge clk)
    begin
-
       case (state)
          ST_BOOT: begin
             pc <= pc + 4;
@@ -437,13 +436,8 @@ module cpu(
             pc <= alu_out;
             state <= ST_L_INST;
          end
-
-
       endcase
-
-
    end
-
 
 
 `ifdef FORMAL
