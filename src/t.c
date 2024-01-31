@@ -150,8 +150,7 @@ void _start(void)
 	}
 
 #endif
-#if 0
-
+#if 1
 	volatile int a = 100;
 	volatile int b = 100;
 	puthex(a * b);

@@ -99,7 +99,7 @@ module cpu(
          OP_LOAD:   imm = { {20{inst[31]}}, inst[31:20] };
          OP_STORE:  imm = { {20{inst[31]}}, inst[31:25], inst[11:7] };
          OP_BRANCH: imm = { {19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
-         OP_JAL:    imm = { inst[31], inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
+         OP_JAL:    imm = { {12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
          OP_JALR:   imm = { {20{inst[31]}}, inst[31:20] };
          OP_LUI:    imm = { inst[31:12], 12'b0 };
          OP_AUIPC:  imm = { inst[31:12], 12'b0 };
@@ -273,7 +273,7 @@ module cpu(
          end
          ST_X_JAL_1: begin
             o_addr = (rd << 2);
-            wr_data = alu_out;
+            wr_data = pc + 4;
             wr_en = 1;
          end
          ST_X_ALU_R_2: begin
@@ -301,7 +301,7 @@ module cpu(
    end
 
    always @(*) begin
-      debug = (pc == 'hcc);
+      debug = (opcode == OP_JAL);
    end
 
    // CPU state machine
