@@ -11,7 +11,7 @@
 
 module machine
 #(
-   parameter W = 32
+   parameter W = 16
 )
 (
    input clk,
@@ -26,7 +26,7 @@ module machine
    reg [31:0] cpu_rd_data;
    reg cpu_rd_valid;
    wire cpu_wr_en;
-   wire [31:0] cpu_wr_data;
+   wire [W-1:0] cpu_wr_data;
    wire [3:0] cpu_wr_mask;
 
    cpu #(.W(W)) cpu0(
@@ -43,9 +43,9 @@ module machine
    wire bram_rd_valid;
    reg bram_wr_en = 0;
    reg [12:0] bram_addr = 0;
-   reg [31:0] bram_wr_data = 0;
+   reg [W-1:0] bram_wr_data = 0;
 
-   bram bram0(
+   bram #(.W(W)) bram0(
       .clk(clk),
       .addr(bram_addr),
       .rd_en(bram_rd_en), .rd_data(bram_rd_data), .rd_valid(bram_rd_valid),
@@ -54,13 +54,13 @@ module machine
 
 
    reg spram_rd_en = 0;
-   wire [31:0] spram_rd_data;
+   wire [W-1:0] spram_rd_data;
    wire spram_rd_valid;
    reg spram_wr_en = 0;
    reg [14:0] spram_addr = 0;
-   reg [31:0] spram_wr_data = 0;
+   reg [W-1:0] spram_wr_data = 0;
 
-   spram spram0(
+   spram #(.W(W)) spram0(
       .clk(clk),
       .addr(spram_addr),
       .rd_en(spram_rd_en), .rd_data(spram_rd_data), .rd_valid(spram_rd_valid),

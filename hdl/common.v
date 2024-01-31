@@ -21,8 +21,8 @@
 `define ST_S_SP 2
 `define ST_F_PC 3
 
-`define ST_L_INST 4
-`define ST_F_INST 5
+`define ST_F_INST 4
+`define ST_DECODE 5
 `define ST_DECODE 6
 `define ST_F_RS1 7
 `define ST_F_RS2 8

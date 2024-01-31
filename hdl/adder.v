@@ -1,5 +1,6 @@
 
-module adder(
+module adder
+(
    input [31:0] x,
    input [31:0] y,
    input addsub,

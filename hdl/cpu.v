@@ -29,46 +29,35 @@ module cpu
    reg [W-1:0] rs2_val = 0;
    
    // Decoded instruction
-   reg [31:0] inst = 0;
    reg [6:0] opcode;
    reg [4:0] rd;
    reg [6:0] funct7;
    reg [2:0] funct3;
    reg [4:0] rs1;
    reg [4:0] rs2;
-   reg [W-1:0] imm_I;
-   reg [W-1:0] imm_S;
-   reg [W-1:0] imm_B;
-   reg [W-1:0] imm_U;
-   reg [W-1:0] imm_J;
    reg [W-1:0] imm;
 
    // Instruction decoding
-   always @(*) begin
-      opcode = inst[6:0];
-      rd = inst[11:7];
-      funct7 = inst[31:25];
-      funct3 = inst[14:12];
-      rs1 = inst[19:15];
-      rs2 = inst[24:20];
-      imm = 0;
-
-      imm_I = { {20{inst[31]}}, inst[31:20] };
-      imm_S = { {20{inst[31]}}, inst[31:25], inst[11:7] };
-      imm_B = { {19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
-      imm_U = { inst[31:12], 12'b0 };
-      imm_J = { {12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
-
-      case (inst[6:0])
-         `OP_ALU_I:  imm = imm_I;
-         `OP_LOAD:   imm = imm_I;
-         `OP_STORE:  imm = imm_S;
-         `OP_BRANCH: imm = imm_B;
-         `OP_JAL:    imm = imm_J;
-         `OP_JALR:   imm = imm_I;
-         `OP_LUI:    imm = imm_U;
-         `OP_AUIPC:  imm = imm_U;
-      endcase
+   always @(posedge clk)
+   begin
+      if(state == `ST_DECODE) begin
+         opcode <= rd_data[6:0];
+         rd <= rd_data[11:7];
+         funct7 <= rd_data[31:25];
+         funct3 <= rd_data[14:12];
+         rs1 <= rd_data[19:15];
+         rs2 <= rd_data[24:20];
+         case (rd_data[6:0])
+            `OP_ALU_I: imm <= { {20{rd_data[31]}}, rd_data[31:20] };
+            `OP_LOAD: imm <= { {20{rd_data[31]}}, rd_data[31:20] };
+            `OP_STORE: imm <= { {20{rd_data[31]}}, rd_data[31:25], rd_data[11:7] };
+            `OP_BRANCH: imm <= { {19{rd_data[31]}}, rd_data[31], rd_data[7], rd_data[30:25], rd_data[11:8], 1'b0};
+            `OP_JAL: imm <= { rd_data[31], rd_data[31], rd_data[19:12], rd_data[20], rd_data[30:21], 1'b0};
+            `OP_JALR: imm <= { {20{rd_data[31]}}, rd_data[31:20] };
+            `OP_LUI: imm <= { rd_data[31:12], 12'b0 };
+            `OP_AUIPC: imm <= { rd_data[31:12], 12'b0 };
+         endcase
+      end
    end
 
    // ALU
@@ -90,7 +79,7 @@ module cpu
       alu_fn = 0;
       alu_x = rs1_val;
       alu_y = imm;
-      case (inst[6:0])
+      case (opcode)
          `OP_ALU_R: begin
             alu_fn = { funct7[5], funct3 };
             alu_y = rs2_val;
@@ -143,14 +132,13 @@ module cpu
       endcase
    end
 
-   reg [31:0] rd_data_shifted;
+   reg [W-1:0] rd_data_shifted;
    always @(*) begin
-      case (o_addr[1:0])
-         2'h0: rd_data_shifted = rd_data[31:0];
-         2'h1: rd_data_shifted = rd_data[31:8];
-         2'h2: rd_data_shifted = rd_data[31:16];
-         2'h3: rd_data_shifted = rd_data[31:24];
-      endcase
+      rd_data_shifted = rd_data;
+      if(W >  0 && o_addr[1:0] == 2'h0) rd_data_shifted = rd_data[W-1:0];
+      if(W >  8 && o_addr[1:0] == 2'h1) rd_data_shifted = rd_data[W-1:8];
+      if(W > 16 && o_addr[1:0] == 2'h2) rd_data_shifted = rd_data[W-1:16];
+      if(W > 24 && o_addr[1:0] == 2'h3) rd_data_shifted = rd_data[W-1:24];
    end
 
    // Memory read/write control
@@ -160,7 +148,6 @@ module cpu
       o_addr = 0;
       wr_data = 0;
       wr_mask = 4'b1111;
-
       case (state)
          `ST_BOOT: begin
             o_addr = VEC_SP;
@@ -175,11 +162,9 @@ module cpu
             o_addr = VEC_RESET;
             rd_en = 1;
          end
-         `ST_L_INST: begin
+         `ST_F_INST: begin
             o_addr = pc;
             rd_en = 1;
-         end
-         `ST_F_INST: begin
          end
          `ST_F_RS1: begin
             o_addr = (rs1 << 2);
@@ -193,8 +178,6 @@ module cpu
             o_addr = (rd << 2);
             wr_data = alu_out;
             wr_en = 1;
-         end
-         `ST_X_STORE_1: begin
          end
          `ST_X_STORE_2: begin
             o_addr = alu_out;
@@ -221,8 +204,6 @@ module cpu
                end
             endcase
             wr_en = 1;
-         end
-         `ST_X_LOAD_1: begin
          end
          `ST_X_LOAD_2: begin
             o_addr = alu_out;
@@ -266,7 +247,7 @@ module cpu
    end
 
    always @(*) begin
-      debug = (opcode == `OP_JAL);
+      debug = (rd_en || wr_en);
    end
 
    // CPU state machine
@@ -289,14 +270,13 @@ module cpu
          `ST_F_PC: begin
             if (rd_valid) begin
                pc <= rd_data;
-               state <= `ST_L_INST;
+               state <= `ST_F_INST;
             end
          end
-         `ST_L_INST: begin
-            state <= `ST_F_INST;
-         end
          `ST_F_INST: begin
-            inst <= rd_data;
+            state <= `ST_DECODE;
+         end
+         `ST_DECODE: begin
             case (rd_data[6:0])
                `OP_ALU_R: state <= `ST_F_RS1;
                `OP_ALU_I: state <= `ST_F_RS1;
@@ -333,7 +313,7 @@ module cpu
             state <= `ST_X_ALU_I_2;
          end
          `ST_X_ALU_I_2: begin
-            state <= `ST_L_INST;
+            state <= `ST_F_INST;
             pc <= pc + 4;
          end
          `ST_X_STORE_1: begin
@@ -342,7 +322,7 @@ module cpu
          end
          `ST_X_STORE_2: begin
             pc <= pc + 4;
-            state <= `ST_L_INST;
+            state <= `ST_F_INST;
          end
          `ST_X_LOAD_1: begin
             rs1_val <= rd_data;
@@ -363,11 +343,11 @@ module cpu
          end
          `ST_X_LOAD_4: begin
             pc <= pc + 4;
-            state <= `ST_L_INST;
+            state <= `ST_F_INST;
          end
          `ST_X_JAL_1: begin
             pc <= alu_out;
-            state <= `ST_L_INST;
+            state <= `ST_F_INST;
          end
          `ST_X_BRANCH_1: begin
             rs2_val <= rd_data;
@@ -378,7 +358,7 @@ module cpu
                pc <= pc + imm; // TODO ALU
             else
                pc <= pc + 4;
-            state <= `ST_L_INST;
+            state <= `ST_F_INST;
          end
          `ST_X_ALU_R_1: begin
             rs2_val = rd_data;
@@ -386,15 +366,15 @@ module cpu
          end
          `ST_X_ALU_R_2: begin
             pc <= pc + 4;
-            state <= `ST_L_INST;
+            state <= `ST_F_INST;
          end
          `ST_X_LUI: begin
             pc <= pc + 4;
-            state <= `ST_L_INST;
+            state <= `ST_F_INST;
          end
          `ST_X_AUIPC: begin
             pc <= pc + 4;
-            state <= `ST_L_INST;
+            state <= `ST_F_INST;
          end
          `ST_X_JALR_1: begin
             rs1_val <= rd_data;
@@ -402,7 +382,7 @@ module cpu
          end
          `ST_X_JALR_2: begin
             pc <= alu_out;
-            state <= `ST_L_INST;
+            state <= `ST_F_INST;
          end
       endcase
    end
