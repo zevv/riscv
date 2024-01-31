@@ -4,7 +4,11 @@
 
 `include "alu.v"
 
-module cpu(
+module cpu
+#(
+   parameter W = 32
+)
+(
    input clk,
    output reg rd_en, output reg [15:0] o_addr, input [31:0] rd_data, input rd_valid,
    output reg wr_en, output reg [31:0] wr_data, output reg[3:0] wr_mask,
@@ -71,9 +75,9 @@ module cpu(
    // CPU state
    reg [4:0] state = 0;
    reg [15:0] pc = 0;
-   reg [31:0] rd_val = 0;
-   reg [31:0] rs1_val = 0;
-   reg [31:0] rs2_val = 0;
+   reg [W-1:0] rd_val = 0;
+   reg [W-1:0] rs1_val = 0;
+   reg [W-1:0] rs2_val = 0;
    
    // Decoded instruction
    reg [31:0] inst = 0;
@@ -83,7 +87,7 @@ module cpu(
    reg [2:0] funct3;
    reg [4:0] rs1;
    reg [4:0] rs2;
-   reg signed [31:0] imm = 0;
+   reg signed [W-1:0] imm = 0;
    
    // Instruction decoding
    always @(*) begin
@@ -107,12 +111,12 @@ module cpu(
    end
 
    // ALU
-   reg [31:0] alu_x;
-   reg [31:0] alu_y;
+   reg [W-1:0] alu_x;
+   reg [W-1:0] alu_y;
    reg [3:0] alu_fn;
-   wire [31:0] alu_out;
+   wire [W-1:0] alu_out;
    wire alu_zero;
-   alu alu(
+   alu #(.W(W)) alu(
       .x(alu_x),
       .y(alu_y),
       .fn(alu_fn),

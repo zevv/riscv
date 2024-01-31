@@ -3,25 +3,17 @@
 `include "adder.v"
 `endif
 
-module alu(
-   input [31:0] x,
-   input [31:0] y,
+module alu
+#(
+   parameter W = 32
+)
+(
+   input [W-1:0] x,
+   input [W-1:0] y,
    input [3:0] fn,
-   output reg [31:0] out,
+   output reg [W-1:0] out,
    output reg zero
 );
-
-
-`ifndef FORMAL
-   adder adder0(
-      .x(x),
-      .y(y),
-      .addsub(fn == 4'h8),
-      .out(add_out)
-   );
-
-   wire [31:0] add_out;
-`endif
 
    always @(*)
    begin
@@ -29,13 +21,8 @@ module alu(
       out = 0;
 
       case (fn)
-`ifdef FORMAL
          4'h0: out = x + y;
          4'h8: out = x - y;
-`else
-         4'h0: out = add_out; // x + y;
-         4'h8: out = add_out; // x - y;
-`endif
          4'h1: out = x << y[4:0];
          4'h2: out = $signed(x) < $signed(y);
          4'h3: out = x < y;

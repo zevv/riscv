@@ -9,7 +9,11 @@
 
 /* verilator lint_off DECLFILENAME */
 
-module machine(
+module machine
+#(
+   parameter W = 32
+)
+(
    input clk,
    output debug,
    output led1, output led2, output led3,
@@ -25,7 +29,7 @@ module machine(
    wire [31:0] cpu_wr_data;
    wire [3:0] cpu_wr_mask;
 
-   cpu cpu0(
+   cpu #(.W(W)) cpu0(
       .clk(clk),
       .o_addr(addr),
       .rd_en(cpu_rd_en), .rd_data(cpu_rd_data), .rd_valid(cpu_rd_valid),
