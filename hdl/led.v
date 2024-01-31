@@ -35,13 +35,13 @@ module led(
    always @(posedge clk)
    begin
       n <= n + 1;
-      if (n == val1) led1 <= 0;
-      if (n == val2) led2 <= 0;
-      if (n == val3) led3 <= 0;
+      if (n == val1) led1 <= 1;
+      if (n == val2) led2 <= 1;
+      if (n == val3) led3 <= 1;
       if (n == 0) begin
-         led1 <= 1;
-         led2 <= 1;
-         led3 <= 1;
+         led1 <= 0;
+         led2 <= 0;
+         led3 <= 0;
       end
    end
 

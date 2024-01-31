@@ -34,9 +34,12 @@ module top(
    always @(posedge clk)
       clk2 <= ~clk2;
 
+   wire debug2;
+   assign IOT_37A = RGB0;
+
    machine machine(
       .clk(clk2),
-      .debug(IOT_37A),
+      .debug(debug2),
       .led1(RGB0), .led2(RGB1), .led3(RGB2),
       .uart_tx(IOB_13B)
    );

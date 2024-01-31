@@ -298,7 +298,10 @@ module cpu(
          end
       endcase
       if (o_addr == 0) wr_en = 0;
-      debug = (rd_en || wr_en);
+   end
+
+   always @(*) begin
+      debug = (pc == 'hcc);
    end
 
    // CPU state machine
