@@ -36,8 +36,13 @@ module cpu
    reg [2:0] funct3;
    reg [4:0] rs1;
    reg [4:0] rs2;
-   reg signed [W-1:0] imm = 0;
-   
+   reg [W-1:0] imm_I;
+   reg [W-1:0] imm_S;
+   reg [W-1:0] imm_B;
+   reg [W-1:0] imm_U;
+   reg [W-1:0] imm_J;
+   reg [W-1:0] imm;
+
    // Instruction decoding
    always @(*) begin
       opcode = inst[6:0];
@@ -47,15 +52,22 @@ module cpu
       rs1 = inst[19:15];
       rs2 = inst[24:20];
       imm = 0;
+
+      imm_I = { {20{inst[31]}}, inst[31:20] };
+      imm_S = { {20{inst[31]}}, inst[31:25], inst[11:7] };
+      imm_B = { {19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
+      imm_U = { inst[31:12], 12'b0 };
+      imm_J = { {12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
+
       case (inst[6:0])
-         `OP_ALU_I:  imm = { {20{inst[31]}}, inst[31:20] };
-         `OP_LOAD:   imm = { {20{inst[31]}}, inst[31:20] };
-         `OP_STORE:  imm = { {20{inst[31]}}, inst[31:25], inst[11:7] };
-         `OP_BRANCH: imm = { {19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
-         `OP_JAL:    imm = { {12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
-         `OP_JALR:   imm = { {20{inst[31]}}, inst[31:20] };
-         `OP_LUI:    imm = { inst[31:12], 12'b0 };
-         `OP_AUIPC:  imm = { inst[31:12], 12'b0 };
+         `OP_ALU_I:  imm = imm_I;
+         `OP_LOAD:   imm = imm_I;
+         `OP_STORE:  imm = imm_S;
+         `OP_BRANCH: imm = imm_B;
+         `OP_JAL:    imm = imm_J;
+         `OP_JALR:   imm = imm_I;
+         `OP_LUI:    imm = imm_U;
+         `OP_AUIPC:  imm = imm_U;
       endcase
    end
 
