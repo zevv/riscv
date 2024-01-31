@@ -1,4 +1,5 @@
 
+
 `ifndef FORMAL
 `include "adder.v"
 `endif
@@ -15,14 +16,31 @@ module alu
    output reg zero
 );
 
+
+`ifndef FORMAL
+   adder adder0(
+      .x(x),
+      .y(y),
+      .addsub(fn == 4'h8),
+      .out(add_out)
+   );
+
+   wire [W-1:0] add_out;
+`endif
+
    always @(*)
    begin
 
       out = 0;
 
       case (fn)
+`ifdef FORMAL
          4'h0: out = x + y;
          4'h8: out = x - y;
+`else
+         4'h0: out = add_out; // x + y;
+         4'h8: out = add_out; // x - y;
+`endif
          4'h1: out = x << y[4:0];
          4'h2: out = $signed(x) < $signed(y);
          4'h3: out = x < y;
