@@ -66,7 +66,7 @@ module bram
          if (W > 16)
             if(wr_mask[1]) mem[addr32][23:16] <= wr_data[23:16];
          if (W > 24)
-            if(wr_mask[0]) mem[addr32][31:24] <= wr_data[31:24];
+            if( wr_mask[0]) mem[addr32][31:24] <= wr_data[31:24];
       end
    end
 

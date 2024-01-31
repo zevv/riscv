@@ -312,17 +312,9 @@ module cpu
             rs1_val <= rd_data;
             state <= `ST_X_ALU_I_2;
          end
-         `ST_X_ALU_I_2: begin
-            state <= `ST_F_INST;
-            pc <= pc + 4;
-         end
          `ST_X_STORE_1: begin
             rs2_val <= rd_data;
             state <= `ST_X_STORE_2;
-         end
-         `ST_X_STORE_2: begin
-            pc <= pc + 4;
-            state <= `ST_F_INST;
          end
          `ST_X_LOAD_1: begin
             rs1_val <= rd_data;
@@ -341,7 +333,12 @@ module cpu
             endcase
             state <= `ST_X_LOAD_4;
          end
-         `ST_X_LOAD_4: begin
+         `ST_X_STORE_2,
+         `ST_X_ALU_R_2,
+         `ST_X_ALU_I_2,
+         `ST_X_LOAD_4,
+         `ST_X_LUI,
+         `ST_X_AUIPC: begin
             pc <= pc + 4;
             state <= `ST_F_INST;
          end
@@ -363,18 +360,6 @@ module cpu
          `ST_X_ALU_R_1: begin
             rs2_val = rd_data;
             state <= `ST_X_ALU_R_2;
-         end
-         `ST_X_ALU_R_2: begin
-            pc <= pc + 4;
-            state <= `ST_F_INST;
-         end
-         `ST_X_LUI: begin
-            pc <= pc + 4;
-            state <= `ST_F_INST;
-         end
-         `ST_X_AUIPC: begin
-            pc <= pc + 4;
-            state <= `ST_F_INST;
          end
          `ST_X_JALR_1: begin
             rs1_val <= rd_data;
