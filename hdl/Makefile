@@ -14,6 +14,7 @@ SRCS += uart.v
 SRCS += bram.v
 SRCS += led.v
 SRCS += pll.v
+SRCS += common.v
 
 YOSYSFLAGS := -Q -T
 NEXTPNRFLAGS := --freq $(FREQ) --package sg48 --up5k 

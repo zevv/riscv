@@ -63,8 +63,10 @@ module bram
       if(wr_en) begin
          if (W >  0 && wr_mask[3]) mem[addr32][7:0] <= wr_data[7:0];
          if (W >  8 && wr_mask[2]) mem[addr32][15:8] <= wr_data[15:8];
-         if (W > 16 && wr_mask[1]) mem[addr32][23:16] <= wr_data[23:16];
-         if (W > 24 && wr_mask[0]) mem[addr32][31:24] <= wr_data[31:24];
+         if (W > 16)
+            if(wr_mask[1]) mem[addr32][23:16] <= wr_data[23:16];
+         if (W > 24)
+            if(wr_mask[0]) mem[addr32][31:24] <= wr_data[31:24];
       end
    end
 

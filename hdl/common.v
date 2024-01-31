@@ -23,16 +23,15 @@
 
 `define ST_F_INST 4
 `define ST_DECODE 5
-`define ST_DECODE 6
+// 6
 `define ST_F_RS1 7
 `define ST_F_RS2 8
-
 `define ST_X_ALU_I_1 9
 `define ST_X_ALU_I_2 10
 `define ST_X_STORE_1 11
 `define ST_X_STORE_2 12
-//define  13
-//define  14
+// 13
+// 14
 `define ST_X_JAL_1 15
 `define ST_X_BRANCH_1 16
 `define ST_X_BRANCH_2 17
