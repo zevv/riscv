@@ -39,10 +39,10 @@ pll.v: Makefile
 
 
 %.json: %.v $(SRCS) ../src/t.mem
-	yosys $(YOSYSFLAGS) -p "synth_ice40 -top $* -json $@" $<
+	yosys $(YOSYSFLAGS) -p "synth_ice40 -top $* -json $@" -l yosys.log $<
 
 %.asc: %.json
-	nextpnr-ice40 $(NEXTPNRFLAGS) --json $< --pcf $(PCF) --asc $@ -l $(NAME).log
+	nextpnr-ice40 $(NEXTPNRFLAGS) --json $< --pcf $(PCF) --asc $@ -l nextpnr.log
 
 %.bin: %.asc
 	icepack $< $@
@@ -67,9 +67,9 @@ prog_flash: $(BIN)
 
 report: top.asc
 	#@./timing.pl < $(NAME).log
-	@grep % $(NAME).log
-	@grep "Max freq" $(NAME).log
+	@grep % nextpnr.log
+	@grep "Max freq" nextpnr.log
 
 clean:
-	rm -rf *.json *.asc *.bin *.vp *.vcd pll.v
+	rm -rf *.json *.asc *.bin *.vp *.vcd pll.v *.log
 	make -C ../src clean

@@ -1,8 +1,5 @@
 
-
-`ifndef FORMAL
 `include "adder.v"
-`endif
 
 module alu
 #(
@@ -16,17 +13,19 @@ module alu
    output reg zero
 );
 
-
-`ifndef FORMAL
    adder adder0(
       .x(x),
       .y(y),
-      .addsub(fn == 4'h8),
-      .out(add_out)
+      .addsub(fn == 4'h8 || fn == 4'h2 || fn == 4'h3),
+      .out(add_out),
+      .carry_out(carry_out)
    );
 
    wire [W-1:0] add_out;
-`endif
+   wire carry_out;
+
+   // Signed less than, Hacker's Delight, p. 22
+   wire [31:0] lt_s = add_out ^ ((x^y) & (add_out ^ x));
 
    always @(*)
    begin
@@ -34,16 +33,11 @@ module alu
       out = 0;
 
       case (fn)
-`ifdef FORMAL
-         4'h0: out = x + y;
-         4'h8: out = x - y;
-`else
          4'h0: out = add_out; // x + y;
          4'h8: out = add_out; // x - y;
-`endif
          4'h1: out = x << y[4:0];
-         4'h2: out = $signed(x) < $signed(y);
-         4'h3: out = x < y;
+         4'h2: out = lt_s[31];
+         4'h3: out = !carry_out;
          4'h4: out = x ^ y;
          4'h5: out = x >> y[4:0];
          4'h6: out = x | y;
@@ -54,6 +48,22 @@ module alu
       zero = (out == 0) ? 1 : 0;
 
    end
+
+`ifdef FORMAL
+   
+   always @(*)
+   begin
+      if (fn == 4'h0)
+         assert (out == x + y);
+      if (fn == 4'h8)
+         assert (out == x - y);
+      if (fn == 4'h2)
+         assert (out == ($signed(x) < $signed(y)));
+      if (fn == 4'h3)
+         assert (out == (x < y));
+   end
+`endif
+
 
 endmodule
 
