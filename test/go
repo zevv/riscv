@@ -44,6 +44,11 @@ do_test()
 
 #set -e
 
+if ! grep -q "parameter W = 32" ../hdl/machine.v; then
+	err "Machine width is not 32 bits"
+	exit 1
+fi
+
 rm -f ${PATH_CTS}/src/*.o
 
 if [ "$1" != "" ]; then
