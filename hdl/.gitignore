@@ -1,1 +1,7 @@
 pll.v
+bram.mem
+*.asc
+*.bin
+*.json
+*.vcd
+*.vp

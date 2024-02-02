@@ -49,7 +49,7 @@ module bram
  	wire [31:0] reg_t6     = mem['h1f];
 
    initial begin
-      $readmemh("../src/t.mem", mem);
+      $readmemh("bram.mem", mem);
    end
 
    always @(posedge clk)

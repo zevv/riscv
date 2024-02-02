@@ -1,0 +1,35 @@
+[tasks]
+basic bmc
+nofullskip prove
+cover
+noverific cover
+basic cover : default
+
+[options]
+depth 50
+cover:
+mode cover
+--
+prove:
+mode prove
+--
+bmc: 
+mode bmc
+--
+
+[engines]
+#smtbmc --syn --nopresat z3 rewriter.cache_all=true opt.enable_sat=true
+smtbmc
+
+[script]
+nofullskip: read -define NO_FULL_SKIP=1
+noverific: read -noverific
+read -formal cpu.v
+prep -top cpu
+
+[files]
+cpu.v
+alu.v
+common.v
+adder.v
+/usr/share/yosys/ice40/cells_sim.v

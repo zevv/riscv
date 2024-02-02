@@ -29,6 +29,7 @@
 
 #define RV_COMPLIANCE_DATA_BEGIN                                              \
         RVTEST_DATA_BEGIN \
+	compliance_test_data_start:
 
 #define RV_COMPLIANCE_DATA_END                                                \
         RVTEST_DATA_END \

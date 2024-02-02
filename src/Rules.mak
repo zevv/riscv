@@ -1,4 +1,10 @@
 
+
+BIN := $(NAME).bin
+ELF := $(NAME).elf
+MEM := $(NAME).mem
+ASM := $(NAME).asm
+
 CROSS := /opt/toolchains/xpack-riscv-none-elf-gcc-13.2.0-2/bin/riscv-none-elf-
 CC := $(CROSS)gcc
 LD := $(CROSS)gcc
@@ -10,18 +16,23 @@ CFLAGS += -march=rv32i
 CFLAGS += -fno-builtin
 CFLAGS += -ffreestanding
 CFLAGS += -Itest
+CFLAGS += -MMD
+CFLAGS += -I.
+CFLAGS += -I..
 
-LDFLAGS += -T script.lds 
+LDFLAGS += -T ../arch/script.lds 
 LDFLAGS += -nostartfiles
 LDFLAGS += -march=rv32i
 LDFLAGS += --specs=nano.specs
 
-CSRC += t.c
 
-OBJS := $(subst .c,.o, $(CSRC)) $(subst .S,.o, $(SSRC))
-DEPS := $(subst .c,.d, $(CSRC))
+CSRCS += ../arch/start.c
 
-all: t.mem t.asm
+SRCS := $(CSRCS) $(SSRCS)
+OBJS := $(subst .c,.o, $(CSRCS)) $(subst .S,.o, $(SSRCS))
+DEPS := $(subst .c,.d, $(CSRCS)) $(subst .S,.d, $(SSRCS))   
+
+all: $(MEM) $(ASM)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -29,20 +40,20 @@ all: t.mem t.asm
 %.o: %.S
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.elf: $(OBJS) script.lds
+$(ELF): $(OBJS)
 	$(LD) -o $@ $(OBJS) $(LDFLAGS)
 
-%.bin: %.elf
+$(BIN): $(ELF)
 	llvm-objcopy-16 -j .text -j .data -O binary $< $@
 
-t.mem: t.bin genmem
-	./genmem < t.bin 
+$(MEM): $(BIN) ../genmem
+	../genmem < $(BIN) > $(MEM)
 
-t.asm: t.elf
-	llvm-objdump-16 -S t.elf > t.asm
+%.asm: %.elf
+	llvm-objdump-16 -S $< > $@
 
 clean:
 	rm -f *.elf *.o *.asm *.bin *.mem
 
-#&& llvm-objdump-16 -S t.o
+-include $(DEPS)
 

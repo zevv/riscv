@@ -27,18 +27,22 @@ SBY := PATH=$$PATH:/home/ico/external/yices2/build/x86_64-pc-linux-gnu-release/d
 
 all: sim sby report
 
-../src/t.mem: ../src/t.c ../src/script.lds
-
-../src/t.mem:
-	$(MAKE) -C ../src
-
 sim: test.vcd
 
 pll.v: Makefile
-	icepll -i 48 -o $(FREQ) -m -f pll.v
+	icepll -q -i 48 -o $(FREQ) -m -f pll.v
 
+bram.mem: ../src/$(PROJ)/$(PROJ).mem
+	ln -sf ../src/$(PROJ)/$(PROJ).mem bram.mem
 
-%.json: %.v $(SRCS) ../src/t.mem
+.PHONY: ../src/$(PROJ)/$(PROJ).mem
+../src/$(PROJ)/$(PROJ).mem:
+	make -C ../src/$(PROJ)
+
+bram.v: bram.mem
+	touch $@
+
+%.json: %.v $(SRCS)
 	yosys $(YOSYSFLAGS) -p "synth_ice40 -top $* -json $@" -l yosys.log $<
 
 %.asc: %.json
@@ -47,11 +51,11 @@ pll.v: Makefile
 %.bin: %.asc
 	icepack $< $@
 
-%.vp: %.v $(SRCS) ../src/t.mem
+%.vp: %.v $(SRCS) 
 	iverilog -g2005-sv -Wall -Winfloop -o $@ $<
 
 %.vcd: %.vp $(SRCS)
-	vvp $<
+	test -r bram.mem && vvp $<
 
 sby:
 	$(SBY) -f cpu.sby
@@ -71,5 +75,4 @@ report: top.asc
 	@grep "Max freq" nextpnr.log
 
 clean:
-	rm -rf *.json *.asc *.bin *.vp *.vcd pll.v *.log
-	make -C ../src clean
+	rm -rf *.json *.asc *.bin *.vp *.vcd pll.v *.log *_cover/ *_basic/ bram.mem

@@ -1,0 +1,56 @@
+#!/bin/bash
+
+
+PATH_CTS=`pwd`/riscv-compliance/riscv-test-suite/rv32i
+
+
+ok() {
+	echo -e "\e[1;32m$1\e[0m"
+}
+
+err() {
+	echo -e "\e[31m$1\e[0m"
+}
+
+
+do_test()
+{
+	NAME=$1
+	SRC=${PATH_CTS}/src/${NAME}.S
+	REF=${PATH_CTS}/references/${NAME}.reference_output
+	OUT=/tmp/sim.out
+	
+	printf "%-20.20s" ${NAME}
+
+	if grep -q csrr ${SRC}; then
+                ok "SKIP"
+                return
+        fi
+
+	make -C ../src/rc clean > /dev/null
+	make -C ../hdl PROJ=rc TEST=${NAME} clean > /dev/null
+	make -C ../hdl PROJ=rc TEST=${NAME} SSRCS=${SRC} sim 2>/tmp/sim.log > /tmp/sim.out
+	./validate ${REF} < /tmp/sim.out
+
+	if [ "$?" = "0" ]; then
+		ok "OK"
+	else
+		err "FAIL"
+		cat /tmp/sim.log
+		exit 1
+	fi
+}
+
+
+#set -e
+
+rm -f ${PATH_CTS}/src/*.o
+
+if [ "$1" != "" ]; then
+	do_test I-$1-01
+else
+	TESTS=`cd ${PATH_CTS}/src && ls *.S | sed -e 's/.S$//'`
+	for TEST in $TESTS; do
+		do_test $TEST
+	done
+fi

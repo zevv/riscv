@@ -1,0 +1,51 @@
+#!/usr/bin/lua
+
+symtab = {}
+
+local fd = io.popen("nm ../src/rc/rc.elf 2>/dev/null")
+for l in fd:lines() do
+	for addr, sym in l:gmatch("(%x+) . (%S+)") do
+		if sym == "compliance_test_data_start" then
+			test_data_start = tonumber(addr, 16)
+		end
+	end
+end
+
+if not test_data_start then
+	os.exit(1)
+end
+
+local refdata = {}
+
+local fd = io.open(arg[1])
+for l in fd:lines() do
+	refdata[#refdata+1] = l
+end
+
+
+local outdata = {}
+
+for l in io.lines() do
+	for addr, val in l:gmatch("mem (%x+) (%x+)$") do
+		addr = tonumber(addr, 16)
+		if addr >= test_data_start then
+			outdata[#outdata+1] = val
+		end
+	end
+end
+
+
+local error = false
+for i = 1, #refdata do
+	if refdata[i] ~= outdata[i] then
+		addr = test_data_start + (i-1) * 4
+		print(string.format("error at %04x: exp %s, got %s", addr, refdata[i], outdata[i]))
+		error = true
+	end
+end
+
+if error then
+	os.exit(1)
+end
+
+-- vi: ft=lua ts=3 sw=3
