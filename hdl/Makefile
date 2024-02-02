@@ -4,7 +4,7 @@ PCF := io.pcf
 ASC := $(NAME).asc
 BIN := $(NAME).bin
 
-FREQ := 24
+FREQ := 16
 
 SRCS += top.v
 SRCS += cpu.v

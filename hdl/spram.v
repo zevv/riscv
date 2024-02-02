@@ -36,7 +36,7 @@ module spram
             .STANDBY(1'b0),
             .SLEEP(1'b0),
             .POWEROFF(1'b1),
-            .DATAOUT(rd_data[31:16])
+            .DATAOUT(rd_data[W-1:16])
          );
       end
    endgenerate

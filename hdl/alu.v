@@ -24,9 +24,6 @@ module alu
    wire [W-1:0] add_out;
    wire carry_out;
 
-   // Signed less than, Hacker's Delight, p. 22
-   wire [31:0] lt_s = add_out ^ ((x^y) & (add_out ^ x));
-
    always @(*)
    begin
 
@@ -36,7 +33,7 @@ module alu
          4'h0: out = add_out; // x + y;
          4'h8: out = add_out; // x - y;
          4'h1: out = x << y[4:0];
-         4'h2: out = lt_s[31];
+         4'h2: out = !carry_out ^ x[W-1] ^ y[W-1]; // Hacker's Delight, p23
          4'h3: out = !carry_out;
          4'h4: out = x ^ y;
          4'h5: out = x >> y[4:0];

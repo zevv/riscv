@@ -13,7 +13,7 @@ module cpu
 (
    input clk,
    output reg rd_en, output reg [15:0] o_addr, input [31:0] rd_data, input rd_valid,
-   output reg wr_en, output reg [31:0] wr_data, output reg[3:0] wr_mask,
+   output reg wr_en, output reg [W-1:0] wr_data, output reg[3:0] wr_mask,
    output reg debug
 );
    
