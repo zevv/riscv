@@ -1,5 +1,6 @@
 
 `include "adder.v"
+`include "common.v"
 
 module alu
 #(
@@ -30,16 +31,16 @@ module alu
       out = 0;
 
       case (fn)
-         4'h0: out = add_out; // x + y;
-         4'h8: out = add_out; // x - y;
-         4'h1: out = x << y[4:0];
-         4'h2: out = !carry_out ^ x[W-1] ^ y[W-1]; // Hacker's Delight, p23
-         4'h3: out = !carry_out;
-         4'h4: out = x ^ y;
-         4'h5: out = x >> y[4:0];
-         4'h6: out = x | y;
-         4'h7: out = x & y;
-         4'hd: out = $signed(x) >>> y[4:0];
+         `ALU_FN_ADD : out = add_out; // x + y;
+         `ALU_FN_SUB : out = add_out; // x - y;
+         `ALU_FN_SLL : out = x << y[4:0];
+         `ALU_FN_LT  : out = !carry_out ^ x[W-1] ^ y[W-1]; // Hacker's Delight, p23
+         `ALU_FN_LTU : out = !carry_out;
+         `ALU_FN_XOR : out = x ^ y;
+         `ALU_FN_SRL : out = x >> y[4:0];
+         `ALU_FN_OR  : out = x | y;
+         `ALU_FN_AND : out = x & y;
+         `ALU_FN_SRA : out = $signed(x) >>> y[4:0];
       endcase
 
       zero = (out == 0) ? 1 : 0;

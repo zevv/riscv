@@ -16,11 +16,21 @@
 `define BR_BLTU 3'h6
 `define BR_BGEU 3'h7
 
+`define ALU_FN_ADD 4'h0
+`define ALU_FN_SUB 4'h8
+`define ALU_FN_SLL 4'h1
+`define ALU_FN_LT  4'h2
+`define ALU_FN_LTU 4'h3
+`define ALU_FN_XOR 4'h4
+`define ALU_FN_SRL 4'h5
+`define ALU_FN_OR  4'h6
+`define ALU_FN_AND 4'h7
+`define ALU_FN_SRA 4'hd
+
 `define ST_BOOT 0
 `define ST_F_SP 1
 `define ST_S_SP 2
 `define ST_F_PC 3
-
 `define ST_F_INST 4
 `define ST_DECODE 5
 // 6
@@ -45,5 +55,4 @@
 `define ST_X_LOAD_2 25
 `define ST_X_LOAD_3 26
 `define ST_X_LOAD_4 27
-
 `define ST_FAULT 31
