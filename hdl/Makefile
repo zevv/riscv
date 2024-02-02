@@ -23,6 +23,12 @@ NEXTPNRFLAGS += --timing-allow-fail
 YOSYSFLAGS += -q
 NEXTPNRFLAGS += -q
 
+LAST_PROJ := $(strip $(shell cat .proj 2>/dev/null))
+ifeq ($(strip $(PROJ)),)
+PROJ=$(LAST_PROJ)
+endif
+
+
 SBY := PATH=$$PATH:/home/ico/external/yices2/build/x86_64-pc-linux-gnu-release/dist/bin python ~/external/sby/sbysrc/sby.py
 
 all: sim sby report
@@ -34,6 +40,7 @@ pll.v: Makefile
 
 bram.mem: ../src/$(PROJ)/$(PROJ).mem
 	ln -sf ../src/$(PROJ)/$(PROJ).mem bram.mem
+	echo $(PROJ) > .proj
 
 .PHONY: ../src/$(PROJ)/$(PROJ).mem
 ../src/$(PROJ)/$(PROJ).mem:

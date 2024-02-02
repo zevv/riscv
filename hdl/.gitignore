@@ -5,3 +5,6 @@ bram.mem
 *.json
 *.vcd
 *.vp
+.proj
+*_cover
+*_basic
