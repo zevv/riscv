@@ -14,7 +14,7 @@ module alu
    output reg zero
 );
 
-   adder adder0(
+   adder #(W) adder0(
       .x(x),
       .y(y),
       .addsub(fn == 4'h8 || fn == 4'h2 || fn == 4'h3),

@@ -4,13 +4,21 @@
 
 
 module adder
+#(
+   parameter W = 32
+)
 (
-   input [31:0] x,
-   input [31:0] y,
+   input [W-1:0] x,
+   input [W-1:0] y,
    input addsub,
-   output [31:0] out,
+   output [W-1:0] out,
    output carry_out
 );
+
+   wire [31:0] out32;
+   wire [31:0] x32 = x;
+   wire [31:0] y32 = y;
+   assign out = out32[W-1:0];
 
    // ICE40 MAC_16 DSP configured as a 32 but adder/subtractor
    SB_MAC16 #(
@@ -23,7 +31,7 @@ module adder
       .A_SIGNED(1'b0), .B_SIGNED(1'b0))
       SB_MAC16_inst(
          .CLK(1'b0), .CE(1'b0),
-         .B(y[15:0]), .A(y[31:16]), .D(x[15:0]), .C(x[31:16]),
+         .B(y32[15:0]), .A(y32[31:16]), .D(x32[15:0]), .C(x32[31:16]),
          .IRSTTOP(1'b0), .IRSTBOT(1'b0), .ORSTTOP(1'b0), .ORSTBOT(1'b0),
          .AHOLD(1'b0), .BHOLD(1'b0), .CHOLD(1'b0), .DHOLD(1'b0),
          .OHOLDTOP(1'b0), .OHOLDBOT(1'b0),
@@ -31,7 +39,7 @@ module adder
          .OLOADTOP(1'b0), .OLOADBOT(1'b0),
          .CI(1'b0), .ACCUMCI(1'b0),
          .SIGNEXTIN(1'b0),
-         .O(out), .CO(carry_out)
+         .O(out32), .CO(carry_out)
       );
 
 endmodule

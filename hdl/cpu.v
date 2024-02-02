@@ -111,6 +111,16 @@ module cpu
       endcase
    end
 
+   // pc + imm
+   wire [15:0] pc_plus_imm;
+   wire pc_plus_imm_carry;
+   adder #(16) add_pc_imm(pc, imm, 1'b0, pc_plus_imm, pc_plus_imm_carry);
+
+   // pc + 4
+   wire [15:0] pc_plus_4;
+   wire pc_plus_4_carry;
+   adder #(16) add_pc_4(pc, 32'd4, 1'b0, pc_plus_4, pc_plus_4_carry);
+
    // Branch control
    reg branch;
    always @(*) begin
@@ -212,7 +222,7 @@ module cpu
          end
          `ST_X_JAL_1: begin
             o_addr = (rd << 2);
-            wr_data = pc + 4;
+            wr_data = pc_plus_4;
             wr_en = 1;
          end
          `ST_X_ALU_R_2: begin
@@ -248,7 +258,7 @@ module cpu
    begin
       case (state)
          `ST_BOOT: begin
-            pc <= pc + 4;
+            pc <= pc_plus_4;
             if (pc == 64) begin
                pc <= 0;
                state <= `ST_F_SP;
@@ -332,7 +342,7 @@ module cpu
          `ST_X_LOAD_4,
          `ST_X_LUI,
          `ST_X_AUIPC: begin
-            pc <= pc + 4;
+            pc <= pc_plus_4;
             state <= `ST_F_INST;
          end
          `ST_X_JAL_1: begin
@@ -345,9 +355,9 @@ module cpu
          end
          `ST_X_BRANCH_2: begin
             if (branch)
-               pc <= pc + imm; // TODO ALU
+               pc <= pc_plus_imm;
             else
-               pc <= pc + 4;
+               pc <= pc_plus_4;
             state <= `ST_F_INST;
          end
          `ST_X_ALU_R_1: begin
