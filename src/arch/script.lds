@@ -11,7 +11,7 @@ SECTIONS
 {
    .text : { 
       . = 0x80;
-      *(.vectors);
+      KEEP(*(.vectors));
       *(.text*) 
       *(.srodata*)
       *(.rodata*)
