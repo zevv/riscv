@@ -30,15 +30,11 @@ module top(
 
    wire dummy;
 
-   reg clk2 = 0;
-   always @(posedge clk)
-      clk2 <= ~clk2;
-
    wire debug2;
    assign IOT_37A = RGB0;
 
    machine machine(
-      .clk(clk2),
+      .clk(clk),
       .debug(debug2),
       .led1(RGB0), .led2(RGB1), .led3(RGB2),
       .uart_tx(IOB_13B)
