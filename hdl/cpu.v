@@ -326,12 +326,9 @@ module cpu
          `ST_X_LOAD_1: begin
             state <= `ST_X_LOAD_2;
          end
+         `ST_S_REG,
          `ST_X_STORE,
          `ST_X_LOAD_2: begin
-            pc <= pc_plus_4;
-            state <= `ST_F_INST;
-         end
-         `ST_S_REG: begin
             pc <= pc_plus_4;
             state <= `ST_F_INST;
          end
