@@ -163,7 +163,7 @@ module cpu
       endcase
    end
 
-   reg [W-1:0] rdata_shifted;
+   reg [W-1:0] load_val;
 
    // Register read/write control
    always @(*) begin
@@ -179,18 +179,7 @@ module cpu
             reg_ren = 1;
          end
          `ST_X_LOAD_2: begin
-            rdata_shifted = rdata;
-            if(W >  0 && addr[1:0] == 2'h0) rdata_shifted = rdata[W-1:0];
-            if(W >  8 && addr[1:0] == 2'h1) rdata_shifted = rdata[W-1:8];
-            if(W > 16 && addr[1:0] == 2'h2) rdata_shifted = rdata[W-1:16];
-            if(W > 24 && addr[1:0] == 2'h3) rdata_shifted = rdata[W-1:24];
-            case (funct3)
-               3'h0: rd_val = { {24{rdata_shifted[7]}}, rdata_shifted[7:0] };
-               3'h1: rd_val = { {16{rdata_shifted[15]}}, rdata_shifted[15:0] };
-               3'h2: rd_val = rdata_shifted;
-               3'h4: rd_val = { 24'b0, rdata_shifted[7:0] };
-               3'h5: rd_val = { 16'b0, rdata_shifted[15:0] };
-            endcase
+            rd_val = load_val;
             reg_wen = 1;
          end
          `ST_WB_REG: begin
@@ -207,6 +196,8 @@ module cpu
    end
 
 
+   reg [31:0] tmp;
+
    // Memory read/write control
    always @(*) begin
       ren = 0;
@@ -214,6 +205,7 @@ module cpu
       addr = 0;
       wdata = 0;
       wmask = 4'b1111;
+      load_val = 0;
       case (state)
          `ST_BOOT: begin
             addr = VEC_SP;
@@ -230,14 +222,14 @@ module cpu
          `ST_X_STORE: begin
             addr = alu_out;
             case ({funct3[1:0], addr[1:0]})
-               5'b00_00: wmask = 4'b1000;
-               5'b01_00: wmask = 4'b1100;
-               5'b10_00: wmask = 4'b1111;
-               5'b00_01: wmask = 4'b0100;
-               5'b01_01: wmask = 4'b0110;
-               5'b00_10: wmask = 4'b0010;
-               5'b01_10: wmask = 4'b0011;
-               5'b00_11: wmask = 4'b0001;
+               4'b00_00: wmask = 4'b1000;
+               4'b00_01: wmask = 4'b0100;
+               4'b00_10: wmask = 4'b0010;
+               4'b00_11: wmask = 4'b0001;
+               4'b01_00: wmask = 4'b1100;
+               4'b01_01: wmask = 4'b0110;
+               4'b01_10: wmask = 4'b0011;
+               4'b10_00: wmask = 4'b1111;
             endcase
             wdata = rs2_val << (addr[1:0] * 8);
             wen = 1;
@@ -248,6 +240,19 @@ module cpu
          end
          `ST_X_LOAD_2: begin
             addr = alu_out;
+            case (addr[1:0])
+               2'b00: tmp = rdata >> 0;
+               2'b01: tmp = rdata >> 8;
+               2'b10: tmp = rdata >> 16;
+               2'b11: tmp = rdata >> 24;
+            endcase
+            case (funct3)
+               3'h0: load_val = { {24{tmp[7]}}, tmp[7:0] };
+               3'h1: load_val = { {16{tmp[15]}}, tmp[15:0] };
+               3'h2: load_val = tmp;
+               3'h4: load_val = { 24'b0, tmp[7:0] };
+               3'h5: load_val = { 16'b0, tmp[15:0] };
+            endcase
          end
       endcase
 
