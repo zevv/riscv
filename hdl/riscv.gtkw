@@ -1,10 +1,10 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sun Feb  4 09:42:35 2024
+[*] Sun Feb  4 11:32:25 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Sun Feb  4 09:42:06 2024"
-[dumpfile_size] 1446526
+[dumpfile_mtime] "Sun Feb  4 11:32:04 2024"
+[dumpfile_size] 1385739
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
 [timestart] 0
 [size] 1366 972
@@ -50,19 +50,19 @@ test.machine.cpu0.imm[31:0]
 @200
 -CPU memory
 @22
-test.machine.cpu0.o_addr[15:0]
+test.machine.cpu0.addr[15:0]
 [color] 2
-test.machine.cpu0.wr_data[31:0]
+test.machine.cpu0.wdata[31:0]
 @28
 [color] 2
-test.machine.cpu0.wr_en
+test.machine.cpu0.wen
 [color] 3
-test.machine.cpu0.rd_en
+test.machine.cpu0.ren
 [color] 3
 test.machine.cpu0.rd_valid
 @22
 [color] 3
-test.machine.cpu0.rd_data[31:0]
+test.machine.cpu0.rdata[31:0]
 @200
 -CPU state
 -ALU
@@ -77,37 +77,37 @@ test.machine.cpu0.alu_out[31:0]
 @200
 -Registers
 @22
-test.machine.cpu0.regs.reg_sp[31:0]
-test.machine.cpu0.regs.reg_a0[31:0]
-test.machine.cpu0.regs.reg_a1[31:0]
-test.machine.cpu0.regs.reg_a2[31:0]
-test.machine.cpu0.regs.reg_a3[31:0]
-test.machine.cpu0.regs.reg_a4[31:0]
-test.machine.cpu0.regs.reg_a5[31:0]
-test.machine.cpu0.regs.reg_a6[31:0]
-test.machine.cpu0.regs.reg_a7[31:0]
-test.machine.cpu0.regs.reg_gp[31:0]
-test.machine.cpu0.regs.reg_ra[31:0]
-test.machine.cpu0.regs.reg_s0[31:0]
-test.machine.cpu0.regs.reg_s1[31:0]
-test.machine.cpu0.regs.reg_s2[31:0]
-test.machine.cpu0.regs.reg_s3[31:0]
-test.machine.cpu0.regs.reg_s4[31:0]
-test.machine.cpu0.regs.reg_s5[31:0]
-test.machine.cpu0.regs.reg_s6[31:0]
-test.machine.cpu0.regs.reg_s7[31:0]
-test.machine.cpu0.regs.reg_s8[31:0]
-test.machine.cpu0.regs.reg_s9[31:0]
-test.machine.cpu0.regs.reg_s10[31:0]
-test.machine.cpu0.regs.reg_s11[31:0]
-test.machine.cpu0.regs.reg_t0[31:0]
-test.machine.cpu0.regs.reg_t1[31:0]
-test.machine.cpu0.regs.reg_t2[31:0]
-test.machine.cpu0.regs.reg_t3[31:0]
-test.machine.cpu0.regs.reg_t4[31:0]
-test.machine.cpu0.regs.reg_t5[31:0]
-test.machine.cpu0.regs.reg_t6[31:0]
-test.machine.cpu0.regs.reg_tp[31:0]
-test.machine.cpu0.regs.reg_zero[31:0]
+test.machine.cpu0.regs.x0_zero[31:0]
+test.machine.cpu0.regs.x1_ra[31:0]
+test.machine.cpu0.regs.x2_sp[31:0]
+test.machine.cpu0.regs.x3_gp[31:0]
+test.machine.cpu0.regs.x4_tp[31:0]
+test.machine.cpu0.regs.x5_t0[31:0]
+test.machine.cpu0.regs.x6_t1[31:0]
+test.machine.cpu0.regs.x7_t2[31:0]
+test.machine.cpu0.regs.x8_s0[31:0]
+test.machine.cpu0.regs.x9_s1[31:0]
+test.machine.cpu0.regs.x10_a0[31:0]
+test.machine.cpu0.regs.x11_a1[31:0]
+test.machine.cpu0.regs.x12_a2[31:0]
+test.machine.cpu0.regs.x13_a3[31:0]
+test.machine.cpu0.regs.x14_a4[31:0]
+test.machine.cpu0.regs.x15_a5[31:0]
+test.machine.cpu0.regs.x16_a6[31:0]
+test.machine.cpu0.regs.x17_a7[31:0]
+test.machine.cpu0.regs.x18_s2[31:0]
+test.machine.cpu0.regs.x19_s3[31:0]
+test.machine.cpu0.regs.x20_s4[31:0]
+test.machine.cpu0.regs.x21_s5[31:0]
+test.machine.cpu0.regs.x22_s6[31:0]
+test.machine.cpu0.regs.x23_s7[31:0]
+test.machine.cpu0.regs.x24_s8[31:0]
+test.machine.cpu0.regs.x25_s9[31:0]
+test.machine.cpu0.regs.x26_s10[31:0]
+test.machine.cpu0.regs.x27_s11[31:0]
+test.machine.cpu0.regs.x28_t3[31:0]
+test.machine.cpu0.regs.x29_t4[31:0]
+test.machine.cpu0.regs.x30_t5[31:0]
+test.machine.cpu0.regs.x31_t6[31:0]
 [pattern_trace] 1
 [pattern_trace] 0

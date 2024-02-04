@@ -21,79 +21,79 @@ module machine
 );
 
 
-   wire cpu_rd_en;
+   wire cpu_ren;
    wire [15:0] addr;
-   reg [31:0] cpu_rd_data;
+   reg [31:0] cpu_rdata;
    reg cpu_rd_valid;
-   wire cpu_wr_en;
-   wire [W-1:0] cpu_wr_data;
+   wire cpu_wen;
+   wire [W-1:0] cpu_wdata;
    wire [3:0] cpu_wr_mask;
 
    cpu #(.W(W)) cpu0(
       .clk(clk),
-      .o_addr(addr),
-      .rd_en(cpu_rd_en), .rd_data(cpu_rd_data), .rd_valid(cpu_rd_valid),
-      .wr_en(cpu_wr_en), .wr_data(cpu_wr_data), .wr_mask(cpu_wr_mask),
+      .addr(addr),
+      .ren(cpu_ren), .rdata(cpu_rdata), .rd_valid(cpu_rd_valid),
+      .wen(cpu_wen), .wdata(cpu_wdata), .wr_mask(cpu_wr_mask),
       .debug(debug)
    );
 
 
-   reg bram_rd_en = 0;
-   wire [31:0] bram_rd_data;
+   reg bram_ren = 0;
+   wire [31:0] bram_rdata;
    wire bram_rd_valid;
-   reg bram_wr_en = 0;
+   reg bram_wen = 0;
    reg [12:0] bram_addr = 0;
-   reg [W-1:0] bram_wr_data = 0;
+   reg [W-1:0] bram_wdata = 0;
 
    bram #(.W(W)) bram0(
       .clk(clk),
       .addr(bram_addr),
-      .rd_en(bram_rd_en), .rd_data(bram_rd_data), .rd_valid(bram_rd_valid),
-      .wr_en(bram_wr_en), .wr_data(bram_wr_data), .wr_mask(cpu_wr_mask)
+      .ren(bram_ren), .rdata(bram_rdata), .rd_valid(bram_rd_valid),
+      .wen(bram_wen), .wdata(bram_wdata), .wr_mask(cpu_wr_mask)
    );
 
 
-   reg spram_rd_en = 0;
-   wire [W-1:0] spram_rd_data;
+   reg spram_ren = 0;
+   wire [W-1:0] spram_rdata;
    wire spram_rd_valid;
-   reg spram_wr_en = 0;
+   reg spram_wen = 0;
    reg [14:0] spram_addr = 0;
-   reg [W-1:0] spram_wr_data = 0;
+   reg [W-1:0] spram_wdata = 0;
 
    spram #(.W(W)) spram0(
       .clk(clk),
       .addr(spram_addr),
-      .rd_en(spram_rd_en), .rd_data(spram_rd_data), .rd_valid(spram_rd_valid),
-      .wr_en(spram_wr_en), .wr_data(spram_wr_data)
+      .ren(spram_ren), .rdata(spram_rdata), .rd_valid(spram_rd_valid),
+      .wen(spram_wen), .wdata(spram_wdata)
    );
 
 
-   reg led_rd_en = 0;
-   wire [7:0] led_rd_data;
+   reg led_ren = 0;
+   wire [7:0] led_rdata;
    wire led_rd_valid;
-   reg led_wr_en = 0;
+   reg led_wen = 0;
    reg [4:0] led_addr = 0;
-   reg [7:0] led_wr_data = 0;
+   reg [7:0] led_wdata = 0;
 
    led led0(
       .clk(clk),
       .addr(led_addr),
-      .rd_en(led_rd_en), .rd_data(led_rd_data), .rd_valid(led_rd_valid),
-      .wr_en(led_wr_en), .wr_data(led_wr_data), .led1(led1), .led2(led2), .led3(led3)
+      .ren(led_ren), .rdata(led_rdata), .rd_valid(led_rd_valid),
+      .wen(led_wen), .wdata(led_wdata), .led1(led1), .led2(led2), .led3(led3)
    );
 
-   reg uart_rd_en = 0;
-   wire [7:0] uart_rd_data;
+   reg uart_ren = 0;
+   wire [7:0] uart_rdata;
    wire uart_rd_valid;
-   reg uart_wr_en = 0;
+   reg uart_wen = 0;
    reg [4:0] uart_addr = 0;
-   reg [7:0] uart_wr_data = 0;
+   reg [7:0] uart_wdata = 0;
 
    uart uart0(
       .clk(clk),
       .addr(uart_addr),
-      .rd_en(uart_rd_en), .rd_data(uart_rd_data), .rd_valid(uart_rd_valid),
-      .wr_en(uart_wr_en), .wr_data(uart_wr_data), .tx(uart_tx)
+      .ren(uart_ren), .rdata(uart_rdata), .rd_valid(uart_rd_valid),
+      .wen(uart_wen), .wdata(uart_wdata), .tx(uart_tx)
    );
 
    // Bus connections / address mapping
@@ -110,38 +110,38 @@ module machine
       uart_sel  = (addr[15:12] == 4'b0101);
       spram_sel = (addr[15:15] == 1'b1);
       
-      bram_rd_en = bram_sel && cpu_rd_en;
-      spram_rd_en = spram_sel && cpu_rd_en;
-      led_rd_en = led_sel && cpu_rd_en;
-      uart_rd_en = uart_sel && cpu_rd_en;
+      bram_ren = bram_sel && cpu_ren;
+      spram_ren = spram_sel && cpu_ren;
+      led_ren = led_sel && cpu_ren;
+      uart_ren = uart_sel && cpu_ren;
 
-      bram_wr_en = bram_sel && cpu_wr_en;
-      spram_wr_en = spram_sel && cpu_wr_en;
-      led_wr_en = led_sel && cpu_wr_en;
-      uart_wr_en = uart_sel && cpu_wr_en;
+      bram_wen = bram_sel && cpu_wen;
+      spram_wen = spram_sel && cpu_wen;
+      led_wen = led_sel && cpu_wen;
+      uart_wen = uart_sel && cpu_wen;
       
       bram_addr = addr[11:0];
       spram_addr = addr[14:0];
       led_addr = addr[4:0];
       uart_addr = addr[2:0];
 
-      bram_wr_data = cpu_wr_data;
-      spram_wr_data = cpu_wr_data;
-      led_wr_data = cpu_wr_data;
-      uart_wr_data = cpu_wr_data;
+      bram_wdata = cpu_wdata;
+      spram_wdata = cpu_wdata;
+      led_wdata = cpu_wdata;
+      uart_wdata = cpu_wdata;
 
       cpu_rd_valid = bram_rd_valid || spram_rd_valid || led_rd_valid || uart_rd_valid;
 
       if (bram_sel) 
-         cpu_rd_data = bram_rd_data;
+         cpu_rdata = bram_rdata;
       else if (spram_sel)
-         cpu_rd_data = spram_rd_data;
+         cpu_rdata = spram_rdata;
       else if (led_sel) 
-         cpu_rd_data = led_rd_data;
+         cpu_rdata = led_rdata;
       else if (uart_sel) 
-         cpu_rd_data = uart_rd_data;
+         cpu_rdata = uart_rdata;
       else
-         cpu_rd_data = 0;
+         cpu_rdata = 0;
 
    end
 

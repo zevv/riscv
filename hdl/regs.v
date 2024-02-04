@@ -4,9 +4,9 @@ module regs
 )
 (
    input clk,
-   input rd_en,
+   input ren,
    input [4:0] rs1, input [4:0] rs2, output reg [31:0] rs1_val, output reg [31:0] rs2_val,
-   input wr_en, input [4:0] rd, input [W-1:0] rd_val
+   input wen, input [4:0] rd, input [W-1:0] rd_val
 );
    reg [31:0] mem1 [0:31];
    reg [31:0] mem2 [0:31];
@@ -54,11 +54,11 @@ module regs
 
    always @(posedge clk)
    begin
-      if (rd_en) begin
+      if (ren) begin
          rs1_val = mem1[rs1];
          rs2_val = mem2[rs2];
       end
-      if(wr_en && rd != 0) begin
+      if(wen && rd != 0) begin
          mem1[rd] <= rd_val;
          mem2[rd] <= rd_val;
       end

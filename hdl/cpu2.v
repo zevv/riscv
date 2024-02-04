@@ -6,8 +6,8 @@
 
 module cpu(
    input clk,
-   output reg rd_en, output reg [15:0] o_addr, input [31:0] rd_data, input rd_valid,
-   output reg wr_en, output reg [31:0] wr_data, output reg[3:0] wr_mask,
+   output reg ren, output reg [15:0] addr, input [31:0] rdata, input rd_valid,
+   output reg wen, output reg [31:0] wdata, output reg[3:0] wr_mask,
    output reg debug
 );
    
@@ -57,8 +57,8 @@ module cpu(
 
 
    initial begin
-      rd_en = 0;
-      wr_en = 0;
+      ren = 0;
+      wen = 0;
    end
 
    // CPU state
@@ -87,7 +87,7 @@ module cpu(
    wire alu_zero;
 
    always @(*) begin
-      alu_in2 = (alu_in2_rs2) ? rd_data : imm;
+      alu_in2 = (alu_in2_rs2) ? rdata : imm;
    end
 
    alu alu(
@@ -105,7 +105,7 @@ module cpu(
       rd = inst[11:7];
       funct7 = inst[31:25];
       funct3 = inst[14:12];
-      rs1 = state == LD_INST ? rd_data[19:15] : inst[19:15];
+      rs1 = state == LD_INST ? rdata[19:15] : inst[19:15];
       rs2 = inst[24:20];
    end
 
@@ -170,131 +170,131 @@ module cpu(
 
    // Memory load, handle unaligned and B/H/W
 
-   reg [31:0] rd_data_shifted;
+   reg [31:0] rdata_shifted;
    reg [31:0] load_cooked;
 
    always @(*) begin
-      case (o_addr[1:0])
-         2'h0: rd_data_shifted = rd_data[31:0];
-         2'h1: rd_data_shifted = rd_data[31:8];
-         2'h2: rd_data_shifted = rd_data[31:16];
-         2'h3: rd_data_shifted = rd_data[31:24];
+      case (addr[1:0])
+         2'h0: rdata_shifted = rdata[31:0];
+         2'h1: rdata_shifted = rdata[31:8];
+         2'h2: rdata_shifted = rdata[31:16];
+         2'h3: rdata_shifted = rdata[31:24];
       endcase
       load_cooked = 0;
       case (funct3)
-         3'h0: load_cooked = { {24{rd_data_shifted[7]}}, rd_data_shifted[7:0] };
-         3'h1: load_cooked = { {16{rd_data_shifted[15]}}, rd_data_shifted[15:0] };
-         3'h2: load_cooked = rd_data_shifted;
-         3'h4: load_cooked = { 24'b0, rd_data_shifted[7:0] };
-         3'h5: load_cooked = { 16'b0, rd_data_shifted[15:0] };
+         3'h0: load_cooked = { {24{rdata_shifted[7]}}, rdata_shifted[7:0] };
+         3'h1: load_cooked = { {16{rdata_shifted[15]}}, rdata_shifted[15:0] };
+         3'h2: load_cooked = rdata_shifted;
+         3'h4: load_cooked = { 24'b0, rdata_shifted[7:0] };
+         3'h5: load_cooked = { 16'b0, rdata_shifted[15:0] };
       endcase
    end
 
    // Memory control
 
    always @(*) begin
-      rd_en = 0;
-      wr_en = 0;
-      o_addr = -1;
-      wr_data = 0;
+      ren = 0;
+      wen = 0;
+      addr = -1;
+      wdata = 0;
       wr_mask = 4'b1111;
 
       case (state)
          LD_PC: begin
-            o_addr = (!rd_valid) ? VEC_RESET : VEC_SP;
-            rd_en = 1;
+            addr = (!rd_valid) ? VEC_RESET : VEC_SP;
+            ren = 1;
          end
          LD_SP: begin
-            o_addr = pc;
-            rd_en = 1;
+            addr = pc;
+            ren = 1;
          end
          ST_SP: begin
-            o_addr = (2 << 2);
-            wr_data = rd_val;
-            wr_en = 1;
+            addr = (2 << 2);
+            wdata = rd_val;
+            wen = 1;
          end
          FETCH: begin
-            o_addr = pc;
-            rd_en = 1;
+            addr = pc;
+            ren = 1;
          end
          LD_INST: begin
-            o_addr = (!rd_valid) ? pc : (rs1 << 2);
-            rd_en = 1;
+            addr = (!rd_valid) ? pc : (rs1 << 2);
+            ren = 1;
          end
          LD_RS1: begin
-            o_addr = (rs2 << 2);
-            rd_en = 1;
+            addr = (rs2 << 2);
+            ren = 1;
          end
          LD_RS2_STORE: begin
-            o_addr = (rs2 << 2);
+            addr = (rs2 << 2);
          end
          BRANCH: begin
-            o_addr = (rs2 << 2);
-            rd_en = 1;
+            addr = (rs2 << 2);
+            ren = 1;
          end
          ST_STORE: begin
-            o_addr = alu_out;
+            addr = alu_out;
             case (funct3)
                3'h0: wr_mask = 4'b1000;
                3'h1: wr_mask = 4'b1100;
                3'h2: wr_mask = 4'b1111;
             endcase
-            case (o_addr[1:0])
+            case (addr[1:0])
                2'h0: begin
-                  wr_data = rs2_val;
+                  wdata = rs2_val;
                end
                2'h1: begin
-                  wr_data = rs2_val << 8;
+                  wdata = rs2_val << 8;
                   wr_mask = wr_mask >> 1;
                end
                2'h2: begin
-                  wr_data = rs2_val << 16;
+                  wdata = rs2_val << 16;
                   wr_mask = wr_mask >> 2;
                end
                2'h3: begin
-                  wr_data = rs2_val << 24;
+                  wdata = rs2_val << 24;
                   wr_mask = wr_mask >> 3;
                end
             endcase
-            wr_en = 1;
+            wen = 1;
          end
          ST_LUI: begin
-            o_addr = (rd << 2);
-            wr_data = imm;
-            wr_en = 1;
+            addr = (rd << 2);
+            wdata = imm;
+            wen = 1;
          end
          ST_LOAD: begin
-            o_addr = (rd << 2);
-            wr_data = rd_val;
-            wr_en = 1;
+            addr = (rd << 2);
+            wdata = rd_val;
+            wen = 1;
          end
          ST_ALU: begin
-            o_addr = (rd << 2);
-            wr_data = alu_out;
-            wr_en = 1;
+            addr = (rd << 2);
+            wdata = alu_out;
+            wen = 1;
          end
          ST_JAL,
             ST_JALR: begin
-            o_addr = (rd << 2);
-            wr_data = pc + 4;
-            wr_en = 1;
+            addr = (rd << 2);
+            wdata = pc + 4;
+            wen = 1;
          end
          ST_AUIPC: begin
-            o_addr = (rd << 2);
-            wr_data = pc + imm;
-            wr_en = 1;
+            addr = (rd << 2);
+            wdata = pc + imm;
+            wen = 1;
          end
          LOAD: begin
-            o_addr = rs1_val + imm;
-            rd_en = 1;
+            addr = rs1_val + imm;
+            ren = 1;
          end
 
       endcase
 
       // Do not allow writes to address 0, the zero register
-      wr_en = (wr_en && o_addr != 0);
+      wen = (wen && addr != 0);
 
-      debug = (!(rd_en || wr_en));
+      debug = (!(ren || wen));
    end
 
    // CPU state machine
@@ -317,8 +317,8 @@ module cpu(
 
          LD_INST: begin
             if (rd_valid) begin
-               inst <= rd_data;
-               case (rd_data[6:0])
+               inst <= rdata;
+               case (rdata[6:0])
                   OP_ALU_R: state <= LD_RS1;
                   OP_ALU_I: state <= LD_RS1;
                   OP_LOAD: state <= LD_RS1;
@@ -335,7 +335,7 @@ module cpu(
 
          LD_RS1: begin
             if (rd_valid) begin
-               rs1_val <= rd_data;
+               rs1_val <= rdata;
                state <= FAULT;
                case (opcode)
                   OP_ALU_R,
@@ -350,7 +350,7 @@ module cpu(
 
          LD_RS2_STORE: begin
             if (rd_valid) begin
-               rs2_val <= rd_data;
+               rs2_val <= rdata;
                state <= ST_STORE;
             end
          end
@@ -376,14 +376,14 @@ module cpu(
 
          LD_PC: begin
             if(rd_valid) begin
-               pc <= rd_data;
+               pc <= rdata;
                state <= LD_SP;
             end
          end
 
          LD_SP: begin
             if(rd_valid) begin
-               rd_val <= rd_data;
+               rd_val <= rdata;
                state <= ST_SP;
             end
          end

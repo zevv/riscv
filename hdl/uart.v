@@ -4,8 +4,8 @@
 module uart(
    input wire clk,
    input wire [4:0] addr, 
-   input wire rd_en, output reg [7:0] rd_data, output reg rd_valid,
-   input wire wr_en, input wire [7:0] wr_data,
+   input wire ren, output reg [7:0] rdata, output reg rd_valid,
+   input wire wen, input wire [7:0] wdata,
    output reg tx
 );
 
@@ -30,11 +30,11 @@ module uart(
 	begin
 		rd_valid <= 0;
 
-		if (wr_en) begin
+		if (wen) begin
 			case (addr)
 				'h0: begin
-               last_data <= wr_data;
-					shift <= { 1'b1, wr_data, 1'b0 };
+               last_data <= wdata;
+					shift <= { 1'b1, wdata, 1'b0 };
 					n <= 10;
 					div <= DIVIDER;
 					tx <= 0;
@@ -42,10 +42,10 @@ module uart(
 			endcase
 		end
 
-		if (rd_en) begin
+		if (ren) begin
 			case (addr)
 				'h4: begin
-					rd_data <= status;
+					rdata <= status;
 					rd_valid <= 1;
 				end
 			endcase

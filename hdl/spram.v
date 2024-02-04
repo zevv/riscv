@@ -5,38 +5,38 @@ module spram
 )
 (
    input wire clk,
-   input wire rd_en, input wire [14:0] addr, output [W-1:0] rd_data, output reg rd_valid,
-   input wire wr_en, input wire [W-1:0] wr_data
+   input wire ren, input wire [14:0] addr, output [W-1:0] rdata, output reg rd_valid,
+   input wire wen, input wire [W-1:0] wdata
 );
 
    wire [13:0] spram_addr = addr >> 2;
 
    SB_SPRAM256KA spram_l (
       .ADDRESS(spram_addr),
-      .DATAIN(wr_data[15: 0]),
+      .DATAIN(wdata[15: 0]),
       .MASKWREN(4'b1111),
-      .WREN(wr_en),
+      .WREN(wen),
       .CHIPSELECT(1'b1),
       .CLOCK(clk),
       .STANDBY(1'b0),
       .SLEEP(1'b0),
       .POWEROFF(1'b1),
-      .DATAOUT(rd_data[15:0])
+      .DATAOUT(rdata[15:0])
    );
 
    generate
       if (W > 16) begin
          SB_SPRAM256KA spram_h (
             .ADDRESS(spram_addr),
-            .DATAIN(wr_data[31:16]),
+            .DATAIN(wdata[31:16]),
             .MASKWREN(4'b1111),
-            .WREN(wr_en),
+            .WREN(wen),
             .CHIPSELECT(1'b1),
             .CLOCK(clk),
             .STANDBY(1'b0),
             .SLEEP(1'b0),
             .POWEROFF(1'b1),
-            .DATAOUT(rd_data[W-1:16])
+            .DATAOUT(rdata[W-1:16])
          );
       end
    endgenerate
@@ -44,7 +44,7 @@ module spram
 
    always @(posedge clk)
    begin
-      if (rd_en) begin
+      if (ren) begin
          rd_valid <= 1;
       end else begin
          rd_valid <= 0;
