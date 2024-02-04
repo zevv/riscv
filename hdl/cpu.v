@@ -106,12 +106,9 @@ module cpu
          end
          `OP_BRANCH: begin
             case (funct3)
-               `BR_BEQ:  alu_fn = `ALU_FN_SUB;
-               `BR_BNE:  alu_fn = `ALU_FN_SUB;
-               `BR_BLT:  alu_fn = `ALU_FN_LT;
-               `BR_BGE:  alu_fn = `ALU_FN_LT;
-               `BR_BLTU: alu_fn = `ALU_FN_LTU;
-               `BR_BGEU: alu_fn = `ALU_FN_LTU;
+               `BR_BEQ,  `BR_BNE:  alu_fn = `ALU_FN_SUB;
+               `BR_BLT,  `BR_BGE:  alu_fn = `ALU_FN_LT;
+               `BR_BLTU, `BR_BGEU: alu_fn = `ALU_FN_LTU;
             endcase
             alu_y_sel = `ALU_Y_RS2;
          end
