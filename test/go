@@ -52,7 +52,9 @@ fi
 rm -f ${PATH_CTS}/src/*.o
 
 if [ "$1" != "" ]; then
-	do_test I-$1-01
+	for name in $@; do
+		do_test I-$name-01
+	done
 else
 	TESTS=`cd ${PATH_CTS}/src && ls *.S | sed -e 's/.S$//'`
 	for TEST in $TESTS; do

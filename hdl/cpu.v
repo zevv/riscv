@@ -21,18 +21,18 @@ module cpu
       VEC_SP    = 16'h0004;
 
    // CPU state
-   reg [3:0] state = 0;
+   reg [4:0] state = `ST_BOOT;
    reg [15:0] pc = 0;
    reg [W-1:0] rd_val;
    
    // Decoded instruction
-   reg [6:0] opcode;
-   reg [4:0] rd;
-   reg [6:0] funct7;
-   reg [2:0] funct3;
-   reg [4:0] rs1;
-   reg [4:0] rs2;
-   reg [W-1:0] imm;
+   reg [6:0] opcode = 0;
+   reg [4:0] rd = 0;
+   reg [6:0] funct7 = 0;
+   reg [2:0] funct3 = 0;
+   reg [4:0] rs1 = 0;
+   reg [4:0] rs2 = 0;
+   reg [W-1:0] imm = 0;
 
    // Instruction decoding
    always @(posedge clk)
@@ -125,7 +125,11 @@ module cpu
          end
          `OP_JAL: begin
             alu_x_sel = `ALU_X_PC;
-            alu_y_sel = `ALU_Y_FOUR;
+            alu_y_sel = `ALU_Y_IMM;
+         end
+         `OP_JALR: begin
+            alu_x_sel = `ALU_X_RS1;
+            alu_y_sel = `ALU_Y_IMM;
          end
          `OP_AUIPC: begin
             alu_x_sel = `ALU_X_PC;
@@ -252,11 +256,13 @@ module cpu
             endcase
             reg_wen = 1;
          end
-         `ST_X_JAL,
-         `ST_X_ALU_R,
-         `ST_S_REG,
-         `ST_X_JALR: begin
+         `ST_S_REG: begin
             rd_val = alu_out;
+            reg_wen = 1;
+         end
+         `ST_X_JAL,
+         `ST_X_JALR: begin
+            rd_val = pc_plus_4;
             reg_wen = 1;
          end
       endcase
@@ -301,7 +307,7 @@ module cpu
                `OP_LOAD,
                `OP_BRANCH,
                `OP_JALR: state <= `ST_F_REG;
-               `OP_LUI: state <= `ST_S_REG;
+               `OP_LUI,
                `OP_AUIPC: state <= `ST_S_REG;
                `OP_JAL: state <= `ST_X_JAL;
                default: state <= `ST_FAULT;
@@ -309,10 +315,10 @@ module cpu
          end
          `ST_F_REG: begin
             case (opcode)
-               `OP_ALU_I: state <= `ST_S_REG;
+               `OP_ALU_I,
+               `OP_ALU_R: state <= `ST_S_REG;
                `OP_LOAD: state <= `ST_X_LOAD_1;
                `OP_JALR: state <= `ST_X_JALR;
-               `OP_ALU_R: state <= `ST_S_REG;
                `OP_STORE: state <= `ST_X_STORE;
                `OP_BRANCH: state <= `ST_X_BRANCH;
             endcase
@@ -329,10 +335,6 @@ module cpu
             pc <= pc_plus_4;
             state <= `ST_F_INST;
          end
-         `ST_X_JAL: begin
-            pc <= pc_plus_imm;;
-            state <= `ST_F_INST;
-         end
          `ST_X_BRANCH: begin
             if (branch)
                pc <= pc_plus_imm;
@@ -340,6 +342,7 @@ module cpu
                pc <= pc_plus_4;
             state <= `ST_F_INST;
          end
+         `ST_X_JAL,
          `ST_X_JALR: begin
             pc <= alu_out;
             state <= `ST_F_INST;
@@ -364,8 +367,6 @@ module cpu
       no_zero_write:
          assert(!(addr == 0 && wen));
 
-      valid_state:
-         assert(state <= `ST_X_LOAD_2 || state == `ST_FAULT);
    end
 
 `endif

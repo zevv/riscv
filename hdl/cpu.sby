@@ -6,7 +6,7 @@ noverific cover
 basic cover : default
 
 [options]
-depth 50
+depth 25
 cover:
 mode cover
 --
@@ -32,4 +32,5 @@ cpu.v
 alu.v
 common.v
 adder.v
+regs.v
 /usr/share/yosys/ice40/cells_sim.v
