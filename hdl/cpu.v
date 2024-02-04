@@ -227,7 +227,6 @@ module cpu
                4'b00_10: wmask = 4'b0010;
                4'b00_11: wmask = 4'b0001;
                4'b01_00: wmask = 4'b1100;
-               4'b01_01: wmask = 4'b0110;
                4'b01_10: wmask = 4'b0011;
                4'b10_00: wmask = 4'b1111;
             endcase
@@ -246,7 +245,6 @@ module cpu
                5'b000_10: load_val = { {24{rdata[23]}}, rdata[23:16] };
                5'b000_11: load_val = { {24{rdata[31]}}, rdata[31:24] };
                5'b001_00: load_val = { {16{rdata[15]}}, rdata[15:0] };
-               5'b001_01: load_val = { {16{rdata[23]}}, rdata[23:8] };
                5'b001_10: load_val = { {16{rdata[31]}}, rdata[31:16] };
                5'b010_00: load_val = rdata;
                5'b100_00: load_val = { 24'b0, rdata[7:0] };
@@ -254,7 +252,6 @@ module cpu
                5'b100_10: load_val = { 24'b0, rdata[23:16] };
                5'b100_11: load_val = { 24'b0, rdata[31:24] };
                5'b101_00: load_val = { 16'b0, rdata[15:0] };
-               5'b101_01: load_val = { 16'b0, rdata[23:8] };
                5'b101_10: load_val = { 16'b0, rdata[31:16] };
                default: load_val = 0;
             endcase
