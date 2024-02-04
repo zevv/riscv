@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stddef.h>
 
 void _start(void);
 void main(void);
@@ -19,3 +20,18 @@ void _start(void)
 	for(;;);
 }
 
+extern char _sheap;
+extern char _eheap;
+static char *brk = &_sheap;
+
+void *_sbrk(ptrdiff_t incr)
+{
+	char *old_brk = brk;
+
+	if ((brk += incr) < &_eheap) {
+		brk += incr;
+	} else {
+		brk = &_eheap;
+	}
+	return old_brk;
+}

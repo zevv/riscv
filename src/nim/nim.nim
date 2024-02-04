@@ -9,6 +9,9 @@ type
 
 var uart {.volatile} = cast[ptr Uart](0x5000)
 
+var a = new int
+a[] = 3
+
 uart.data = 'a'.uint32
 while uart.status != 0:
   discard
