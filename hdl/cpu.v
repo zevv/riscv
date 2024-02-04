@@ -192,9 +192,6 @@ module cpu
       if (rd == 0) reg_wen = 0;
    end
 
-
-   reg [31:0] tmp;
-
    // Memory read/write control
    always @(*) begin
       ren = 0;
