@@ -33,8 +33,8 @@
 `define ST_F_PC 3
 `define ST_F_INST 4
 `define ST_DECODE 5
-`define ST_F_REG 6
-`define ST_S_REG 7
+`define ST_RD_REG 6
+`define ST_WB_REG 7
 `define ST_X_STORE 8
 `define ST_X_JAL 9
 `define ST_X_BRANCH 10

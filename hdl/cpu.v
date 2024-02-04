@@ -165,6 +165,47 @@ module cpu
 
    reg [W-1:0] rdata_shifted;
 
+   // Register read/write control
+   always @(*) begin
+      reg_ren = 0;
+      reg_wen = 0;
+      rd_val = 0;
+      case (state)
+         `ST_F_SP:  begin
+            rd_val = rdata;
+            reg_wen = 1;
+         end
+         `ST_RD_REG: begin
+            reg_ren = 1;
+         end
+         `ST_X_LOAD_2: begin
+            rdata_shifted = rdata;
+            if(W >  0 && addr[1:0] == 2'h0) rdata_shifted = rdata[W-1:0];
+            if(W >  8 && addr[1:0] == 2'h1) rdata_shifted = rdata[W-1:8];
+            if(W > 16 && addr[1:0] == 2'h2) rdata_shifted = rdata[W-1:16];
+            if(W > 24 && addr[1:0] == 2'h3) rdata_shifted = rdata[W-1:24];
+            case (funct3)
+               3'h0: rd_val = { {24{rdata_shifted[7]}}, rdata_shifted[7:0] };
+               3'h1: rd_val = { {16{rdata_shifted[15]}}, rdata_shifted[15:0] };
+               3'h2: rd_val = rdata_shifted;
+               3'h4: rd_val = { 24'b0, rdata_shifted[7:0] };
+               3'h5: rd_val = { 16'b0, rdata_shifted[15:0] };
+            endcase
+            reg_wen = 1;
+         end
+         `ST_WB_REG: begin
+            rd_val = alu_out;
+            reg_wen = 1;
+         end
+         `ST_X_JAL,
+         `ST_X_JALR: begin
+            rd_val = pc_plus_4;
+            reg_wen = 1;
+         end
+      endcase
+      if (rd == 0) reg_wen = 0;
+   end
+
    // Memory read/write control
    always @(*) begin
       ren = 0;
@@ -172,17 +213,10 @@ module cpu
       addr = 0;
       wdata = 0;
       wr_mask = 4'b1111;
-      reg_ren = 0;
-      reg_wen = 0;
-      rd_val = 0;
       case (state)
          `ST_BOOT: begin
             addr = VEC_SP;
             ren = 1;
-         end
-         `ST_F_SP:  begin
-            rd_val = rdata;
-            reg_wen = 1;
          end
          `ST_F_PC: begin
             addr = VEC_RESET;
@@ -191,9 +225,6 @@ module cpu
          `ST_F_INST: begin
             addr = pc;
             ren = 1;
-         end
-         `ST_F_REG: begin
-            reg_ren = 1;
          end
          `ST_X_STORE: begin
             addr = alu_out;
@@ -227,31 +258,8 @@ module cpu
          end
          `ST_X_LOAD_2: begin
             addr = alu_out;
-            rdata_shifted = rdata;
-            if(W >  0 && addr[1:0] == 2'h0) rdata_shifted = rdata[W-1:0];
-            if(W >  8 && addr[1:0] == 2'h1) rdata_shifted = rdata[W-1:8];
-            if(W > 16 && addr[1:0] == 2'h2) rdata_shifted = rdata[W-1:16];
-            if(W > 24 && addr[1:0] == 2'h3) rdata_shifted = rdata[W-1:24];
-            case (funct3)
-               3'h0: rd_val = { {24{rdata_shifted[7]}}, rdata_shifted[7:0] };
-               3'h1: rd_val = { {16{rdata_shifted[15]}}, rdata_shifted[15:0] };
-               3'h2: rd_val = rdata_shifted;
-               3'h4: rd_val = { 24'b0, rdata_shifted[7:0] };
-               3'h5: rd_val = { 16'b0, rdata_shifted[15:0] };
-            endcase
-            reg_wen = 1;
-         end
-         `ST_S_REG: begin
-            rd_val = alu_out;
-            reg_wen = 1;
-         end
-         `ST_X_JAL,
-         `ST_X_JALR: begin
-            rd_val = pc_plus_4;
-            reg_wen = 1;
          end
       endcase
-      if (addr == 0) wen = 0;
    end
 
    always @(*) begin
@@ -291,17 +299,17 @@ module cpu
                `OP_STORE,
                `OP_LOAD,
                `OP_BRANCH,
-               `OP_JALR: state <= `ST_F_REG;
+               `OP_JALR: state <= `ST_RD_REG;
                `OP_LUI,
-               `OP_AUIPC: state <= `ST_S_REG;
+               `OP_AUIPC: state <= `ST_WB_REG;
                `OP_JAL: state <= `ST_X_JAL;
                default: state <= `ST_FAULT;
             endcase
          end
-         `ST_F_REG: begin
+         `ST_RD_REG: begin
             case (opcode)
                `OP_ALU_I,
-               `OP_ALU_R: state <= `ST_S_REG;
+               `OP_ALU_R: state <= `ST_WB_REG;
                `OP_LOAD: state <= `ST_X_LOAD_1;
                `OP_JALR: state <= `ST_X_JALR;
                `OP_STORE: state <= `ST_X_STORE;
@@ -311,7 +319,7 @@ module cpu
          `ST_X_LOAD_1: begin
             state <= `ST_X_LOAD_2;
          end
-         `ST_S_REG,
+         `ST_WB_REG,
          `ST_X_STORE,
          `ST_X_LOAD_2: begin
             pc <= pc_plus_4;
