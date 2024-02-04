@@ -7,7 +7,7 @@
 module cpu(
    input clk,
    output reg ren, output reg [15:0] addr, input [31:0] rdata, input rd_valid,
-   output reg wen, output reg [31:0] wdata, output reg[3:0] wr_mask,
+   output reg wen, output reg [31:0] wdata, output reg[3:0] wmask,
    output reg debug
 );
    
@@ -197,7 +197,7 @@ module cpu(
       wen = 0;
       addr = -1;
       wdata = 0;
-      wr_mask = 4'b1111;
+      wmask = 4'b1111;
 
       case (state)
          LD_PC: begin
@@ -235,9 +235,9 @@ module cpu(
          ST_STORE: begin
             addr = alu_out;
             case (funct3)
-               3'h0: wr_mask = 4'b1000;
-               3'h1: wr_mask = 4'b1100;
-               3'h2: wr_mask = 4'b1111;
+               3'h0: wmask = 4'b1000;
+               3'h1: wmask = 4'b1100;
+               3'h2: wmask = 4'b1111;
             endcase
             case (addr[1:0])
                2'h0: begin
@@ -245,15 +245,15 @@ module cpu(
                end
                2'h1: begin
                   wdata = rs2_val << 8;
-                  wr_mask = wr_mask >> 1;
+                  wmask = wmask >> 1;
                end
                2'h2: begin
                   wdata = rs2_val << 16;
-                  wr_mask = wr_mask >> 2;
+                  wmask = wmask >> 2;
                end
                2'h3: begin
                   wdata = rs2_val << 24;
-                  wr_mask = wr_mask >> 3;
+                  wmask = wmask >> 3;
                end
             endcase
             wen = 1;

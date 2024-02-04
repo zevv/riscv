@@ -27,13 +27,13 @@ module machine
    reg cpu_rd_valid;
    wire cpu_wen;
    wire [W-1:0] cpu_wdata;
-   wire [3:0] cpu_wr_mask;
+   wire [3:0] cpu_wmask;
 
    cpu #(.W(W)) cpu0(
       .clk(clk),
       .addr(addr),
       .ren(cpu_ren), .rdata(cpu_rdata), .rd_valid(cpu_rd_valid),
-      .wen(cpu_wen), .wdata(cpu_wdata), .wr_mask(cpu_wr_mask),
+      .wen(cpu_wen), .wdata(cpu_wdata), .wmask(cpu_wmask),
       .debug(debug)
    );
 
@@ -49,7 +49,7 @@ module machine
       .clk(clk),
       .addr(bram_addr),
       .ren(bram_ren), .rdata(bram_rdata), .rd_valid(bram_rd_valid),
-      .wen(bram_wen), .wdata(bram_wdata), .wr_mask(cpu_wr_mask)
+      .wen(bram_wen), .wdata(bram_wdata), .wmask(cpu_wmask)
    );
 
 

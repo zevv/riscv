@@ -12,7 +12,7 @@ module cpu
 (
    input clk,
    output reg ren, output reg [15:0] addr, input [31:0] rdata, input rd_valid,
-   output reg wen, output reg [W-1:0] wdata, output reg[3:0] wr_mask,
+   output reg wen, output reg [W-1:0] wdata, output reg[3:0] wmask,
    output reg debug
 );
    
@@ -206,13 +206,14 @@ module cpu
       if (rd == 0) reg_wen = 0;
    end
 
+
    // Memory read/write control
    always @(*) begin
       ren = 0;
       wen = 0;
       addr = 0;
       wdata = 0;
-      wr_mask = 4'b1111;
+      wmask = 4'b1111;
       case (state)
          `ST_BOOT: begin
             addr = VEC_SP;
@@ -228,28 +229,17 @@ module cpu
          end
          `ST_X_STORE: begin
             addr = alu_out;
-            case (funct3)
-               3'h0: wr_mask = 4'b1000;
-               3'h1: wr_mask = 4'b1100;
-               3'h2: wr_mask = 4'b1111;
+            case ({funct3[1:0], addr[1:0]})
+               5'b00_00: wmask = 4'b1000;
+               5'b01_00: wmask = 4'b1100;
+               5'b10_00: wmask = 4'b1111;
+               5'b00_01: wmask = 4'b0100;
+               5'b01_01: wmask = 4'b0110;
+               5'b00_10: wmask = 4'b0010;
+               5'b01_10: wmask = 4'b0011;
+               5'b00_11: wmask = 4'b0001;
             endcase
-            case (addr[1:0])
-               2'h0: begin
-                  wdata = rs2_val;
-               end
-               2'h1: begin
-                  wdata = rs2_val << 8;
-                  wr_mask = wr_mask >> 1;
-               end
-               2'h2: begin
-                  wdata = rs2_val << 16;
-                  wr_mask = wr_mask >> 2;
-               end
-               2'h3: begin
-                  wdata = rs2_val << 24;
-                  wr_mask = wr_mask >> 3;
-               end
-            endcase
+            wdata = rs2_val << (addr[1:0] * 8);
             wen = 1;
          end
          `ST_X_LOAD_1: begin
@@ -260,6 +250,7 @@ module cpu
             addr = alu_out;
          end
       endcase
+
    end
 
    always @(*) begin
