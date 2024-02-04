@@ -50,7 +50,7 @@ bram.v: bram.mem
 	touch $@
 
 %.json: %.v $(SRCS)
-	yosys $(YOSYSFLAGS) -p "synth_ice40 -top $* -json $@" -l yosys.log $<
+	yosys $(YOSYSFLAGS) -p "synth_ice40 -top $* -noflatten -json $@" -l yosys.log $<
 
 %.asc: %.json
 	nextpnr-ice40 $(NEXTPNRFLAGS) --json $< --pcf $(PCF) --asc $@ -l nextpnr.log

@@ -1,10 +1,8 @@
-
 // https://github.com/jameslzhu/riscv-card/blob/master/riscv-card.pdf
 // https://riscv.org/wp-content/uploads/2017/05/riscv-spec-v2.2.pdf
 
 `include "alu.v"
 `include "common.v"
-
 
 module cpu
 #(
@@ -18,15 +16,13 @@ module cpu
 );
    
    localparam
-      VEC_RESET = 16'h0080,
-      VEC_SP    = 16'h0084;
+      VEC_RESET = 16'h0000,
+      VEC_SP    = 16'h0004;
 
    // CPU state
    reg [4:0] state = 0;
    reg [15:0] pc = 0;
-   reg [W-1:0] rd_val = 0;
-   reg [W-1:0] rs1_val = 0;
-   reg [W-1:0] rs2_val = 0;
+   reg [W-1:0] rd_val;
    
    // Decoded instruction
    reg [6:0] opcode;
@@ -40,6 +36,9 @@ module cpu
    // Instruction decoding
    always @(posedge clk)
    begin
+      if(state == `ST_F_SP) begin
+         rd = 2;
+      end
       if(state == `ST_DECODE) begin
          opcode <= rd_data[6:0];
          rd <= rd_data[11:7];
@@ -59,6 +58,18 @@ module cpu
          endcase
       end
    end
+
+   reg reg_rd_en = 0;
+   reg reg_wr_en = 0;
+   wire [W-1:0] rs1_val;
+   wire [W-1:0] rs2_val;
+
+   regs #(.W(W)) regs(
+      .clk(clk),
+      .rd_en(reg_rd_en),
+      .rs1(rs1), .rs2(rs2), .rs1_val(rs1_val), .rs2_val(rs2_val),
+      .wr_en(reg_wr_en), .rd(rd), .rd_val(rd_val)
+   );
 
    // ALU
    reg [W-1:0] alu_x;
@@ -136,13 +147,6 @@ module cpu
    end
 
    reg [W-1:0] rd_data_shifted;
-   always @(*) begin
-      rd_data_shifted = rd_data;
-      if(W >  0 && o_addr[1:0] == 2'h0) rd_data_shifted = rd_data[W-1:0];
-      if(W >  8 && o_addr[1:0] == 2'h1) rd_data_shifted = rd_data[W-1:8];
-      if(W > 16 && o_addr[1:0] == 2'h2) rd_data_shifted = rd_data[W-1:16];
-      if(W > 24 && o_addr[1:0] == 2'h3) rd_data_shifted = rd_data[W-1:24];
-   end
 
    // Memory read/write control
    always @(*) begin
@@ -151,15 +155,17 @@ module cpu
       o_addr = 0;
       wr_data = 0;
       wr_mask = 4'b1111;
+      reg_rd_en = 0;
+      reg_wr_en = 0;
+      rd_val = 0;
       case (state)
          `ST_BOOT: begin
             o_addr = VEC_SP;
             rd_en = 1;
          end
          `ST_F_SP:  begin
-            o_addr = (2 << 2);
-            wr_data = rd_data;
-            wr_en = 1;
+            rd_val = rd_data;
+            reg_wr_en = 1;
          end
          `ST_F_PC: begin
             o_addr = VEC_RESET;
@@ -169,20 +175,14 @@ module cpu
             o_addr = pc;
             rd_en = 1;
          end
-         `ST_F_RS1: begin
-            o_addr = (rs1 << 2);
-            rd_en = 1;
+         `ST_F_REG: begin
+            reg_rd_en = 1;
          end
-         `ST_F_RS2: begin
-            o_addr = (rs2 << 2);
-            rd_en = 1;
+         `ST_X_ALU_I: begin
+            reg_wr_en = 1;
+            rd_val = alu_out;
          end
-         `ST_X_ALU_I_2: begin
-            o_addr = (rd << 2);
-            wr_data = alu_out;
-            wr_en = 1;
-         end
-         `ST_X_STORE_2: begin
+         `ST_X_STORE: begin
             o_addr = alu_out;
             case (funct3)
                3'h0: wr_mask = 4'b1000;
@@ -214,36 +214,39 @@ module cpu
          end
          `ST_X_LOAD_3: begin
             o_addr = alu_out;
+            rd_data_shifted = rd_data;
+            if(W >  0 && o_addr[1:0] == 2'h0) rd_data_shifted = rd_data[W-1:0];
+            if(W >  8 && o_addr[1:0] == 2'h1) rd_data_shifted = rd_data[W-1:8];
+            if(W > 16 && o_addr[1:0] == 2'h2) rd_data_shifted = rd_data[W-1:16];
+            if(W > 24 && o_addr[1:0] == 2'h3) rd_data_shifted = rd_data[W-1:24];
+            case (funct3)
+               3'h0: rd_val = { {24{rd_data_shifted[7]}}, rd_data_shifted[7:0] };
+               3'h1: rd_val = { {16{rd_data_shifted[15]}}, rd_data_shifted[15:0] };
+               3'h2: rd_val = rd_data_shifted;
+               3'h4: rd_val = { 24'b0, rd_data_shifted[7:0] };
+               3'h5: rd_val = { 16'b0, rd_data_shifted[15:0] };
+            endcase
+            reg_wr_en = 1;
          end
-         `ST_X_LOAD_4: begin
-            o_addr = (rd << 2);
-            wr_data = rd_val;
-            wr_en = 1;
+         `ST_X_JAL: begin
+            rd_val = pc_plus_4;
+            reg_wr_en = 1;
          end
-         `ST_X_JAL_1: begin
-            o_addr = (rd << 2);
-            wr_data = pc_plus_4;
-            wr_en = 1;
-         end
-         `ST_X_ALU_R_2: begin
-            o_addr = (rd << 2);
-            wr_data = alu_out;
-            wr_en = 1;
+         `ST_X_ALU_R: begin
+            rd_val = alu_out;
+            reg_wr_en = 1;
          end
          `ST_X_LUI: begin
-            o_addr = (rd << 2);
-            wr_data = imm;
-            wr_en = 1;
+            rd_val = imm;
+            reg_wr_en = 1;
          end
          `ST_X_AUIPC: begin
-            o_addr = (rd << 2);
-            wr_data = alu_out;
-            wr_en = 1;
+            rd_val = alu_out;
+            reg_wr_en = 1;
          end
          `ST_X_JALR_2: begin
-            o_addr = (rd << 2);
-            wr_data = alu_out;
-            wr_en = 1;
+            rd_val = alu_out;
+            reg_wr_en = 1;
          end
       endcase
       if (o_addr == 0) wr_en = 0;
@@ -281,91 +284,52 @@ module cpu
          end
          `ST_DECODE: begin
             case (rd_data[6:0])
-               `OP_ALU_R: state <= `ST_F_RS1;
-               `OP_ALU_I: state <= `ST_F_RS1;
-               `OP_STORE: state <= `ST_F_RS1;
-               `OP_LOAD: state <= `ST_F_RS1;
-               `OP_JAL: state <= `ST_X_JAL_1;
-               `OP_BRANCH: state <= `ST_F_RS1;
+               `OP_ALU_R: state <= `ST_F_REG;
+               `OP_ALU_I: state <= `ST_F_REG;
+               `OP_STORE: state <= `ST_F_REG;
+               `OP_LOAD: state <= `ST_F_REG;
+               `OP_JAL: state <= `ST_X_JAL;
+               `OP_BRANCH: state <= `ST_F_REG;
                `OP_LUI: state <= `ST_X_LUI;
                `OP_AUIPC: state <= `ST_X_AUIPC;
-               `OP_JALR: state <= `ST_F_RS1;
+               `OP_JALR: state <= `ST_F_REG;
                default: state <= `ST_FAULT;
             endcase
          end
-         `ST_F_RS1: begin
+         `ST_F_REG: begin
             case (opcode)
-               `OP_ALU_R: state <= `ST_F_RS2;
-               `OP_ALU_I: state <= `ST_X_ALU_I_1;
-               `OP_STORE: state <= `ST_F_RS2;
-               `OP_LOAD: state <= `ST_X_LOAD_1;
-               `OP_BRANCH: state <= `ST_F_RS2;
+               `OP_ALU_I: state <= `ST_X_ALU_I;
+               `OP_LOAD: state <= `ST_X_LOAD_2;
                `OP_JALR: state <= `ST_X_JALR_1;
+               `OP_ALU_R: state <= `ST_X_ALU_R;
+               `OP_STORE: state <= `ST_X_STORE;
+               `OP_BRANCH: state <= `ST_X_BRANCH;
             endcase
-         end
-         `ST_F_RS2: begin
-            rs1_val <= rd_data;
-            case (opcode)
-               `OP_ALU_R: state <= `ST_X_ALU_R_1;
-               `OP_STORE: state <= `ST_X_STORE_1;
-               `OP_BRANCH: state <= `ST_X_BRANCH_1;
-            endcase
-         end
-         `ST_X_ALU_I_1: begin
-            rs1_val <= rd_data;
-            state <= `ST_X_ALU_I_2;
-         end
-         `ST_X_STORE_1: begin
-            rs2_val <= rd_data;
-            state <= `ST_X_STORE_2;
-         end
-         `ST_X_LOAD_1: begin
-            rs1_val <= rd_data;
-            state <= `ST_X_LOAD_2;
          end
          `ST_X_LOAD_2: begin
             state <= `ST_X_LOAD_3;
          end
-         `ST_X_LOAD_3: begin
-            case (funct3)
-               3'h0: rd_val = { {24{rd_data_shifted[7]}}, rd_data_shifted[7:0] };
-               3'h1: rd_val = { {16{rd_data_shifted[15]}}, rd_data_shifted[15:0] };
-               3'h2: rd_val = rd_data_shifted;
-               3'h4: rd_val = { 24'b0, rd_data_shifted[7:0] };
-               3'h5: rd_val = { 16'b0, rd_data_shifted[15:0] };
-            endcase
-            state <= `ST_X_LOAD_4;
-         end
-         `ST_X_STORE_2,
-         `ST_X_ALU_R_2,
-         `ST_X_ALU_I_2,
-         `ST_X_LOAD_4,
+         `ST_X_STORE,
+         `ST_X_ALU_R,
+         `ST_X_ALU_I,
+         `ST_X_LOAD_3,
          `ST_X_LUI,
          `ST_X_AUIPC: begin
             pc <= pc_plus_4;
             state <= `ST_F_INST;
          end
-         `ST_X_JAL_1: begin
+         `ST_X_JAL: begin
             pc <= alu_out;
             state <= `ST_F_INST;
          end
-         `ST_X_BRANCH_1: begin
-            rs2_val <= rd_data;
-            state <= `ST_X_BRANCH_2;
-         end
-         `ST_X_BRANCH_2: begin
+         `ST_X_BRANCH: begin
             if (branch)
                pc <= pc_plus_imm;
             else
                pc <= pc_plus_4;
             state <= `ST_F_INST;
          end
-         `ST_X_ALU_R_1: begin
-            rs2_val = rd_data;
-            state <= `ST_X_ALU_R_2;
-         end
          `ST_X_JALR_1: begin
-            rs1_val <= rd_data;
             state <= `ST_X_JALR_2;
          end
          `ST_X_JALR_2: begin
@@ -394,10 +358,79 @@ module cpu
          assert(!(o_addr == 0 && wr_en));
 
       valid_state:
-         assert(state <= `ST_X_LOAD_4 || state == `ST_FAULT);
+         assert(state <= `ST_X_LOAD_3 || state == `ST_FAULT);
    end
 
 `endif
+
+endmodule
+
+
+module regs
+#(
+   parameter W = 32
+)
+(
+   input clk,
+   input rd_en,
+   input [4:0] rs1, input [4:0] rs2, output reg [31:0] rs1_val, output reg [31:0] rs2_val,
+   input wr_en, input [4:0] rd, input [W-1:0] rd_val
+);
+   reg [31:0] mem1 [0:31];
+   reg [31:0] mem2 [0:31];
+
+   integer i;
+   initial begin
+      for (i = 0; i < 32; i = i + 1) begin
+         mem1[i] = 32'd0;
+         mem2[i] = 32'd0;
+      end
+   end
+
+   wire [31:0] reg_zero   = mem1['h00];
+   wire [31:0] reg_ra     = mem1['h01];
+   wire [31:0] reg_sp     = mem1['h02];
+   wire [31:0] reg_gp     = mem1['h03];
+   wire [31:0] reg_tp     = mem1['h04];
+   wire [31:0] reg_t0     = mem1['h05];
+   wire [31:0] reg_t1     = mem1['h06];
+   wire [31:0] reg_t2     = mem1['h07];
+   wire [31:0] reg_s0     = mem1['h08];
+   wire [31:0] reg_s1     = mem1['h09];
+   wire [31:0] reg_a0     = mem1['h0a];
+   wire [31:0] reg_a1     = mem1['h0b];
+   wire [31:0] reg_a2     = mem1['h0c];
+   wire [31:0] reg_a3     = mem1['h0d];
+   wire [31:0] reg_a4     = mem1['h0e];
+   wire [31:0] reg_a5     = mem1['h0f];
+   wire [31:0] reg_a6     = mem1['h10];
+   wire [31:0] reg_a7     = mem1['h11];
+   wire [31:0] reg_s2     = mem1['h12];
+   wire [31:0] reg_s3     = mem1['h13];
+   wire [31:0] reg_s4     = mem1['h14];
+   wire [31:0] reg_s5     = mem1['h15];
+   wire [31:0] reg_s6     = mem1['h16];
+   wire [31:0] reg_s7     = mem1['h17];
+   wire [31:0] reg_s8     = mem1['h18];
+   wire [31:0] reg_s9     = mem1['h19];
+   wire [31:0] reg_s10    = mem1['h1a];
+   wire [31:0] reg_s11    = mem1['h1b];
+   wire [31:0] reg_t3     = mem1['h1c];
+   wire [31:0] reg_t4     = mem1['h1d];
+   wire [31:0] reg_t5     = mem1['h1e];
+   wire [31:0] reg_t6     = mem1['h1f];
+
+   always @(posedge clk)
+   begin
+      if (rd_en) begin
+         rs1_val = mem1[rs1];
+         rs2_val = mem2[rs2];
+      end
+      if(wr_en && rd != 0) begin
+         mem1[rd] <= rd_val;
+         mem2[rd] <= rd_val;
+      end
+   end
 
 endmodule
 

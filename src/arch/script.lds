@@ -10,7 +10,6 @@ _sp = 0x2000;
 SECTIONS
 {
    .text : { 
-      . = 0x80;
       KEEP(*(.vectors));
       *(.text*) 
       *(.srodata*)
