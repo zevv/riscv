@@ -49,10 +49,10 @@
 `define ST_X_ALU_R 19
 `define ST_X_LUI 20
 `define ST_X_AUIPC 21
-`define ST_X_JALR_1 22
-`define ST_X_JALR_2 23
+`define ST_X_JALR 22
+// 23
 // 24
-`define ST_X_LOAD_2 25
-`define ST_X_LOAD_3 26
+`define ST_X_LOAD_1 25
+`define ST_X_LOAD_2 26
 
 `define ST_FAULT 31

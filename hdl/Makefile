@@ -8,6 +8,7 @@ FREQ := 16
 
 SRCS += top.v
 SRCS += cpu.v
+SRCS += regs.v
 SRCS += alu.v adder.v
 SRCS += machine.v
 SRCS += uart.v
