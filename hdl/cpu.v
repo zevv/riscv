@@ -240,18 +240,23 @@ module cpu
          end
          `ST_X_LOAD_2: begin
             addr = alu_out;
-            case (addr[1:0])
-               2'b00: tmp = rdata >> 0;
-               2'b01: tmp = rdata >> 8;
-               2'b10: tmp = rdata >> 16;
-               2'b11: tmp = rdata >> 24;
-            endcase
-            case (funct3)
-               3'h0: load_val = { {24{tmp[7]}}, tmp[7:0] };
-               3'h1: load_val = { {16{tmp[15]}}, tmp[15:0] };
-               3'h2: load_val = tmp;
-               3'h4: load_val = { 24'b0, tmp[7:0] };
-               3'h5: load_val = { 16'b0, tmp[15:0] };
+            case ({funct3[2:0], addr[1:0]})
+               5'b000_00: load_val = { {24{rdata[7]}}, rdata[7:0] };
+               5'b000_01: load_val = { {24{rdata[15]}}, rdata[15:8] };
+               5'b000_10: load_val = { {24{rdata[23]}}, rdata[23:16] };
+               5'b000_11: load_val = { {24{rdata[31]}}, rdata[31:24] };
+               5'b001_00: load_val = { {16{rdata[15]}}, rdata[15:0] };
+               5'b001_01: load_val = { {16{rdata[23]}}, rdata[23:8] };
+               5'b001_10: load_val = { {16{rdata[31]}}, rdata[31:16] };
+               5'b010_00: load_val = rdata;
+               5'b100_00: load_val = { 24'b0, rdata[7:0] };
+               5'b100_01: load_val = { 24'b0, rdata[15:8] };
+               5'b100_10: load_val = { 24'b0, rdata[23:16] };
+               5'b100_11: load_val = { 24'b0, rdata[31:24] };
+               5'b101_00: load_val = { 16'b0, rdata[15:0] };
+               5'b101_01: load_val = { 16'b0, rdata[23:8] };
+               5'b101_10: load_val = { 16'b0, rdata[31:16] };
+               default: load_val = 0;
             endcase
          end
       endcase
