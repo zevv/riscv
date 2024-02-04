@@ -35,9 +35,9 @@
 `define ST_DECODE 5
 // 6
 `define ST_F_REG 7
-// 8
+`define ST_S_REG 8
 // 9
-`define ST_X_ALU_I 10
+// 10
 // 11
 `define ST_X_STORE 12
 // 13
@@ -47,8 +47,8 @@
 `define ST_X_BRANCH 17
 // 18
 `define ST_X_ALU_R 19
-`define ST_X_LUI 20
-`define ST_X_AUIPC 21
+// 21
+// 22
 `define ST_X_JALR 22
 // 23
 // 24

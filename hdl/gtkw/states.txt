@@ -6,9 +6,9 @@
 5 DECODE
 6 DECODE
 7 F_REG
-8 ?
+8 S_REG
 9 ?
-10 X_ALU_I
+10 ?
 11 ?
 12 X_STORE
 13 ?
@@ -18,8 +18,8 @@
 17 X_BRANCH
 18 ?
 19 X_ALU_R
-20 X_LUI
-21 X_AUIPC
+20 ?
+21 ?
 22 X_JALR
 23 ?
 24 ?

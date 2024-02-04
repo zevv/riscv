@@ -86,15 +86,28 @@ module cpu
       .zero(alu_zero)
    );
 
+`define ALU_X_RS1 2'h0
+`define ALU_X_PC 2'h2
+`define ALU_X_IMM 2'h1
+`define ALU_X_ZERO 2'h3
+
+`define ALU_Y_IMM 2'h0
+`define ALU_Y_RS2 2'h1
+`define ALU_Y_FOUR 2'h2
+
+   reg [2:0] alu_x_sel;
+   reg [2:0] alu_y_sel;
+
    // ALU control
    always @(*) begin
       alu_fn = `ALU_FN_ADD;
-      alu_x = rs1_val;
-      alu_y = imm;
+      alu_x_sel = `ALU_X_RS1;
+      alu_y_sel = `ALU_Y_IMM;
+
       case (opcode)
          `OP_ALU_R: begin
             alu_fn = { funct7[5], funct3 };
-            alu_y = rs2_val;
+            alu_y_sel = `ALU_Y_RS2;
          end
          `OP_ALU_I: begin
             alu_fn = { (funct3 == 3'h1 || funct3 == 3'h5) ? imm[10] : 1'b0, funct3 };
@@ -108,18 +121,32 @@ module cpu
                `BR_BLTU: alu_fn = `ALU_FN_LTU;
                `BR_BGEU: alu_fn = `ALU_FN_LTU;
             endcase
-            alu_y = rs2_val;
+            alu_y_sel = `ALU_Y_RS2;
          end
          `OP_JAL: begin
-            alu_x = pc;
-         end
-         `OP_JAL: begin
-            alu_x = pc;
-            alu_y = 32'd4;
+            alu_x_sel = `ALU_X_PC;
+            alu_y_sel = `ALU_Y_FOUR;
          end
          `OP_AUIPC: begin
-            alu_x = pc;
+            alu_x_sel = `ALU_X_PC;
          end
+         `OP_LUI: begin
+            alu_x_sel = `ALU_X_ZERO;
+         end
+      endcase
+
+      case (alu_x_sel)
+         `ALU_X_RS1: alu_x = rs1_val;
+         `ALU_X_PC: alu_x = pc;
+         `ALU_X_IMM: alu_x = imm;
+         `ALU_X_ZERO: alu_x = 32'd0;
+      endcase
+
+      case (alu_y_sel)
+         `ALU_Y_IMM: alu_y = imm;
+         `ALU_Y_RS2: alu_y = rs2_val;
+         `ALU_Y_FOUR: alu_y = 32'd4;
+         default: alu_y = 32'd0;
       endcase
    end
 
@@ -179,10 +206,6 @@ module cpu
          `ST_F_REG: begin
             reg_ren = 1;
          end
-         `ST_X_ALU_I: begin
-            reg_wen = 1;
-            rd_val = alu_out;
-         end
          `ST_X_STORE: begin
             addr = alu_out;
             case (funct3)
@@ -229,22 +252,9 @@ module cpu
             endcase
             reg_wen = 1;
          end
-         `ST_X_JAL: begin
-            rd_val = pc_plus_4;
-            reg_wen = 1;
-         end
-         `ST_X_ALU_R: begin
-            rd_val = alu_out;
-            reg_wen = 1;
-         end
-         `ST_X_LUI: begin
-            rd_val = imm;
-            reg_wen = 1;
-         end
-         `ST_X_AUIPC: begin
-            rd_val = alu_out;
-            reg_wen = 1;
-         end
+         `ST_X_JAL,
+         `ST_X_ALU_R,
+         `ST_S_REG,
          `ST_X_JALR: begin
             rd_val = alu_out;
             reg_wen = 1;
@@ -285,24 +295,24 @@ module cpu
          end
          `ST_DECODE: begin
             case (rdata[6:0])
-               `OP_ALU_R: state <= `ST_F_REG;
-               `OP_ALU_I: state <= `ST_F_REG;
-               `OP_STORE: state <= `ST_F_REG;
-               `OP_LOAD: state <= `ST_F_REG;
-               `OP_JAL: state <= `ST_X_JAL;
-               `OP_BRANCH: state <= `ST_F_REG;
-               `OP_LUI: state <= `ST_X_LUI;
-               `OP_AUIPC: state <= `ST_X_AUIPC;
+               `OP_ALU_R,
+               `OP_ALU_I,
+               `OP_STORE,
+               `OP_LOAD,
+               `OP_BRANCH,
                `OP_JALR: state <= `ST_F_REG;
+               `OP_LUI: state <= `ST_S_REG;
+               `OP_AUIPC: state <= `ST_S_REG;
+               `OP_JAL: state <= `ST_X_JAL;
                default: state <= `ST_FAULT;
             endcase
          end
          `ST_F_REG: begin
             case (opcode)
-               `OP_ALU_I: state <= `ST_X_ALU_I;
+               `OP_ALU_I: state <= `ST_S_REG;
                `OP_LOAD: state <= `ST_X_LOAD_1;
                `OP_JALR: state <= `ST_X_JALR;
-               `OP_ALU_R: state <= `ST_X_ALU_R;
+               `OP_ALU_R: state <= `ST_S_REG;
                `OP_STORE: state <= `ST_X_STORE;
                `OP_BRANCH: state <= `ST_X_BRANCH;
             endcase
@@ -311,16 +321,16 @@ module cpu
             state <= `ST_X_LOAD_2;
          end
          `ST_X_STORE,
-         `ST_X_ALU_R,
-         `ST_X_ALU_I,
-         `ST_X_LOAD_2,
-         `ST_X_LUI,
-         `ST_X_AUIPC: begin
+         `ST_X_LOAD_2: begin
+            pc <= pc_plus_4;
+            state <= `ST_F_INST;
+         end
+         `ST_S_REG: begin
             pc <= pc_plus_4;
             state <= `ST_F_INST;
          end
          `ST_X_JAL: begin
-            pc <= alu_out;
+            pc <= pc_plus_imm;;
             state <= `ST_F_INST;
          end
          `ST_X_BRANCH: begin
