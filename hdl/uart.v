@@ -33,6 +33,9 @@ module uart(
 		if (wen) begin
 			case (addr)
 				'h0: begin
+               `ifdef __ICARUS__
+               $write("%c", wdata);
+               `endif
                last_data <= wdata;
 					shift <= { 1'b1, wdata, 1'b0 };
 					n <= 10;
