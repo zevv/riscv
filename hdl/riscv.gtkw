@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sun Feb  4 11:32:25 2024
+[*] Sun Feb  4 12:56:55 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Sun Feb  4 11:32:04 2024"
-[dumpfile_size] 1385739
+[dumpfile_mtime] "Sun Feb  4 12:56:31 2024"
+[dumpfile_size] 1379507
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
-[timestart] 0
+[timestart] 37
 [size] 1366 972
 [pos] -1 -1
-*-9.000002 77 2021 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.400002 45 2021 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
 [treeopen] test.machine.cpu0.
@@ -17,7 +17,7 @@
 [sst_width] 269
 [signals_width] 142
 [sst_expanded] 1
-[sst_vpaned_height] 495
+[sst_vpaned_height] 286
 @24
 test.cycle[31:0]
 @28
@@ -30,9 +30,9 @@ test.machine.uart0.last_data[8:0]
 @22
 [color] 7
 test.machine.cpu0.pc[15:0]
-@2024
+@2023
 ^1 /home/ico/sandbox/prjs/riscv/hdl/gtkw/states.txt
-test.machine.cpu0.state[4:0]
+test.machine.cpu0.state[3:0]
 @2028
 [color] 3
 ^2 /home/ico/sandbox/prjs/riscv/hdl/gtkw/opcodes.txt
@@ -56,8 +56,6 @@ test.machine.cpu0.wdata[31:0]
 @28
 [color] 2
 test.machine.cpu0.wen
-[color] 3
-test.machine.cpu0.ren
 [color] 3
 test.machine.cpu0.rd_valid
 @22

@@ -21,7 +21,7 @@ module cpu
       VEC_SP    = 16'h0004;
 
    // CPU state
-   reg [4:0] state = 0;
+   reg [3:0] state = 0;
    reg [15:0] pc = 0;
    reg [W-1:0] rd_val;
    

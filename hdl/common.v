@@ -34,25 +34,25 @@
 `define ST_F_INST 4
 `define ST_DECODE 5
 // 6
-`define ST_F_REG 7
-`define ST_S_REG 8
+`define ST_F_REG 6
+`define ST_S_REG 7
 // 9
 // 10
 // 11
-`define ST_X_STORE 12
+`define ST_X_STORE 8
 // 13
 // 14
-`define ST_X_JAL 15
+`define ST_X_JAL 9
 // 16
-`define ST_X_BRANCH 17
+`define ST_X_BRANCH 10
 // 18
-`define ST_X_ALU_R 19
+`define ST_X_ALU_R 11
 // 21
 // 22
-`define ST_X_JALR 22
+`define ST_X_JALR 12
 // 23
 // 24
-`define ST_X_LOAD_1 25
-`define ST_X_LOAD_2 26
+`define ST_X_LOAD_1 13
+`define ST_X_LOAD_2 14
 
-`define ST_FAULT 31
+`define ST_FAULT 15
