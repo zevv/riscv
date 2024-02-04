@@ -23,9 +23,8 @@ module cpu
    // CPU state
    reg [4:0] state = `ST_BOOT;
    reg [15:0] pc = 0;
-   reg [W-1:0] rd_val;
    
-   // Decoded instruction
+   // Instruction decoding
    reg [6:0] opcode = 0;
    reg [4:0] rd = 0;
    reg [6:0] funct7 = 0;
@@ -34,7 +33,6 @@ module cpu
    reg [4:0] rs2 = 0;
    reg [W-1:0] imm = 0;
 
-   // Instruction decoding
    always @(posedge clk)
    begin
       if(state == `ST_F_SP) begin
@@ -48,22 +46,24 @@ module cpu
          rs1 <= rdata[19:15];
          rs2 <= rdata[24:20];
          case (rdata[6:0])
-            `OP_ALU_I: imm <= { {20{rdata[31]}}, rdata[31:20] };
-            `OP_LOAD: imm <= { {20{rdata[31]}}, rdata[31:20] };
-            `OP_STORE: imm <= { {20{rdata[31]}}, rdata[31:25], rdata[11:7] };
+            `OP_ALU_I:  imm <= { {20{rdata[31]}}, rdata[31:20] };
+            `OP_LOAD:   imm <= { {20{rdata[31]}}, rdata[31:20] };
+            `OP_STORE:  imm <= { {20{rdata[31]}}, rdata[31:25], rdata[11:7] };
             `OP_BRANCH: imm <= { {19{rdata[31]}}, rdata[31], rdata[7], rdata[30:25], rdata[11:8], 1'b0};
-            `OP_JAL: imm <= { rdata[31], rdata[31], rdata[19:12], rdata[20], rdata[30:21], 1'b0};
-            `OP_JALR: imm <= { {20{rdata[31]}}, rdata[31:20] };
-            `OP_LUI: imm <= { rdata[31:12], 12'b0 };
-            `OP_AUIPC: imm <= { rdata[31:12], 12'b0 };
+            `OP_JAL:    imm <= { rdata[31], rdata[31], rdata[19:12], rdata[20], rdata[30:21], 1'b0};
+            `OP_JALR:   imm <= { {20{rdata[31]}}, rdata[31:20] };
+            `OP_LUI:    imm <= { rdata[31:12], 12'b0 };
+            `OP_AUIPC:  imm <= { rdata[31:12], 12'b0 };
          endcase
       end
    end
 
+   // Register file
    reg reg_ren = 0;
    reg reg_wen = 0;
    wire [W-1:0] rs1_val;
    wire [W-1:0] rs2_val;
+   reg [W-1:0] rd_val;
 
    regs #(.W(W)) regs(
       .clk(clk),
@@ -78,6 +78,7 @@ module cpu
    reg [3:0] alu_fn;
    wire [W-1:0] alu_out;
    wire alu_zero;
+
    alu #(.W(W)) alu(
       .x(alu_x),
       .y(alu_y),
@@ -86,17 +87,8 @@ module cpu
       .zero(alu_zero)
    );
 
-`define ALU_X_RS1 2'h0
-`define ALU_X_PC 2'h2
-`define ALU_X_IMM 2'h1
-`define ALU_X_ZERO 2'h3
-
-`define ALU_Y_IMM 2'h0
-`define ALU_Y_RS2 2'h1
-`define ALU_Y_FOUR 2'h2
-
-   reg [2:0] alu_x_sel;
-   reg [2:0] alu_y_sel;
+   reg [1:0] alu_x_sel;
+   reg [1:0] alu_y_sel;
 
    // ALU control
    always @(*) begin
@@ -123,14 +115,7 @@ module cpu
             endcase
             alu_y_sel = `ALU_Y_RS2;
          end
-         `OP_JAL: begin
-            alu_x_sel = `ALU_X_PC;
-            alu_y_sel = `ALU_Y_IMM;
-         end
-         `OP_JALR: begin
-            alu_x_sel = `ALU_X_RS1;
-            alu_y_sel = `ALU_Y_IMM;
-         end
+         `OP_JAL,
          `OP_AUIPC: begin
             alu_x_sel = `ALU_X_PC;
          end
@@ -142,15 +127,15 @@ module cpu
       case (alu_x_sel)
          `ALU_X_RS1: alu_x = rs1_val;
          `ALU_X_PC: alu_x = pc;
-         `ALU_X_IMM: alu_x = imm;
          `ALU_X_ZERO: alu_x = 32'd0;
+         default: alu_x = 32'd0;
       endcase
 
       case (alu_y_sel)
          `ALU_Y_IMM: alu_y = imm;
          `ALU_Y_RS2: alu_y = rs2_val;
          `ALU_Y_FOUR: alu_y = 32'd4;
-         default: alu_y = 32'd0;
+         default: alu_y = imm;
       endcase
    end
 
