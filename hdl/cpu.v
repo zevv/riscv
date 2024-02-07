@@ -229,12 +229,7 @@ module cpu
    always @(posedge clk)
    begin
       case (state)
-         `ST_BOOT: begin
-            pc <= pc_plus_4;
-            if (pc == 64) begin
-               pc <= 0;
-            end
-         end
+         `ST_BOOT: pc <= (pc == 64) ? `VEC_RESET : pc_plus_4;
          `ST_F_PC: if (rd_valid) pc <= rdata;
          `ST_WB_REG, `ST_X_STORE, `ST_X_LOAD_2: pc <= pc_plus_4;
          `ST_X_BRANCH: pc <= branch ? pc_plus_imm : pc_plus_4;
