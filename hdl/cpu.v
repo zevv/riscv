@@ -79,9 +79,8 @@ module cpu
             alu_fn = { funct7[5], funct3 };
             alu_y_sel = `ALU_Y_RS2;
          end
-         `OP_ALU_I: begin
+         `OP_ALU_I:
             alu_fn = { (funct3 == 3'h1 || funct3 == 3'h5) ? imm[10] : 1'b0, funct3 };
-         end
          `OP_BRANCH: begin
             case (funct3)
                `BR_BEQ,  `BR_BNE:  alu_fn = `ALU_FN_SUB;
@@ -90,13 +89,10 @@ module cpu
             endcase
             alu_y_sel = `ALU_Y_RS2;
          end
-         `OP_JAL,
-         `OP_AUIPC: begin
+         `OP_JAL, `OP_AUIPC: 
             alu_x_sel = `ALU_X_PC;
-         end
-         `OP_LUI: begin
+         `OP_LUI:
             alu_x_sel = `ALU_X_ZERO;
-         end
       endcase
 
       case (alu_x_sel)

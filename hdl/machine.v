@@ -132,16 +132,13 @@ module machine
 
       cpu_rd_valid = bram_rd_valid || spram_rd_valid || led_rd_valid || uart_rd_valid;
 
-      if (bram_sel) 
-         cpu_rdata = bram_rdata;
-      else if (spram_sel)
-         cpu_rdata = spram_rdata;
-      else if (led_sel) 
-         cpu_rdata = led_rdata;
-      else if (uart_sel) 
-         cpu_rdata = uart_rdata;
-      else
-         cpu_rdata = 0;
+      case(1'b1)
+         bram_sel:  cpu_rdata = bram_rdata;
+         spram_sel: cpu_rdata = spram_rdata;
+         led_sel:   cpu_rdata = led_rdata;
+         uart_sel:  cpu_rdata = uart_rdata;
+         default:   cpu_rdata = 0;
+      endcase
 
    end
 
