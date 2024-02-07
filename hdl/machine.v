@@ -11,7 +11,7 @@
 
 module machine
 #(
-   parameter W = 32
+   parameter W = 16
 )
 (
    input clk,

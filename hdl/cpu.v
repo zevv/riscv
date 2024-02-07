@@ -258,7 +258,8 @@ module cpu
       debug = (ren || wen);
    end
 
-   // CPU state machine
+   // PC control
+   
    always @(posedge clk)
    begin
       case (state)
@@ -266,25 +267,26 @@ module cpu
             pc <= pc_plus_4;
             if (pc == 64) begin
                pc <= 0;
-               state <= `ST_F_SP;
             end
          end
-         `ST_F_SP: begin
-            state <= `ST_S_SP;
-         end
-         `ST_S_SP: begin
-            state <= `ST_F_PC;
-         end
-         `ST_F_PC: begin
-            if (rd_valid) begin
-               pc <= rdata;
-               state <= `ST_F_INST;
-            end
-         end
-         `ST_F_INST: begin
-            state <= `ST_DECODE;
-         end
-         `ST_DECODE: begin
+         `ST_F_PC: if (rd_valid) pc <= rdata;
+         `ST_WB_REG, `ST_X_STORE, `ST_X_LOAD_2: pc <= pc_plus_4;
+         `ST_X_BRANCH: pc <= branch ? pc_plus_imm : pc_plus_4;
+         `ST_X_JAL, `ST_X_JALR: pc <= alu_out;
+      endcase
+   end
+
+   // CPU state machine
+
+   always @(posedge clk)
+   begin
+      case (state)
+         `ST_BOOT: if (pc == 64) state <= `ST_F_SP;
+         `ST_F_SP: state <= `ST_S_SP;
+         `ST_S_SP: state <= `ST_F_PC;
+         `ST_F_PC: if (rd_valid) state <= `ST_F_INST;
+         `ST_F_INST: state <= `ST_DECODE;
+         `ST_DECODE:
             case (rdata[6:0])
                `OP_ALU_R,
                `OP_ALU_I,
@@ -297,8 +299,7 @@ module cpu
                `OP_JAL: state <= `ST_X_JAL;
                default: state <= `ST_FAULT;
             endcase
-         end
-         `ST_RD_REG: begin
+         `ST_RD_REG:
             case (opcode)
                `OP_ALU_I,
                `OP_ALU_R: state <= `ST_WB_REG;
@@ -307,28 +308,10 @@ module cpu
                `OP_STORE: state <= `ST_X_STORE;
                `OP_BRANCH: state <= `ST_X_BRANCH;
             endcase
-         end
-         `ST_X_LOAD_1: begin
-            state <= `ST_X_LOAD_2;
-         end
-         `ST_WB_REG,
-         `ST_X_STORE,
-         `ST_X_LOAD_2: begin
-            pc <= pc_plus_4;
-            state <= `ST_F_INST;
-         end
-         `ST_X_BRANCH: begin
-            if (branch)
-               pc <= pc_plus_imm;
-            else
-               pc <= pc_plus_4;
-            state <= `ST_F_INST;
-         end
-         `ST_X_JAL,
-         `ST_X_JALR: begin
-            pc <= alu_out;
-            state <= `ST_F_INST;
-         end
+         `ST_X_LOAD_1: state <= `ST_X_LOAD_2;
+         `ST_WB_REG, `ST_X_STORE, `ST_X_LOAD_2: state <= `ST_F_INST;
+         `ST_X_BRANCH: state <= `ST_F_INST;
+         `ST_X_JAL, `ST_X_JALR: state <= `ST_F_INST;
       endcase
    end
 
