@@ -41,6 +41,7 @@
 `define ST_X_JALR 11
 `define ST_X_LOAD_1 12
 `define ST_X_LOAD_2 13
+`define ST_FAULT 31
 
 `define ALU_X_RS1 2'h0
 `define ALU_X_PC 2'h1
@@ -50,16 +51,7 @@
 `define ALU_Y_RS2 2'h1
 `define ALU_Y_FOUR 2'h2
 
-/*
-
-rs1	rs2
-rs1	imm
-pc	imm
-pc	4
-0	imm
-
-*/
+`define VEC_RESET 16'h0000
+`define VEC_SP    16'h0004
 
 
-
-`define ST_FAULT 31

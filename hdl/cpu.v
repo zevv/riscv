@@ -20,10 +20,6 @@ module cpu
       VEC_RESET = 16'h0000,
       VEC_SP    = 16'h0004;
 
-   // CPU state
-   reg [4:0] state = `ST_BOOT;
-   reg [15:0] pc = 0;
-   
    // Instruction decoding
    reg [6:0] opcode = 0;
    reg [4:0] rd = 0;
@@ -64,13 +60,7 @@ module cpu
    wire [W-1:0] rs1_val;
    wire [W-1:0] rs2_val;
    reg [W-1:0] rd_val;
-
-   regs #(.W(W)) regs(
-      .clk(clk),
-      .ren(reg_ren),
-      .rs1(rs1), .rs2(rs2), .rs1_val(rs1_val), .rs2_val(rs2_val),
-      .wen(reg_wen), .rd(rd), .rd_val(rd_val)
-   );
+   regs #(W) regs(clk, reg_ren, rs1, rs2, rs1_val, rs2_val, reg_wen, rd, rd_val);
 
    // ALU
    reg [W-1:0] alu_x;
@@ -78,19 +68,11 @@ module cpu
    reg [3:0] alu_fn;
    wire [W-1:0] alu_out;
    wire alu_zero;
-
-   alu #(.W(W)) alu(
-      .x(alu_x),
-      .y(alu_y),
-      .fn(alu_fn),
-      .out(alu_out),
-      .zero(alu_zero)
-   );
-
-   reg [1:0] alu_x_sel;
-   reg [1:0] alu_y_sel;
+   alu #(W) alu(alu_x, alu_y, alu_fn, alu_out, alu_zero);
 
    // ALU control
+   reg [1:0] alu_x_sel;
+   reg [1:0] alu_y_sel;
    always @(*) begin
       alu_fn = `ALU_FN_ADD;
       alu_x_sel = `ALU_X_RS1;
@@ -160,8 +142,6 @@ module cpu
       endcase
    end
 
-   reg [W-1:0] load_val;
-
    // Register read/write control
    always @(*) begin
       reg_ren = 0;
@@ -193,6 +173,7 @@ module cpu
    end
 
    // Memory read/write control
+   reg [W-1:0] load_val;
    always @(*) begin
       ren = 0;
       wen = 0;
@@ -259,7 +240,7 @@ module cpu
    end
 
    // PC control
-   
+   reg [15:0] pc = 0;
    always @(posedge clk)
    begin
       case (state)
@@ -277,7 +258,7 @@ module cpu
    end
 
    // CPU state machine
-
+   reg [4:0] state = `ST_BOOT;
    always @(posedge clk)
    begin
       case (state)
