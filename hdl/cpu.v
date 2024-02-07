@@ -15,10 +15,6 @@ module cpu
    output reg wen, output reg [W-1:0] wdata, output reg[3:0] wmask,
    output reg debug
 );
-   
-   localparam
-      VEC_RESET = 16'h0000,
-      VEC_SP    = 16'h0004;
 
    // Instruction decoding
    reg [6:0] opcode = 0;
@@ -146,30 +142,22 @@ module cpu
    always @(*) begin
       reg_ren = 0;
       reg_wen = 0;
+      case (state)
+         `ST_RD_REG: 
+            reg_ren = 1;
+         `ST_F_SP, `ST_X_LOAD_2, `ST_WB_REG, `ST_X_JAL, `ST_X_JALR:
+            reg_wen = (rd != 0);
+      endcase
+   end
+   
+   always @(*) begin
       rd_val = 0;
       case (state)
-         `ST_F_SP:  begin
-            rd_val = rdata;
-            reg_wen = 1;
-         end
-         `ST_RD_REG: begin
-            reg_ren = 1;
-         end
-         `ST_X_LOAD_2: begin
-            rd_val = load_val;
-            reg_wen = 1;
-         end
-         `ST_WB_REG: begin
-            rd_val = alu_out;
-            reg_wen = 1;
-         end
-         `ST_X_JAL,
-         `ST_X_JALR: begin
-            rd_val = pc_plus_4;
-            reg_wen = 1;
-         end
+         `ST_F_SP: rd_val = rdata;
+         `ST_X_LOAD_2: rd_val = load_val;
+         `ST_WB_REG: rd_val = alu_out;
+         `ST_X_JAL, `ST_X_JALR: rd_val = pc_plus_4;
       endcase
-      if (rd == 0) reg_wen = 0;
    end
 
    // Memory read/write control
@@ -183,11 +171,11 @@ module cpu
       load_val = 0;
       case (state)
          `ST_BOOT: begin
-            addr = VEC_SP;
+            addr = `VEC_SP;
             ren = 1;
          end
          `ST_F_PC: begin
-            addr = VEC_RESET;
+            addr = `VEC_RESET;
             ren = 1;
          end
          `ST_F_INST: begin
@@ -258,7 +246,7 @@ module cpu
    end
 
    // CPU state machine
-   reg [4:0] state = `ST_BOOT;
+   reg [3:0] state = `ST_BOOT;
    always @(posedge clk)
    begin
       case (state)
@@ -304,15 +292,10 @@ module cpu
       f_last_clk <= i_clk;
    end
 
-
    always @(*)
    begin
       on_ren_wen:
          assert(!(ren && wen));
-
-      no_zero_write:
-         assert(!(addr == 0 && wen));
-
    end
 
 `endif

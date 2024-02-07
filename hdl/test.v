@@ -14,7 +14,7 @@ module test();
          //$dumpvars(0, machine, machine.ram0.mem[i]);
       end
       #20000
-      if (machine.cpu0.state == 31) begin
+      if (machine.cpu0.state == `ST_FAULT) begin
          for (i = 'h0; i < 'h800; i++) begin
             $display("mem %04x %08x", i * 'd4, machine.bram0.mem[i]);
          end
