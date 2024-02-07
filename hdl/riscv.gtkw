@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Sun Feb  4 13:14:47 2024
+[*] Wed Feb  7 09:47:55 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Sun Feb  4 13:14:05 2024"
-[dumpfile_size] 1380612
+[dumpfile_mtime] "Wed Feb  7 09:47:27 2024"
+[dumpfile_size] 566233
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
-[timestart] 896
-[size] 1366 972
+[timestart] 21
+[size] 1620 951
 [pos] -1 -1
-*-2.400002 907 2021 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-2.700001 33 2021 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
 [treeopen] test.machine.cpu0.
@@ -17,7 +17,7 @@
 [sst_width] 269
 [signals_width] 142
 [sst_expanded] 1
-[sst_vpaned_height] 286
+[sst_vpaned_height] 279
 @24
 test.cycle[31:0]
 @28
@@ -30,19 +30,20 @@ test.machine.uart0.last_data[8:0]
 @22
 [color] 7
 test.machine.cpu0.pc[15:0]
+@2024
+[color] 6
+^1 /home/ico/sandbox/prjs/riscv/hdl/gtkw/states.txt
+test.machine.cpu0.state[3:0]
 @2028
 [color] 3
-^1 /home/ico/sandbox/prjs/riscv/hdl/gtkw/opcodes.txt
+^2 /home/ico/sandbox/prjs/riscv/hdl/gtkw/opcodes.txt
 test.machine.cpu0.opcode[6:0]
-@2025
-^4 /home/ico/sandbox/prjs/riscv/hdl/gtkw/states.txt
-test.machine.cpu0.state[4:0]
 @2022
-^2 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
+^3 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
 test.machine.cpu0.rs1[4:0]
-^2 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
+^3 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
 test.machine.cpu0.rs2[4:0]
-^2 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
+^3 /home/ico/sandbox/prjs/riscv/hdl/gtkw/registers.txt
 test.machine.cpu0.rd[4:0]
 @22
 test.machine.cpu0.funct7[6:0]
@@ -56,6 +57,10 @@ test.machine.cpu0.wdata[31:0]
 @28
 [color] 2
 test.machine.cpu0.wen
+@29
+[color] 3
+test.machine.cpu0.ren
+@28
 [color] 3
 test.machine.cpu0.rd_valid
 @22
@@ -63,12 +68,17 @@ test.machine.cpu0.rd_valid
 test.machine.cpu0.rdata[31:0]
 @200
 -CPU state
+@22
+test.machine.cpu0.rs2_val[31:0]
+test.machine.cpu0.rs1_val[31:0]
+test.machine.cpu0.rd_val[31:0]
+@200
 -ALU
 @22
 test.machine.cpu0.alu_x[31:0]
 test.machine.cpu0.alu_y[31:0]
 @2024
-^3 /home/ico/sandbox/prjs/riscv/hdl/gtkw/alu_fn.txt
+^4 /home/ico/sandbox/prjs/riscv/hdl/gtkw/alu_fn.txt
 test.machine.cpu0.alu_fn[3:0]
 @22
 test.machine.cpu0.alu_out[31:0]

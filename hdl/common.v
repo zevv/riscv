@@ -28,9 +28,9 @@
 `define ALU_FN_SRA 4'hd
 
 `define ST_BOOT 0
-`define ST_F_SP 1
-`define ST_S_SP 2
-`define ST_F_PC 3
+`define ST_F_PC 1
+`define ST_F_SP 2
+`define ST_S_SP 3
 `define ST_F_INST 4
 `define ST_DECODE 5
 `define ST_RD_REG 6
@@ -54,4 +54,35 @@
 `define VEC_RESET 16'h0000
 `define VEC_SP    16'h0004
 
-
+`define REG_ZERO   'h00
+`define REG_RA     'h01
+`define REG_SP     'h02
+`define REG_GP     'h03
+`define REG_TP     'h04
+`define REG_T0     'h05
+`define REG_T1     'h06
+`define REG_T2     'h07
+`define REG_S0     'h08
+`define REG_S1     'h09
+`define REG_A0     'h0a
+`define REG_A1     'h0b
+`define REG_A2     'h0c
+`define REG_A3     'h0d
+`define REG_A4     'h0e
+`define REG_A5     'h0f
+`define REG_A6     'h10
+`define REG_A7     'h11
+`define REG_S2     'h12
+`define REG_S3     'h13
+`define REG_S4     'h14
+`define REG_S5     'h15
+`define REG_S6     'h16
+`define REG_S7     'h17
+`define REG_S8     'h18
+`define REG_S9     'h19
+`define REG_S10    'h1a
+`define REG_S11    'h1b
+`define REG_T3     'h1c
+`define REG_T4     'h1d
+`define REG_T5     'h1e
+`define REG_T6     'h1f

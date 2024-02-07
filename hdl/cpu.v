@@ -18,7 +18,7 @@ module cpu
 
    // Instruction decoding
    reg [6:0] opcode = 0;
-   reg [4:0] rd = 0;
+   reg [4:0] rd = `REG_SP;
    reg [6:0] funct7 = 0;
    reg [2:0] funct3 = 0;
    reg [4:0] rs1 = 0;
@@ -27,9 +27,6 @@ module cpu
 
    always @(posedge clk)
    begin
-      if(state == `ST_F_SP) begin
-         rd = 2;
-      end
       if(state == `ST_DECODE) begin
          opcode <= rdata[6:0];
          rd <= rdata[11:7];
@@ -141,7 +138,7 @@ module cpu
       case (state)
          `ST_RD_REG: 
             reg_ren = 1;
-         `ST_F_SP, `ST_X_LOAD_2, `ST_WB_REG, `ST_X_JAL, `ST_X_JALR:
+         `ST_S_SP, `ST_X_LOAD_2, `ST_WB_REG, `ST_X_JAL, `ST_X_JALR:
             reg_wen = (rd != 0);
       endcase
    end
@@ -149,7 +146,7 @@ module cpu
    always @(*) begin
       rd_val = 0;
       case (state)
-         `ST_F_SP: rd_val = rdata;
+         `ST_S_SP: rd_val = rdata;
          `ST_X_LOAD_2: rd_val = load_val;
          `ST_WB_REG: rd_val = alu_out;
          `ST_X_JAL, `ST_X_JALR: rd_val = pc_plus_4;
@@ -167,11 +164,15 @@ module cpu
       load_val = 0;
       case (state)
          `ST_BOOT: begin
-            addr = `VEC_SP;
+            addr = `VEC_RESET;
             ren = 1;
          end
          `ST_F_PC: begin
             addr = `VEC_RESET;
+            ren = 1;
+         end
+         `ST_F_SP: begin
+            addr = `VEC_SP;
             ren = 1;
          end
          `ST_F_INST: begin
@@ -246,10 +247,10 @@ module cpu
    always @(posedge clk)
    begin
       case (state)
-         `ST_BOOT: if (pc == 64) state <= `ST_F_SP;
+         `ST_BOOT: if (pc == 64) state <= `ST_F_PC;
+         `ST_F_PC: state <= `ST_F_SP;
          `ST_F_SP: state <= `ST_S_SP;
-         `ST_S_SP: state <= `ST_F_PC;
-         `ST_F_PC: if (rd_valid) state <= `ST_F_INST;
+         `ST_S_SP: state <= `ST_F_INST;
          `ST_F_INST: state <= `ST_DECODE;
          `ST_DECODE:
             case (rdata[6:0])
