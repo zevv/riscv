@@ -11,7 +11,7 @@
 
 # set_io IOB_0A               46       
 set_io IOB_13B              6
-# set_io IOB_16A              9
+set_io IOB_16A              9
 # set_io IOB_18A              10
 # set_io IOB_20A              11
 # set_io IOB_22A              12

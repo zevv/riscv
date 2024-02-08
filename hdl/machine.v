@@ -17,7 +17,8 @@ module machine
    input clk,
    output debug,
    output led1, output led2, output led3,
-   output uart_tx
+   output uart_tx,
+   input uart_rx
 );
 
 
@@ -93,7 +94,8 @@ module machine
       .clk(clk),
       .addr(uart_addr),
       .ren(uart_ren), .rdata(uart_rdata), .rd_valid(uart_rd_valid),
-      .wen(uart_wen), .wdata(uart_wdata), .tx(uart_tx)
+      .wen(uart_wen), .wdata(uart_wdata),
+      .tx(uart_tx), .rx(uart_rx)
    );
 
    // Bus connections / address mapping

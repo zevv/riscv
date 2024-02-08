@@ -9,6 +9,7 @@ module top(
    output RGB0, RGB1, RGB2,
    output IOB_13B,
    output IOT_37A,
+   input IOB_16A
 );
    
    wire clk_48;
@@ -37,7 +38,8 @@ module top(
       .clk(clk),
       .debug(debug2),
       .led1(RGB0), .led2(RGB1), .led3(RGB2),
-      .uart_tx(IOB_13B)
+      .uart_tx(IOB_13B),
+      .uart_rx(IOB_16A)
    );
 
 

@@ -1,7 +1,7 @@
 
 NAME = uart
 
-CSRCS += uart.c
+CSRCS += uart.c ../arch/arch.c
 
 CFLAGS += -I./include
 

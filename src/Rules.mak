@@ -19,12 +19,13 @@ CFLAGS += -Itest
 CFLAGS += -MMD
 CFLAGS += -I.
 CFLAGS += -I..
-CFLAGS += -flto
 
 LDFLAGS += -T ../arch/script.lds 
 LDFLAGS += -nostartfiles
 LDFLAGS += -march=rv32i
 LDFLAGS += --specs=nano.specs
+
+CFLAGS += -flto
 LDFLAGS += -flto
 
 
@@ -55,7 +56,7 @@ $(MEM): $(BIN) ../genmem
 	llvm-objdump-16 -S $< > $@
 
 clean::
-	rm -f *.elf *.o *.asm *.bin *.mem
+	rm -f $(OBJS) $(DEPS) *.elf *.o *.asm *.bin *.mem
 
 -include $(DEPS)
 

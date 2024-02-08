@@ -48,13 +48,32 @@ module test();
    wire debug;
    wire led1, led2, led3;
    wire uart_tx;
+   reg uart_rx;
 
    machine machine(
       .clk(clk),
       .debug(debug),
       .led1(led1), .led2(led2), .led3(led3),
-      .uart_tx(uart_tx)
+      .uart_tx(uart_tx),
+      .uart_rx(uart_rx)
    );
+
+   initial begin
+      uart_rx = 1;
+      #1500
+      // send out ascii 'h', one stop bit, 8 data bits, no parity, idle high.
+      // ascii 'h' is binary 01101000, so we send 0001101000
+      #16 uart_rx = 0;
+      #16 uart_rx = 0;
+      #16 uart_rx = 1;
+      #16 uart_rx = 1;
+      #16 uart_rx = 1;
+      #16 uart_rx = 1;
+      #16 uart_rx = 0;
+      #16 uart_rx = 1;
+      #16 uart_rx = 0;
+      #16 uart_rx = 1;
+   end
 
 endmodule
 

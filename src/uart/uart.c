@@ -2,21 +2,20 @@
 #include "arch/io.h"
 
 
-void putc(uint8_t c)
-{
-	uart0->data = c;
-	while(uart0->status);
-}
-
 void puts(char *s)
 {
 	while(*s) {
-		putc(*s);
+		uart_tx(*s);
 		s++;
 	}
 }
+
+
 void main(void)
 {
 	puts("Hullo\n");
+	for(;;) {
+		uart_tx(uart_rx());
+	}
 }
 
