@@ -8,29 +8,28 @@
 #include "arch/io.h"
 
 
-static char buf[32];
 
 void puthex(uint16_t v)
 {
 	static char hexdigit[] = "0123456789abcdef";
-        for(int i=0; i<4; i++) {                    
-                uart_tx(hexdigit[v >> 12]);
-                v <<= 4;
-        }
+	for(int i=0; i<4; i++) {                    
+		uart_tx(hexdigit[v >> 12]);
+		v <<= 4;
+	}
 }
 
 
 int main(void)
 {
+	static char buf[32];
+
 	/* Initialize zforth */
 	zf_init(0);
 	zf_bootstrap();
 	zf_eval(": . 1 sys ;");
 
 	/* Main loop: read words and eval */
-
 	uint8_t l = 0;
-
 	for(;;) {
 		char c = uart_rx();
 		uart_tx(c);
@@ -39,7 +38,6 @@ int main(void)
 			if(r != ZF_OK) {
 				uart_tx('E');
 				puthex(r);
-				uart_tx('\n');
 			}
 			l = 0;
 		} else if(l < sizeof(buf)-1) {
@@ -48,11 +46,14 @@ int main(void)
 
 		buf[l] = '\0';
 	}
-
 }
+
 
 zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 {
+	char b[8];
+	char *p;
+
 	switch((int)id) {
 
 		case ZF_SYSCALL_EMIT:
@@ -60,8 +61,8 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 			break;
 
 		case ZF_SYSCALL_PRINT:
-			puthex(zf_pop());
-			uart_tx('\n');
+			itoa(zf_pop(), b, 10);
+			for(p=b; *p; p++) uart_tx(*p);
 			break;
 	}
 
@@ -71,16 +72,6 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 
 zf_cell zf_host_parse_num(const char *buf)
 {
-	char *end;
-	zf_cell v = strtol(buf, &end, 0);
-	if(*end != '\0') {
-		zf_abort(ZF_ABORT_NOT_A_WORD);
-	}
-	return v;
+	return atoi(buf);
 }
-
-
-/*
- * End
- */
 

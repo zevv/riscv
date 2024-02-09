@@ -19,17 +19,16 @@ CFLAGS += -Itest
 CFLAGS += -MMD
 CFLAGS += -I.
 CFLAGS += -I..
+CFLAGS += -flto
 
+LDFLAGS += $(CFLAGS)
 LDFLAGS += -T ../arch/script.lds 
 LDFLAGS += -nostartfiles
-LDFLAGS += -march=rv32i
 LDFLAGS += --specs=nano.specs
 
-CFLAGS += -flto
-LDFLAGS += -flto
+CSRCS += start.c io.c
 
-
-CSRCS += ../arch/start.c
+VPATH = ../arch
 
 SRCS := $(CSRCS) $(SSRCS)
 OBJS := $(subst .c,.o, $(CSRCS)) $(subst .S,.o, $(SSRCS))

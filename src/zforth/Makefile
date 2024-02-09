@@ -1,7 +1,7 @@
 
 NAME = zforth
 
-CSRCS += main.c zforth.c ../arch/arch.c
+CSRCS += main.c zforth.c
 
 CFLAGS += -I./include
 
