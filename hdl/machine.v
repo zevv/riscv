@@ -65,7 +65,7 @@ module machine
       .clk(clk),
       .addr(spram_addr),
       .ren(spram_ren), .rdata(spram_rdata), .rd_valid(spram_rd_valid),
-      .wen(spram_wen), .wdata(spram_wdata)
+      .wen(spram_wen), .wdata(spram_wdata), .wmask(cpu_wmask)
    );
 
 
@@ -94,7 +94,7 @@ module machine
       .clk(clk),
       .addr(uart_addr),
       .ren(uart_ren), .rdata(uart_rdata), .rd_valid(uart_rd_valid),
-      .wen(uart_wen), .wdata(uart_wdata), .tx(uart_tx)
+      .wen(uart_wen), .wdata(uart_wdata), .tx(uart_tx), .rx(uart_rx)
    );
 
    // Bus connections / address mapping

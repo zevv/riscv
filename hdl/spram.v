@@ -6,15 +6,17 @@ module spram
 (
    input wire clk,
    input wire ren, input wire [14:0] addr, output [W-1:0] rdata, output reg rd_valid,
-   input wire wen, input wire [W-1:0] wdata
+   input wire wen, input wire [W-1:0] wdata, input wire[3:0] wmask
 );
 
    wire [13:0] spram_addr = addr >> 2;
+   wire [3:0] wmask_l = { wmask[2], wmask[2], wmask[3], wmask[3] };
+   wire [3:0] wmask_h = { wmask[0], wmask[0], wmask[1], wmask[1] };
 
    SB_SPRAM256KA spram_l (
       .ADDRESS(spram_addr),
       .DATAIN(wdata[15: 0]),
-      .MASKWREN(4'b1111),
+      .MASKWREN(wmask_l),
       .WREN(wen),
       .CHIPSELECT(1'b1),
       .CLOCK(clk),
@@ -29,7 +31,7 @@ module spram
          SB_SPRAM256KA spram_h (
             .ADDRESS(spram_addr),
             .DATAIN(wdata[31:16]),
-            .MASKWREN(4'b1111),
+            .MASKWREN(wmask_h),
             .WREN(wen),
             .CHIPSELECT(1'b1),
             .CLOCK(clk),
