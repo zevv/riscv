@@ -94,8 +94,7 @@ module machine
       .clk(clk),
       .addr(uart_addr),
       .ren(uart_ren), .rdata(uart_rdata), .rd_valid(uart_rd_valid),
-      .wen(uart_wen), .wdata(uart_wdata),
-      .tx(uart_tx), .rx(uart_rx)
+      .wen(uart_wen), .wdata(uart_wdata), .tx(uart_tx)
    );
 
    // Bus connections / address mapping
@@ -122,7 +121,7 @@ module machine
       led_wen = led_sel && cpu_wen;
       uart_wen = uart_sel && cpu_wen;
       
-      bram_addr = addr[11:0];
+      bram_addr = addr[12:0];
       spram_addr = addr[14:0];
       led_addr = addr[4:0];
       uart_addr = addr[2:0];
@@ -135,7 +134,7 @@ module machine
       cpu_rd_valid = bram_rd_valid || spram_rd_valid || led_rd_valid || uart_rd_valid;
 
       case(1'b1)
-         bram_sel:  cpu_rdata = bram_rdata;
+         bram_sel: cpu_rdata = bram_rdata;
          spram_sel: cpu_rdata = spram_rdata;
          led_sel:   cpu_rdata = led_rdata;
          uart_sel:  cpu_rdata = uart_rdata;

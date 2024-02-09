@@ -14,17 +14,20 @@ static char buf[32];
 
 int main(void)
 {
+	uart_tx('1');
 	/* Initialize zforth */
 
 	zf_init(1);
+	uart_tx('2');
 	zf_bootstrap();
+	uart_tx('3');
 	zf_eval(": . 1 sys ;");
 
 	/* Main loop: read words and eval */
 
 	uint8_t l = 0;
 
-	uart_puts("ready>");
+	uart_tx('4');
 
 	for(;;) {
 		char c = uart_rx();
