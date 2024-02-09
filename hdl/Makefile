@@ -13,6 +13,7 @@ SRCS += alu.v adder.v
 SRCS += machine.v
 SRCS += uart.v
 SRCS += bram.v
+SRCS += spram.v
 SRCS += led.v
 SRCS += pll.v
 SRCS += common.v

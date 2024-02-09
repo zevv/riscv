@@ -6,14 +6,15 @@ module uart(
    input wire [4:0] addr, 
    input wire ren, output reg [7:0] rdata, output reg rd_valid,
    input wire wen, input wire [7:0] wdata,
-   output reg tx, input wire rx
+   output reg tx, input rx
 );
 
 	initial begin
 		rd_valid <= 0;
 	end
 
-	localparam DIVIDER = 7;
+   localparam BAUDRATE = 1000000;
+	localparam DIVIDER = (16000000 / BAUDRATE) - 1;
    localparam IDLE = 0;
    localparam BUSY = 1;
 

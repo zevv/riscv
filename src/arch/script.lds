@@ -19,8 +19,11 @@ SECTIONS
    } > bram
 
    .bss : { 
-      _sheap = .;
+      _sbss = .;
+      *(.bss) 
       *(.sbss) 
+      _ebss = .;
+      _sheap = .;
       . = 0x4000;
       _eheap = .;
    } > spram

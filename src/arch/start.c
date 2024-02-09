@@ -1,10 +1,16 @@
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 
 void _start(void);
 void main(void);
 
-extern uint32_t _sp;
+extern char _sp;
+extern char _sbss;
+extern char _ebss;
+extern char _sheap;
+extern char _eheap;
+static char *brk = &_sheap;
 
 __attribute__ ((section(".vectors")))
 __attribute__ ((used))
@@ -16,13 +22,10 @@ void *vectors[] = {
 
 void _start(void)
 {
+	memset(&_sbss, 0, &_ebss - &_sbss);
 	main();
 	for(;;);
 }
-
-extern char _sheap;
-extern char _eheap;
-static char *brk = &_sheap;
 
 void *_sbrk(ptrdiff_t incr)
 {

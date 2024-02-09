@@ -13,7 +13,7 @@ module test();
       for (i = 0; i < 32; i++) begin
          //$dumpvars(0, machine, machine.ram0.mem[i]);
       end
-      #20000
+      #100000
       if (machine.cpu0.state == `ST_FAULT) begin
          for (i = 'h0; i < 'h800; i++) begin
             $display("mem %04x %08x", i * 'd4, machine.bram0.mem[i]);
@@ -58,23 +58,23 @@ module test();
       .uart_rx(uart_rx)
    );
 
-   initial begin
-      uart_rx = 1;
-      #1500
-      // send out ascii 'h', one stop bit, 8 data bits, no parity, idle high.
-      // ascii 'h' is binary 01101000, so we send 0001101000
-      #16 uart_rx = 0;
-      #16 uart_rx = 0;
-      #16 uart_rx = 1;
-      #16 uart_rx = 1;
-      #16 uart_rx = 1;
-      #16 uart_rx = 1;
-      #16 uart_rx = 0;
-      #16 uart_rx = 1;
-      #16 uart_rx = 0;
-      #16 uart_rx = 1;
-   end
-
+//   initial begin
+//      uart_rx = 1;
+//      #200000
+//      // send out ascii 'h', one stop bit, 8 data bits, no parity, idle high.
+//      // ascii 'h' is binary 01101000, so we send 0001101000
+//      #16 uart_rx = 0;
+//      #16 uart_rx = 0;
+//      #16 uart_rx = 1;
+//      #16 uart_rx = 1;
+//      #16 uart_rx = 1;
+//      #16 uart_rx = 1;
+//      #16 uart_rx = 0;
+//      #16 uart_rx = 1;
+//      #16 uart_rx = 0;
+//      #16 uart_rx = 1;
+//   end
+//
 endmodule
 
 
