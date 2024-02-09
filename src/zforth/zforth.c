@@ -4,6 +4,7 @@
 #include <setjmp.h>
 
 #include "zforth.h"
+#include "arch/io.h"
 
 
 /* Flags and length encoded in words */
