@@ -236,17 +236,18 @@ module cpu
          `ST_X_JAL, `ST_X_JALR: pc <= alu_out;
       endcase
    end
-
+  
    // CPU state machine
-   reg [3:0] state = `ST_BOOT;
-   always @(posedge clk)
+   reg [3:0] state_next;
+   always @(*)
    begin
+      state_next = state;
       case (state)
-         `ST_BOOT: if (pc == 64) state <= `ST_F_PC;
-         `ST_F_PC: state <= `ST_F_SP;
-         `ST_F_SP: state <= `ST_S_SP;
-         `ST_S_SP: state <= `ST_F_INST;
-         `ST_F_INST: state <= `ST_DECODE;
+         `ST_BOOT: if (pc == 64) state_next = `ST_F_PC;
+         `ST_F_PC: state_next = `ST_F_SP;
+         `ST_F_SP: state_next = `ST_S_SP;
+         `ST_S_SP: state_next = `ST_F_INST;
+         `ST_F_INST: state_next = `ST_DECODE;
          `ST_DECODE:
             case (rdata[6:0])
                `OP_ALU_R,
@@ -254,26 +255,30 @@ module cpu
                `OP_STORE,
                `OP_LOAD,
                `OP_BRANCH,
-               `OP_JALR: state <= `ST_RD_REG;
+               `OP_JALR: state_next = `ST_RD_REG;
                `OP_LUI,
-               `OP_AUIPC: state <= `ST_WB_REG;
-               `OP_JAL: state <= `ST_X_JAL;
-               default: state <= `ST_FAULT;
+               `OP_AUIPC: state_next = `ST_WB_REG;
+               `OP_JAL: state_next = `ST_X_JAL;
+               default: state_next = `ST_FAULT;
             endcase
          `ST_RD_REG:
             case (opcode)
                `OP_ALU_I,
-               `OP_ALU_R: state <= `ST_WB_REG;
-               `OP_LOAD: state <= `ST_X_LOAD_1;
-               `OP_JALR: state <= `ST_X_JALR;
-               `OP_STORE: state <= `ST_X_STORE;
-               `OP_BRANCH: state <= `ST_X_BRANCH;
+               `OP_ALU_R: state_next = `ST_WB_REG;
+               `OP_LOAD: state_next = `ST_X_LOAD_1;
+               `OP_JALR: state_next = `ST_X_JALR;
+               `OP_STORE: state_next = `ST_X_STORE;
+               `OP_BRANCH: state_next = `ST_X_BRANCH;
             endcase
-         `ST_X_LOAD_1: state <= `ST_X_LOAD_2;
-         `ST_WB_REG, `ST_X_STORE, `ST_X_LOAD_2: state <= `ST_F_INST;
-         `ST_X_BRANCH: state <= `ST_F_INST;
-         `ST_X_JAL, `ST_X_JALR: state <= `ST_F_INST;
+         `ST_X_LOAD_1, `ST_WB_REG, `ST_X_STORE, `ST_X_LOAD_2,
+         `ST_X_BRANCH, `ST_X_JAL, `ST_X_JALR: state_next = `ST_F_INST;
       endcase
+   end
+   
+   reg [3:0] state = `ST_BOOT;
+   always @(posedge clk)
+   begin
+      state <= state_next;
    end
 
 `ifdef FORMAL
