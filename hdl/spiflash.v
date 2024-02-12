@@ -13,18 +13,19 @@ module spiflash(
 
    localparam IDLE = 0, START = 1, TX = 2, RX = 3, DONE = 4;
 
-   reg [23:0] read_addr;
+   reg [31:0] data_out = 0;
    reg start_stb = 0;
    
    always @(posedge clk) begin
       start_stb <= 0;
       if (ren && state == IDLE) begin
          start_stb <= 1;
-         read_addr <= addr + 'd1024 * 'd1024;
+         data_out <= { CMD_READ, addr + 24'h100000 };
       end
    end
 
    initial begin
+      rdata = 0;
       mosi = 1'b0;
       sck = 1'b1;
       ss = 1'b1;
@@ -32,37 +33,38 @@ module spiflash(
   
    reg [31:0] shift_in = 0;
    reg [31:0] shift_out = 0;
-   reg [1:0] state = IDLE;
-   reg [5:0] bitno = 0;
+   reg [2:0] state = IDLE;
+   reg [4:0] bitno = 0;
    
    always @(*) begin
       ss = (state == IDLE);
+      rd_valid = (state == DONE);
    end
 
    always @(posedge clk) begin
-      rd_valid <= 0;
 
       case (state)
          IDLE: begin
             sck <= 1;
             if (start_stb) begin
                state <= START;
+               shift_out <= data_out << 1;
+               mosi <= data_out[31];
             end
-            shift_out <= { CMD_READ, read_addr };
          end
          START: begin
-            sck <= 1'b1;
+            sck <= 0;
             state <= TX;
             bitno <= 32;
             mosi <= shift_out[31];
+            shift_in <= 0;
          end
          TX: begin
             sck <= ~sck;
-            if (bitno == 0) begin
-               bitno <= 32;
-               state <= RX;
-            end
             if (sck) begin
+               if (bitno == 1) begin
+                  state <= RX;
+               end
                mosi <= shift_out[31];
                bitno <= bitno - 1;
                shift_out <= shift_out << 1;
@@ -70,19 +72,18 @@ module spiflash(
          end
          RX: begin
             sck <= ~sck;
-            if (bitno == 0) begin
-               state <= DONE;
-               rdata <= shift_in;
-               rd_valid <= 1;
-            end
             if (sck) begin
-               shift_in = (shift_in << 1) | miso;
+               if (bitno == 1) begin
+                  state <= DONE;
+               end
                bitno <= bitno - 1;
-               shift_out <= shift_out << 1;
+               shift_in <= (shift_in << 1) | miso;
             end
          end
-         DONE: 
-            if (!ren) state <= IDLE;
+         DONE: begin
+            rdata <= shift_in;
+            state <= IDLE;
+         end
 
       endcase
    end

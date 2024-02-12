@@ -247,7 +247,7 @@ module cpu
          `ST_F_PC: state_next = `ST_F_SP;
          `ST_F_SP: state_next = `ST_S_SP;
          `ST_S_SP: state_next = `ST_F_INST;
-         `ST_F_INST: state_next = `ST_DECODE;
+         `ST_F_INST: if (rd_valid) state_next = `ST_DECODE;
          `ST_DECODE:
             case (rdata[6:0])
                `OP_ALU_R,

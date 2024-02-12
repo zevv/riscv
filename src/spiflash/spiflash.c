@@ -25,8 +25,13 @@ void puts(char *s)
 
 void main(void)
 {
-	puts("SPI: ");
-	puthex(*spiflash);
-	puts("\n");
+	for(;;) {
+		puts("SPI: ");
+		volatile uint32_t v = *spiflash;
+		puthex(v);
+		puts("\n");
+		volatile int i;
+		for(i=0; i<100000; i++);
+	}
 }
 

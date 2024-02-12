@@ -13,9 +13,10 @@ void puts(char *s)
 
 void main(void)
 {
-	puts("Hullo\n");
 	for(;;) {
-		uart_tx(uart_rx());
+		puts("Hullo\n");
+		volatile int i;
+		for(i=0; i<10000; i++);
 	}
 }
 
