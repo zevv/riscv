@@ -1,14 +1,14 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Wed Feb  7 09:47:55 2024
+[*] Sun Feb 11 19:20:48 2024
 [*]
 [dumpfile] "/home/ico/sandbox/prjs/riscv/hdl/test.vcd"
-[dumpfile_mtime] "Wed Feb  7 09:47:27 2024"
-[dumpfile_size] 566233
+[dumpfile_mtime] "Sun Feb 11 19:20:46 2024"
+[dumpfile_size] 1624583
 [savefile] "/home/ico/sandbox/prjs/riscv/hdl/riscv.gtkw"
 [timestart] 21
-[size] 1620 951
-[pos] -1 -1
+[size] 1366 801
+[pos] -254 -1
 *-2.700001 33 2021 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] test.
 [treeopen] test.machine.
@@ -17,14 +17,12 @@
 [sst_width] 269
 [signals_width] 142
 [sst_expanded] 1
-[sst_vpaned_height] 279
+[sst_vpaned_height] 321
 @24
 test.cycle[31:0]
 @28
 test.debug
 test.uart_tx
-@820
-test.machine.uart0.last_data[8:0]
 @200
 -Decoder
 @22

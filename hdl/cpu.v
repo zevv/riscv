@@ -270,8 +270,9 @@ module cpu
                `OP_STORE: state_next = `ST_X_STORE;
                `OP_BRANCH: state_next = `ST_X_BRANCH;
             endcase
-         `ST_X_LOAD_1: state_next = `ST_X_LOAD_2;
-         `ST_WB_REG, `ST_X_STORE, `ST_X_LOAD_2, `ST_X_BRANCH,
+         `ST_X_LOAD_1: if(rd_valid) state_next = `ST_X_LOAD_2;
+         `ST_X_LOAD_2: state_next = `ST_F_INST;
+         `ST_WB_REG, `ST_X_STORE, `ST_X_BRANCH,
          `ST_X_JAL, `ST_X_JALR: state_next = `ST_F_INST;
       endcase
    end

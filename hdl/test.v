@@ -50,13 +50,24 @@ module test();
    wire uart_tx;
    reg uart_rx;
 
+   wire spi_mosi;
+   wire spi_ss;
+   wire spi_sck;
+   reg spi_miso = 0;
+
    machine machine(
       .clk(clk),
       .debug(debug),
       .led1(led1), .led2(led2), .led3(led3),
-      .uart_tx(uart_tx),
-      .uart_rx(uart_rx)
+      .uart_tx(uart_tx), .uart_rx(uart_rx),
+      .spi_ss(spi_ss), .spi_miso(spi_miso), .spi_mosi(spi_mosi), .spi_sck(spi_sck)
    );
+
+   reg [1:0] ss = 0;
+   always @(posedge clk) begin
+      ss <= ss + 1;
+      if (ss == 0) spi_miso <= ~spi_miso;
+   end
 
 //   initial begin
 //      uart_rx = 1;

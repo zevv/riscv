@@ -17,6 +17,7 @@ SRCS += spram.v
 SRCS += led.v
 SRCS += pll.v
 SRCS += common.v
+SRCS += spiflash.v
 
 YOSYSFLAGS := -Q -T
 NEXTPNRFLAGS := --freq $(FREQ) --package sg48 --up5k 
@@ -75,8 +76,8 @@ lint: $(SRCS)
 prog: top.bin
 	iceprog -S $<
 
-prog_flash: $(BIN)
-	iceprog $(BIN)
+prog_flash: top.bin
+	iceprog $<
 
 report: top.asc
 	#@./timing.pl < $(NAME).log

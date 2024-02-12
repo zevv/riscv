@@ -64,6 +64,10 @@ zf_input_state zf_host_sys(zf_syscall_id id, const char *input)
 			itoa(zf_pop(), b, 10);
 			for(p=b; *p; p++) uart_tx(*p);
 			break;
+
+		case ZF_SYSCALL_USER:
+			led_set(zf_pop(), zf_pop(), zf_pop());
+			break;
 	}
 
 	return 0;
